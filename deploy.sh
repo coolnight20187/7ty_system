@@ -86,7 +86,7 @@ deploy_flyio() {
     echo "6. Deploy:"
     echo "   fly deploy"
     echo ""
-    echo "🔗 URL: https://7ty-system.fly.dev"
+    echo "🔗 URL: https://7ty.fly.dev"
 }
 
 # ============================================
@@ -123,12 +123,12 @@ deploy_huggingface() {
     echo "2. Create new Space"
     echo "3. Chọn Docker SDK"
     echo "4. Push code:"
-    echo "   git remote add hf https://huggingface.co/spaces/YOUR_USERNAME/7ty-system"
+    echo "   git remote add hf https://huggingface.co/spaces/YOUR_USERNAME/7ty"
     echo "   git push hf main"
     echo ""
     echo "Lưu ý: Chỉ hỗ trợ SQLite (không persistent)"
     echo ""
-    echo "🔗 URL: https://YOUR_USERNAME-7ty-system.hf.space"
+    echo "🔗 URL: https://YOUR_USERNAME-7ty.hf.space"
 }
 
 echo ""

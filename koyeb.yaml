@@ -2,7 +2,7 @@
 # Use with: koyeb app init
 
 version: 1.0.0
-name: 7ty-system
+name: 7ty
 
 services:
   - name: web

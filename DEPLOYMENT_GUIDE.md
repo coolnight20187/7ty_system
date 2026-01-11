@@ -110,7 +110,7 @@ DEBUG=false
 1. New -> Web Service
 2. Connect GitHub repo
 3. Settings:
-   - Name: 7ty-system
+   - Name: 7ty
    - Environment: Python 3
    - Build Command: pip install -r requirements.txt
    - Start Command: uvicorn main:app --host 0.0.0.0 --port $PORT
@@ -165,7 +165,7 @@ fly launch
 #### 4. Tạo PostgreSQL
 ```bash
 fly postgres create --name 7ty-postgres --region sin
-fly postgres attach 7ty-postgres --app 7ty-system
+fly postgres attach 7ty-postgres --app 7ty
 ```
 
 #### 5. Set Secrets

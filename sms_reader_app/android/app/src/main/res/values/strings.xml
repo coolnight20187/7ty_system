@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">7TY SMS Reader</string>
+    <string name="title_activity_main">7TY SMS Reader</string>
+    <string name="package_name">com.ty7.smsreader</string>
+    <string name="custom_url_scheme">com.ty7.smsreader</string>
+</resources>

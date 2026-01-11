@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">7TY Agent</string>
+    <string name="title_activity_main">7TY Agent</string>
+    <string name="package_name">com.ty7.agent</string>
+    <string name="custom_url_scheme">com.ty7.agent</string>
+</resources>

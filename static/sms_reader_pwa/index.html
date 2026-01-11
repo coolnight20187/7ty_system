@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="7TY SMS">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>7TY SMS Reader</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 58, 95, 0.5);
+            --primary: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: var(--text);
+            padding: 16px;
+            padding-top: calc(16px + var(--safe-top));
+            padding-bottom: calc(90px + var(--safe-bottom));
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .header .logo {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #06b6d4, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-title i {
+            color: var(--primary);
+        }
+        
+        /* Status */
+        .status-container {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+        }
+        
+        .status-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        
+        .status-icon.active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            animation: pulse 2s infinite;
+        }
+        
+        .status-icon.inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+        
+        .status-icon.warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        }
+        
+        .status-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .status-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        /* Stats Grid */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .stat-box {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 14px 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Input */
+        .input-group {
+            margin-bottom: 12px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        /* Buttons */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #0891b2);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .btn-group .btn {
+            flex: 1;
+        }
+        
+        /* Logs */
+        .log-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .log-item {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            background: rgba(0,0,0,0.2);
+            position: relative;
+            padding-left: 18px;
+        }
+        
+        .log-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 4px 0 0 4px;
+        }
+        
+        .log-item.success::before { background: var(--success); }
+        .log-item.error::before { background: var(--danger); }
+        .log-item.info::before { background: var(--primary); }
+        
+        .log-message {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .log-time {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Tab Bar */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            padding-bottom: calc(12px + var(--safe-bottom));
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 10px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        
+        .tab-item.active {
+            color: var(--primary);
+            background: rgba(6, 182, 212, 0.1);
+        }
+        
+        .tab-item i {
+            font-size: 20px;
+        }
+        
+        /* Pages */
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        /* Info boxes */
+        .info-box {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .info-box strong {
+            color: var(--primary);
+        }
+        
+        .bank-card {
+            background: linear-gradient(135deg, #1e3a5f 0%, #134e4a 100%);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .bank-card h4 {
+            color: var(--success);
+            font-size: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .bank-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 13px;
+        }
+        
+        .bank-info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .bank-info-row span:first-child {
+            color: var(--text-muted);
+        }
+        
+        .hidden { display: none !important; }
+        
+        .version {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">📱</div>
+        <h1>7TY SMS Reader</h1>
+        <p>Đọc SMS ngân hàng tự động</p>
+    </div>
+    
+    <!-- Page: Dashboard -->
+    <div class="page active" id="page-dashboard">
+        <!-- Status -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-signal"></i> Trạng Thái</div>
+            <div class="status-container">
+                <div class="status-icon" id="statusIcon">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <div class="status-info">
+                    <h3 id="statusTitle">Đang kiểm tra...</h3>
+                    <p id="statusSubtitle">Vui lòng đợi</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-chart-bar"></i> Thống Kê Hôm Nay</div>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label">Tổng SMS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statSuccess" style="color: #10b981;">0</div>
+                    <div class="stat-label">Thành công</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="statFailed" style="color: #ef4444;">0</div>
+                    <div class="stat-label">Thất bại</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bank Info -->
+        <div class="bank-card">
+            <h4><i class="fas fa-university"></i> Tài Khoản Hệ Thống</h4>
+            <div class="bank-info-row">
+                <span>Ngân hàng</span>
+                <span id="bankName">MB Bank</span>
+            </div>
+            <div class="bank-info-row">
+                <span>Số TK</span>
+                <span id="bankAccount">0123456789</span>
+            </div>
+            <div class="bank-info-row">
+                <span>Chủ TK</span>
+                <span id="bankOwner">7TY SYSTEM</span>
+            </div>
+        </div>
+        
+        <!-- Quick Test -->
+        <button class="btn btn-primary" onclick="quickTest()">
+            <i class="fas fa-flask"></i> Gửi Test Nạp Tiền
+        </button>
+    </div>
+    
+    <!-- Page: Logs -->
+    <div class="page" id="page-logs">
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-list-alt"></i> Nhật Ký SMS
+                <span style="margin-left: auto; font-size: 12px;" onclick="clearLogs()">
+                    <i class="fas fa-trash"></i> Xóa
+                </span>
+            </div>
+            <div class="log-list" id="logList">
+                <p style="text-align: center; color: var(--text-muted); padding: 30px;">
+                    Chưa có nhật ký SMS
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Page: Settings -->
+    <div class="page" id="page-settings">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-server"></i> Cấu Hình Server</div>
+            
+            <div class="input-group">
+                <label>Server URL</label>
+                <input type="url" id="serverUrl" placeholder="http://192.168.2.10:8000">
+            </div>
+            
+            <button class="btn btn-success" onclick="saveConfig()">
+                <i class="fas fa-save"></i> Lưu Cấu Hình
+            </button>
+        </div>
+        
+        <div class="card">
+            <div class="card-title"><i class="fas fa-university"></i> Thông Tin Ngân Hàng</div>
+            
+            <div class="input-group">
+                <label>Tên ngân hàng</label>
+                <input type="text" id="inputBankName" placeholder="MB Bank">
+            </div>
+            
+            <div class="input-group">
+                <label>Số tài khoản</label>
+                <input type="text" id="inputBankAccount" placeholder="0123456789">
+            </div>
+            
+            <div class="input-group">
+                <label>Chủ tài khoản</label>
+                <input type="text" id="inputBankOwner" placeholder="7TY SYSTEM">
+            </div>
+            
+            <button class="btn btn-success" onclick="saveBankInfo()">
+                <i class="fas fa-save"></i> Lưu Thông Tin
+            </button>
+        </div>
+        
+        <div class="info-box">
+            <strong>💡 Hướng dẫn:</strong><br><br>
+            <strong>Cách 1:</strong> Dùng App 7TY Agent<br>
+            1. Cài đặt app 7TY Agent trên điện thoại này<br>
+            2. Mở app → Cài đặt → Đọc SMS Ngân hàng<br>
+            3. Bật tính năng đọc SMS<br><br>
+            
+            <strong>Cách 2:</strong> Thêm bookmark<br>
+            1. Truy cập trang này trên điện thoại<br>
+            2. Thêm vào màn hình chính<br>
+            3. Dùng để test và xem log<br><br>
+            
+            <strong>Lưu ý:</strong> Điện thoại cần có SIM nhận SMS từ ngân hàng
+        </div>
+        
+        <div class="version">
+            7TY SMS Reader v1.0.0<br>
+            © 2026 7TY.VN
+        </div>
+    </div>
+    
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <div class="tab-item active" onclick="switchPage('dashboard')">
+            <i class="fas fa-home"></i>
+            <span>Trang chủ</span>
+        </div>
+        <div class="tab-item" onclick="switchPage('logs')">
+            <i class="fas fa-list-alt"></i>
+            <span>Nhật ký</span>
+        </div>
+        <div class="tab-item" onclick="switchPage('settings')">
+            <i class="fas fa-cog"></i>
+            <span>Cài đặt</span>
+        </div>
+    </div>
+    
+    <script>
+        // Default config
+        const DEFAULT_SERVER = 'http://192.168.2.10:8000';
+        
+        // State
+        let logs = [];
+        let stats = { total: 0, success: 0, failed: 0 };
+        
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            loadStats();
+            loadLogs();
+            checkServer();
+            
+            // Register service worker for PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(console.error);
+            }
+        });
+        
+        // Page switching
+        function switchPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById('page-' + page).classList.add('active');
+            document.querySelector(`.tab-item[onclick="switchPage('${page}')"]`).classList.add('active');
+        }
+        
+        // Config management
+        function loadConfig() {
+            const savedUrl = localStorage.getItem('sms_serverUrl') || DEFAULT_SERVER;
+            document.getElementById('serverUrl').value = savedUrl;
+            
+            const bank = JSON.parse(localStorage.getItem('sms_bankInfo') || '{}');
+            if (bank.name) {
+                document.getElementById('bankName').textContent = bank.name;
+                document.getElementById('inputBankName').value = bank.name;
+            }
+            if (bank.account) {
+                document.getElementById('bankAccount').textContent = bank.account;
+                document.getElementById('inputBankAccount').value = bank.account;
+            }
+            if (bank.owner) {
+                document.getElementById('bankOwner').textContent = bank.owner;
+                document.getElementById('inputBankOwner').value = bank.owner;
+            }
+        }
+        
+        function saveConfig() {
+            const url = document.getElementById('serverUrl').value.trim();
+            if (!url) {
+                alert('Vui lòng nhập Server URL');
+                return;
+            }
+            localStorage.setItem('sms_serverUrl', url);
+            addLog('info', 'Đã lưu cấu hình server: ' + url);
+            alert('✅ Đã lưu cấu hình!');
+            checkServer();
+        }
+        
+        function saveBankInfo() {
+            const bank = {
+                name: document.getElementById('inputBankName').value.trim(),
+                account: document.getElementById('inputBankAccount').value.trim(),
+                owner: document.getElementById('inputBankOwner').value.trim()
+            };
+            localStorage.setItem('sms_bankInfo', JSON.stringify(bank));
+            
+            document.getElementById('bankName').textContent = bank.name || 'MB Bank';
+            document.getElementById('bankAccount').textContent = bank.account || '0123456789';
+            document.getElementById('bankOwner').textContent = bank.owner || '7TY SYSTEM';
+            
+            addLog('info', 'Đã lưu thông tin ngân hàng');
+            alert('✅ Đã lưu thông tin ngân hàng!');
+        }
+        
+        // Stats
+        function loadStats() {
+            const saved = localStorage.getItem('sms_stats');
+            if (saved) {
+                stats = JSON.parse(saved);
+                updateStatsUI();
+            }
+        }
+        
+        function updateStatsUI() {
+            document.getElementById('statTotal').textContent = stats.total;
+            document.getElementById('statSuccess').textContent = stats.success;
+            document.getElementById('statFailed').textContent = stats.failed;
+        }
+        
+        // Logs
+        function loadLogs() {
+            const saved = localStorage.getItem('sms_logs');
+            if (saved) {
+                logs = JSON.parse(saved);
+                renderLogs();
+            }
+        }
+        
+        function addLog(type, message) {
+            const log = {
+                type,
+                message,
+                time: new Date().toLocaleString('vi-VN')
+            };
+            logs.unshift(log);
+            if (logs.length > 100) logs.pop();
+            localStorage.setItem('sms_logs', JSON.stringify(logs));
+            renderLogs();
+        }
+        
+        function renderLogs() {
+            const container = document.getElementById('logList');
+            if (logs.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 30px;">Chưa có nhật ký SMS</p>';
+                return;
+            }
+            
+            container.innerHTML = logs.map(log => `
+                <div class="log-item ${log.type}">
+                    <div class="log-message">${log.message}</div>
+                    <div class="log-time">${log.time}</div>
+                </div>
+            `).join('');
+        }
+        
+        function clearLogs() {
+            if (confirm('Xóa tất cả nhật ký?')) {
+                logs = [];
+                stats = { total: 0, success: 0, failed: 0 };
+                localStorage.removeItem('sms_logs');
+                localStorage.removeItem('sms_stats');
+                renderLogs();
+                updateStatsUI();
+            }
+        }
+        
+        // Server check
+        async function checkServer() {
+            const url = localStorage.getItem('sms_serverUrl') || DEFAULT_SERVER;
+            const icon = document.getElementById('statusIcon');
+            const title = document.getElementById('statusTitle');
+            const subtitle = document.getElementById('statusSubtitle');
+            
+            icon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            icon.className = 'status-icon warning';
+            title.textContent = 'Đang kiểm tra...';
+            subtitle.textContent = url;
+            
+            try {
+                const response = await fetch(url + '/health', { 
+                    method: 'GET'
+                });
+                
+                if (response.ok) {
+                    icon.innerHTML = '<i class="fas fa-check"></i>';
+                    icon.className = 'status-icon active';
+                    title.textContent = 'Server hoạt động';
+                    subtitle.textContent = 'Sẵn sàng nhận SMS';
+                } else {
+                    icon.innerHTML = '<i class="fas fa-exclamation"></i>';
+                    icon.className = 'status-icon warning';
+                    title.textContent = 'Server lỗi';
+                    subtitle.textContent = 'Code: ' + response.status;
+                }
+            } catch (e) {
+                icon.innerHTML = '<i class="fas fa-times"></i>';
+                icon.className = 'status-icon inactive';
+                title.textContent = 'Không kết nối được';
+                subtitle.textContent = e.message;
+            }
+        }
+        
+        // Quick test
+        async function quickTest() {
+            const url = localStorage.getItem('sms_serverUrl') || DEFAULT_SERVER;
+            
+            const amount = prompt('💰 Số tiền test (VND):', '100000');
+            if (!amount) return;
+            
+            const agentCode = prompt('👤 Mã đại lý (VD: 7TY001):', '7TY001');
+            if (!agentCode) return;
+            
+            try {
+                addLog('info', `📤 Đang gửi test: ${parseInt(amount).toLocaleString()}đ cho ${agentCode}...`);
+                
+                const response = await fetch(url + '/api/v1/bank-webhook', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Webhook-Source': '7ty-sms-pwa-test',
+                        'X-Webhook-Secret': '7ty_sms_secret_2024'
+                    },
+                    body: JSON.stringify({
+                        source: 'sms_pwa_test',
+                        bank_code: 'MB',
+                        amount: parseInt(amount),
+                        content: 'NAP ' + agentCode,
+                        transaction_id: 'PWA_TEST_' + Date.now(),
+                        transaction_type: 'credit',
+                        type: 'credit',
+                        raw_message: `MB Bank: TK 0123456789 +${amount}VND luc ${new Date().toLocaleString('vi-VN')}. ND: NAP ${agentCode}. SD: 50,000,000VND`
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    stats.total++;
+                    stats.success++;
+                    addLog('success', `✅ Nạp ${parseInt(amount).toLocaleString()}đ cho ${agentCode} thành công!`);
+                    alert('✅ Test thành công!\n\nĐã nạp ' + parseInt(amount).toLocaleString() + 'đ cho đại lý ' + agentCode);
+                } else {
+                    stats.total++;
+                    stats.failed++;
+                    addLog('error', `❌ Thất bại: ${result.detail || result.message || 'Unknown error'}`);
+                    alert('❌ Lỗi: ' + (result.detail || result.message || 'Unknown error'));
+                }
+                
+                localStorage.setItem('sms_stats', JSON.stringify(stats));
+                updateStatsUI();
+                
+            } catch (e) {
+                stats.total++;
+                stats.failed++;
+                addLog('error', `❌ Lỗi kết nối: ${e.message}`);
+                localStorage.setItem('sms_stats', JSON.stringify(stats));
+                updateStatsUI();
+                alert('❌ Lỗi kết nối: ' + e.message);
+            }
+        }
+        
+        // Auto refresh
+        setInterval(checkServer, 30000);
+    </script>
+</body>
+</html>

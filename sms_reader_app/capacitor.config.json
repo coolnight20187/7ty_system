@@ -1,0 +1,17 @@
+{
+  "appId": "com.ty7.smsreader",
+  "appName": "7TY SMS Reader",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "hostname": "sms.7ty.vn",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  },
+  "plugins": {}
+}
