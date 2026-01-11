@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: 7ty_postgres
+    environment:
+      POSTGRES_USER: 7ty_admin
+      POSTGRES_PASSWORD: 7ty_password_secure
+      POSTGRES_DB: 7ty_vn_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - 7ty_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U 7ty_admin -d 7ty_vn_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: 7ty_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@7ty.vn
+      PGADMIN_DEFAULT_PASSWORD: admin@7ty
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
+      SCRIPT_NAME: /pgadmin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - 7ty_network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: 7ty_app
+    environment:
+      DATABASE_TYPE: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: 7ty_admin
+      DB_PASSWORD: 7ty_password_secure
+      DB_NAME: 7ty_vn_db
+      SECRET_KEY: your-super-secret-key-change-this-in-production-12345
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./static:/app/static
+      - ./data:/app/data
+    networks:
+      - 7ty_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  7ty_network:
+    driver: bridge

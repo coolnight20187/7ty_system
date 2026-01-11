@@ -1,0 +1,76 @@
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.pytest_cache
+.coverage
+htmlcov
+dist
+build
+*.egg
+
+# Virtual environments
+.venv
+venv
+env
+.env
+
+# IDE
+.vscode
+.idea
+
+# Git
+.git
+.gitignore
+
+# Databases (don't include local db in docker)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+app.log
+hs_err_*.log
+replay_*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules
+
+# Test files
+test_*.py
+test_*.html
+test_*.apk
+test_*.zip
+tests/
+
+# Temp files
+temp_*/
+*.tmp
+*.temp
+
+# Large static files (APKs) - keep only latest
+static/uploads/7ty-agent-v*.apk
+!static/uploads/7ty-agent-latest.apk
+
+# Documentation (not needed in container)
+*.md
+!README.md
+
+# Development files
+*.ps1
+deploy_app.ps1
+
+# Real check folders
+real_check/
+temp_extract/
+test_check/
+test_final_check/
+test_static_check/
+sms_reader_app/
+

@@ -1,0 +1,42 @@
+# fly.toml - Fly.io configuration
+# Deploy: fly launch -> fly deploy
+
+app = "7ty-system"
+primary_region = "sin"  # Singapore - gần Việt Nam
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  DATABASE_TYPE = "postgres"
+  PORT = "8000"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8000
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [[services.http_checks]]
+    interval = "30s"
+    timeout = "5s"
+    path = "/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256
