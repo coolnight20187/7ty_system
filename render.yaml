@@ -21,8 +21,6 @@ services:
         generateValue: true
       - key: DEBUG
         value: "false"
-      - key: PYTHON_VERSION
-        value: "3.11.4"
 
 databases:
   - name: seven-postgres
