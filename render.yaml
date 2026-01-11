@@ -22,7 +22,7 @@ services:
       - key: DEBUG
         value: "false"
       - key: PYTHON_VERSION
-        value: "3.11"
+        value: "3.11.4"
 
 databases:
   - name: seven-postgres
