@@ -45,7 +45,7 @@ def is_admin_or_staff(user):
 async def get_customers(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    status: Optional[str] = Query(None, regex="^(active|inactive)$"),
+    status: Optional[str] = Query(None, pattern="^(active|inactive)$"),
     province: Optional[str] = None,
     district: Optional[str] = None,
     ward: Optional[str] = None,
@@ -658,7 +658,7 @@ async def get_customer_stats(
 @router.get("/search/advanced", response_model=CustomerSearchResponse)
 async def advanced_search_customers(
     query_string: str = Query(..., min_length=2),
-    search_fields: str = Query("all", regex="^(all|code|name|phone|email|address)$"),
+    search_fields: str = Query("all", pattern="^(all|code|name|phone|email|address)$"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -720,7 +720,7 @@ async def advanced_search_customers(
 @router.post("/import")
 async def import_customers(
     file_content: str,
-    format: str = Query("csv", regex="^(csv|json)$"),
+    format: str = Query("csv", pattern="^(csv|json)$"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -832,7 +832,7 @@ async def import_customers(
 # Xuất danh sách khách hàng
 @router.get("/export")
 async def export_customers(
-    format: str = Query("csv", regex="^(csv|excel)$"),
+    format: str = Query("csv", pattern="^(csv|excel)$"),
     status: Optional[str] = None,
     from_date: Optional[date] = None,
     to_date: Optional[date] = None,

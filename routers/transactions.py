@@ -135,7 +135,7 @@ def get_transactions(
 
 @router.get("/stats", response_model=TransactionStatsResponse)
 def get_transaction_stats(
-    period: str = Query("today", regex="^(today|yesterday|week|month|year|custom)$"),
+    period: str = Query("today", pattern="^(today|yesterday|week|month|year|custom)$"),
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     current_user: User = Depends(get_current_active_admin),
@@ -465,7 +465,7 @@ def delete_transaction(
 @router.post("/export", response_model=SuccessResponse)
 def export_transactions(
     filter_data: TransactionFilter,
-    format: str = Query("excel", regex="^(excel|csv)$"),
+    format: str = Query("excel", pattern="^(excel|csv)$"),
     current_user: User = Depends(get_current_active_admin),
     db: Session = Depends(get_db)
 ):

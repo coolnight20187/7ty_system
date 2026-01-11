@@ -75,7 +75,7 @@ def date_format_func(column, format_str):
 
 @router.get("/dashboard", response_model=DashboardResponse)
 async def get_dashboard_stats(
-    period: str = Query("today", regex="^(today|week|month|year|custom)$"),
+    period: str = Query("today", pattern="^(today|week|month|year|custom)$"),
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     current_user: User = Depends(get_current_active_user),
@@ -789,8 +789,8 @@ async def generate_system_report(
 
 @router.post("/reports/export")
 async def export_report(
-    report_type: str = Query(..., regex="^(sales|agents|system)$"),
-    format: str = Query("excel", regex="^(excel|csv|pdf)$"),
+    report_type: str = Query(..., pattern="^(sales|agents|system)$"),
+    format: str = Query("excel", pattern="^(excel|csv|pdf)$"),
     report_request: ReportRequest = None,
     current_user: User = Depends(get_current_active_admin),
     db: Session = Depends(get_db)
@@ -1805,7 +1805,7 @@ async def cleanup_logs(
 async def export_logs(
     start_date: str = Query(..., description="Ngày bắt đầu (YYYY-MM-DD)"),
     end_date: str = Query(..., description="Ngày kết thúc (YYYY-MM-DD)"),
-    format: str = Query("csv", regex="^(csv|excel)$"),
+    format: str = Query("csv", pattern="^(csv|excel)$"),
     current_user: User = Depends(get_current_active_admin),
     db: Session = Depends(get_db)
 ):

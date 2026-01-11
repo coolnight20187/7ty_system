@@ -78,7 +78,7 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
             }
@@ -92,7 +92,7 @@ class LoginRequest(BaseModel):
     remember_me: bool = False
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "username": "john_doe",
                 "password": "SecurePass123!",
@@ -106,7 +106,7 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "old_password": "OldPass123!",
                 "new_password": "NewSecurePass456!"
@@ -118,7 +118,7 @@ class AdminResetPasswordRequest(BaseModel):
     new_password: str
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "new_password": "NewSecurePass456!"
             }
@@ -129,7 +129,7 @@ class ForgotPasswordRequest(BaseModel):
     email: EmailStr
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "email": "user@example.com"
             }
@@ -141,7 +141,7 @@ class ResetPasswordRequest(BaseModel):
     new_password: str
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "token": "reset_token_123",
                 "new_password": "NewSecurePass456!"
@@ -180,7 +180,7 @@ class UserCreate(UserBase):
         return v
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "username": "john_doe",
                 "email": "john@example.com",
@@ -225,7 +225,7 @@ class UserUpdate(BaseModel):
         return v
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "username": "john_doe_updated",
                 "email": "john.updated@example.com",
@@ -242,7 +242,7 @@ class UserRoleUpdate(BaseModel):
     
     class Config:
         from_attributes = True
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "role": "agent"
             }
@@ -326,7 +326,7 @@ class AgentCreate(AgentBase):
     user_id: int
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "user_id": 1,
                 "agent_code": "AG202312310001",
@@ -372,7 +372,7 @@ class AgentCreateWithUser(BaseModel):
         return v
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "username": "agent_001",
                 "password": "SecurePass123!",
@@ -409,7 +409,7 @@ class AgentUpdate(BaseModel):
     notes: Optional[str] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "full_name": "Updated Name",
                 "agent_name": "Updated Agent Name",
@@ -471,7 +471,7 @@ class CustomerCreate(CustomerBase):
     password: Optional[str] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "agent_id": None,
                 "customer_code": "THE123456",
@@ -502,7 +502,7 @@ class CustomerUpdate(BaseModel):
     status: Optional[str] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "customer_name": "John Smith Updated",
                 "phone": "+84987654321",
@@ -564,7 +564,7 @@ class BillCreate(BillBase):
     agent_id: int
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "agent_id": 1,
                 "period": "2023-12",
@@ -590,7 +590,7 @@ class BillUpdate(BaseModel):
     notes: Optional[str] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "amount": 1600000,
                 "status": "paid",
@@ -656,7 +656,7 @@ class TransactionCreate(TransactionBase):
     agent_id: Optional[int] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "bill_id": 1,
                 "agent_id": 1,
@@ -678,7 +678,7 @@ class TransactionUpdate(BaseModel):
     notes: Optional[str] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "status": "completed",
                 "payment_method": "credit_card",
@@ -721,7 +721,7 @@ class ActivityLogCreate(ActivityLogBase):
     user_id: int
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "user_id": 1,
                 "activity_type": "login",
@@ -761,7 +761,7 @@ class NotificationCreate(NotificationBase):
     user_id: int
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "user_id": 1,
                 "notification_type": "info",
@@ -798,7 +798,7 @@ class SystemConfigCreate(SystemConfigBase):
     """System configuration creation schema"""
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "key": "maintenance_mode",
                 "value": "false",
@@ -814,7 +814,7 @@ class SystemConfigUpdate(BaseModel):
     is_public: Optional[bool] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "value": "true",
                 "description": "System is under maintenance"
@@ -841,7 +841,7 @@ class ReportRequest(BaseModel):
     group_by: str = "day"
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "report_type": "sales",
                 "start_date": "2023-12-01T00:00:00",
@@ -871,7 +871,7 @@ class ImportRequest(BaseModel):
     overwrite: bool = False
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "import_type": "bills",
                 "file_format": "csv",
@@ -886,7 +886,7 @@ class ExportRequest(BaseModel):
     filters: Optional[Dict[str, Any]] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "export_type": "transactions",
                 "format": "excel",
@@ -902,7 +902,7 @@ class SearchRequest(BaseModel):
     limit: int = Field(10, ge=1, le=100)
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "query": "john",
                 "search_type": "users",
@@ -971,7 +971,7 @@ class AuditLogRequest(BaseModel):
     details: Optional[str] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "action": "user_created",
                 "resource_type": "user",
@@ -989,7 +989,7 @@ class WebhookPayload(BaseModel):
     signature: Optional[str] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "event": "payment.received",
                 "data": {"transaction_id": 1, "amount": 1500000},
@@ -1006,7 +1006,7 @@ class APIKeyCreate(BaseModel):
     expires_at: Optional[datetime] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "Mobile App API Key",
                 "permissions": ["bills:read", "transactions:create"],
@@ -1049,7 +1049,7 @@ class BulkOperationRequest(BaseModel):
     dry_run: bool = False
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "operation": "create",
                 "data": [{"username": "user1", "email": "user1@example.com"}],
@@ -1083,7 +1083,7 @@ class ScheduleCreate(BaseModel):
     is_active: bool = True
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "Daily Backup",
                 "schedule_type": "cron",
@@ -1103,7 +1103,7 @@ class BackupRequest(BaseModel):
     compress: bool = True
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "backup_type": "full",
                 "include_data": True,
@@ -1432,7 +1432,7 @@ class DepositRequest(BaseModel):
     notes: Optional[str] = Field(None, max_length=500)
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "amount": 5000000,
                 "payment_method": "bank_transfer",

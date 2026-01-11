@@ -2364,7 +2364,7 @@ async def import_bills(
 @manager_or_admin()
 async def export_bills(
     filters: Dict = Depends(bill_filter_params),
-    format: str = Query("excel", regex="^(excel|csv)$"),
+    format: str = Query("excel", pattern="^(excel|csv)$"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -2515,7 +2515,7 @@ async def get_overdue_bills(
 @manager_or_admin()
 async def get_bills_summary_report(
     date_range: DateRange,
-    group_by: str = Query("day", regex="^(day|week|month|year)$"),
+    group_by: str = Query("day", pattern="^(day|week|month|year)$"),
     agent_id: Optional[int] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
