@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 400px; margin: auto; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+        button { background: #0d4a4a; color: white; border: none; cursor: pointer; }
+        #result { padding: 10px; margin: 10px 0; background: #f0f0f0; white-space: pre-wrap; word-break: break-all; }
+        .success { background: #d4edda !important; }
+        .error { background: #f8d7da !important; }
+    </style>
+</head>
+<body>
+    <h2>Test Login API</h2>
+    
+    <input type="text" id="username" value="855409876" placeholder="Username">
+    <input type="password" id="password" value="Cool@123" placeholder="Password">
+    <button onclick="testLogin()">Test Login</button>
+    
+    <div id="result">Kết quả sẽ hiển thị ở đây...</div>
+    
+    <h3>Debug Info:</h3>
+    <div id="debug"></div>
+
+    <script>
+        const API_URL = window.location.origin + '/api/auth/agent-login';
+        document.getElementById('debug').innerHTML = `
+            <p><strong>API URL:</strong> ${API_URL}</p>
+            <p><strong>Origin:</strong> ${window.location.origin}</p>
+            <p><strong>Current URL:</strong> ${window.location.href}</p>
+        `;
+
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.className = '';
+            resultDiv.textContent = 'Đang gửi request...';
+            
+            try {
+                console.log('Sending login request to:', API_URL);
+                console.log('Body:', { username, password: '***' });
+                
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultDiv.textContent = 'SUCCESS!\n\n' + JSON.stringify(data, null, 2);
+                    
+                    // Save to localStorage
+                    localStorage.setItem('agent_token', data.access_token);
+                    localStorage.setItem('agent_id', data.agent_id);
+                    localStorage.setItem('agent_name', data.agent_name);
+                    localStorage.setItem('agent_code', data.agent_code);
+                    
+                    alert('Đăng nhập thành công! Token đã được lưu.');
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.textContent = 'ERROR ' + response.status + '\n\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                resultDiv.className = 'error';
+                resultDiv.textContent = 'EXCEPTION:\n\n' + error.message + '\n\nStack: ' + error.stack;
+            }
+        }
+    </script>
+</body>
+</html>
