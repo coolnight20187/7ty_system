@@ -11,35 +11,21 @@ services:
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: 7ty-postgres
+          property: connectionString
       - key: DATABASE_TYPE
         value: postgres
-      - key: DB_HOST
-        fromDatabase:
-          name: 7ty-postgres
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: 7ty-postgres
-          property: port
-      - key: DB_USER
-        fromDatabase:
-          name: 7ty-postgres
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: 7ty-postgres
-          property: password
-      - key: DB_NAME
-        fromDatabase:
-          name: 7ty-postgres
-          property: database
       - key: SECRET_KEY
         generateValue: true
+      - key: DEBUG
+        value: "false"
       - key: PYTHON_VERSION
         value: "3.11"
 
 databases:
   - name: 7ty-postgres
     plan: free
-    databaseName: app_db
-    user: app_admin
+    databaseName: appdb
+    user: appadmin

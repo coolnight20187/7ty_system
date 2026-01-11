@@ -6,23 +6,26 @@ class Settings(BaseSettings):
     # Application
     APP_NAME: str = "7TY.VN"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = True
+    DEBUG: bool = os.getenv("DEBUG", "true").lower() == "true"
     
     # Server
     HOST: str = "0.0.0.0"
-    PORT: int = 8000
+    PORT: int = int(os.getenv("PORT", 8000))
     WORKERS: int = 1
     ALLOWED_HOSTS: list = ["*"]
     
     # Database - Support both SQLite and PostgreSQL
     DATABASE_TYPE: str = os.getenv("DATABASE_TYPE", "sqlite")  # "sqlite" or "postgres"
     
-    # PostgreSQL settings (used if DATABASE_TYPE="postgres")
+    # Direct DATABASE_URL (used by Render, Railway, etc.)
+    DATABASE_URL_DIRECT: Optional[str] = os.getenv("DATABASE_URL", None)
+    
+    # PostgreSQL settings (used if DATABASE_TYPE="postgres" and no DATABASE_URL)
     DB_HOST: str = os.getenv("DB_HOST", "localhost")
-    DB_PORT: int = int(os.getenv("DB_PORT", 5432))
-    DB_USER: str = os.getenv("DB_USER", "7ty_admin")
-    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "7ty_password_secure")
-    DB_NAME: str = os.getenv("DB_NAME", "7ty_vn_db")
+    DB_PORT: int = int(os.getenv("DB_PORT", "5432"))
+    DB_USER: str = os.getenv("DB_USER", "postgres")
+    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "password")
+    DB_NAME: str = os.getenv("DB_NAME", "app_db")
     
     # SQLite settings (used if DATABASE_TYPE="sqlite")
     SQLITE_DB_PATH: str = os.getenv("SQLITE_DB_PATH", "./7ty_vn.db")
@@ -30,8 +33,18 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URL(self) -> str:
         """Generate database URL based on type"""
+        # First check if direct DATABASE_URL is provided (Render, Railway, etc.)
+        if self.DATABASE_URL_DIRECT:
+            url = self.DATABASE_URL_DIRECT
+            # Convert postgres:// to postgresql+psycopg2:// for SQLAlchemy
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+            elif url.startswith("postgresql://"):
+                url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+            return url
+        
+        # Otherwise build from individual components
         if self.DATABASE_TYPE.lower() == "postgres":
-            # Use the DB_HOST from environment (supports both localhost and Docker container names)
             return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         else:
             return f"sqlite:///{self.SQLITE_DB_PATH}"
