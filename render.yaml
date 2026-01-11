@@ -4,14 +4,14 @@
 services:
   # Web Service
   - type: web
-    name: seven
+    name: sevenapp
     runtime: docker
     plan: free
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: seven-postgres
+          name: sevendb
           property: connectionString
       - key: DATABASE_TYPE
         value: postgres
@@ -21,7 +21,7 @@ services:
         value: "false"
 
 databases:
-  - name: seven-postgres
+  - name: sevendb
     plan: free
     databaseName: appdb
     user: appadmin
