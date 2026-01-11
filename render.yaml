@@ -41,5 +41,5 @@ services:
 databases:
   - name: 7ty-postgres
     plan: free
-    databaseName: 7ty_vn_db
-    user: 7ty_admin
+    databaseName: app_db
+    user: app_admin
