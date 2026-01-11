@@ -1,7 +1,7 @@
 # fly.toml - Fly.io configuration
 # Deploy: fly launch -> fly deploy
 
-app = "7ty"
+app = "seven"
 primary_region = "sin"  # Singapore - gần Việt Nam
 
 [build]
