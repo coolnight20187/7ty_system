@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Mở App Ngân Hàng</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: #0068ff; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-info { background: #3b82f6; color: white; }
+        .btn-purple { background: #8b5cf6; color: white; }
+        .btn-pink { background: #ec4899; color: white; }
+        .btn-dark { background: #1f2937; color: white; }
+        
+        #log {
+            background: #1f2937;
+            color: #10b981;
+            border-radius: 12px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .log-error { color: #ef4444; }
+        .log-success { color: #10b981; }
+        .log-info { color: #3b82f6; }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 12px;
+        }
+        .status.ready { background: #d1fae5; color: #059669; }
+        .status.error { background: #fee2e2; color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏦 Test Mở App Ngân Hàng</h1>
+        
+        <div class="card">
+            <h3>📱 Trạng thái</h3>
+            <div id="status" class="status">Đang kiểm tra...</div>
+            <div id="capacitorStatus" class="status">Capacitor: checking...</div>
+        </div>
+        
+        <div class="card">
+            <h3>🏦 Chọn Ngân Hàng</h3>
+            <select id="bankSelect">
+                <option value="970422">MB Bank</option>
+                <option value="970436">Vietcombank</option>
+                <option value="970407">Techcombank</option>
+                <option value="970418">BIDV</option>
+                <option value="970415">VietinBank</option>
+                <option value="970432">VPBank</option>
+                <option value="970423">TPBank</option>
+                <option value="970416">ACB</option>
+            </select>
+            
+            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">
+                <strong>VietQR URL sẽ dùng:</strong><br>
+                <span id="urlPreview" style="word-break: break-all;"></span>
+            </p>
+        </div>
+        
+        <div class="card">
+            <h3>🧪 Phương pháp 1: window.location.href</h3>
+            <button class="btn btn-primary" onclick="testMethod1()">
+                Thử window.location.href
+            </button>
+        </div>
+        
+        <div class="card">
+            <h3>🧪 Phương pháp 2: window.open(_system)</h3>
+            <button class="btn btn-success" onclick="testMethod2()">
+                Thử window.open(_system)
+            </button>
+        </div>
+        
+        <div class="card">
+            <h3>🧪 Phương pháp 3: window.open(_blank)</h3>
+            <button class="btn btn-warning" onclick="testMethod3()">
+                Thử window.open(_blank)
+            </button>
+        </div>
+        
+        <div class="card">
+            <h3>🧪 Phương pháp 4: NativeAppLauncher</h3>
+            <button class="btn btn-danger" onclick="testMethod4()">
+                Thử NativeAppLauncher.openDeeplink()
+            </button>
+        </div>
+        
+        <div class="card">
+            <h3>🧪 Phương pháp 5: Intent URL (Chrome)</h3>
+            <button class="btn btn-info" onclick="testMethod5()">
+                Thử intent:// URL
+            </button>
+        </div>
+        
+        <div class="card">
+            <h3>🧪 Phương pháp 6: Capacitor Browser</h3>
+            <button class="btn btn-purple" onclick="testMethod6()">
+                Thử Capacitor Browser.open()
+            </button>
+        </div>
+        
+        <div class="card">
+            <h3>🧪 Phương pháp 7: Capacitor AppLauncher</h3>
+            <button class="btn btn-pink" onclick="testMethod7()">
+                Thử AppLauncher.openUrl()
+            </button>
+        </div>
+        
+        <div class="card">
+            <h3>🧪 Phương pháp 8: BankLauncher Plugin</h3>
+            <button class="btn btn-dark" onclick="testMethod8()">
+                Thử BankLauncher.openUrl()
+            </button>
+        </div>
+        
+        <div class="card">
+            <h3>🧪 Phương pháp 9: iframe</h3>
+            <button class="btn btn-primary" onclick="testMethod9()">
+                Thử iframe src
+            </button>
+        </div>
+        
+        <div class="card">
+            <h3>🧪 Phương pháp 10: Link Click</h3>
+            <button class="btn btn-success" onclick="testMethod10()">
+                Thử tạo &lt;a&gt; và click
+            </button>
+        </div>
+        
+        <div class="card">
+            <h3>📋 Log</h3>
+            <button class="btn btn-dark" onclick="clearLog()" style="margin-bottom: 10px;">Xóa Log</button>
+            <div id="log"></div>
+        </div>
+    </div>
+    
+    <iframe id="hiddenFrame" style="display:none;"></iframe>
+    
+    <script src="https://unpkg.com/@pwabuilder/pwainstall"></script>
+    <script type="module">
+        import { Capacitor } from 'https://unpkg.com/@pwabuilder/pwainstall/node_modules/@pwabuilder/pwainstall/node_modules/@pwabuilder/pwainstall/node_modules/@pwabuilder/pwainstall/node_modules/@pwabuilder/pwainstall/src/capacitor.js';
+    </script>
+    <script src="capacitor.js"></script>
+    <script>
+        // ==================== UTILITIES ====================
+        function log(msg, type = 'info') {
+            const logEl = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'log-error' : type === 'success' ? 'log-success' : 'log-info';
+            logEl.innerHTML += `<span class="${className}">[${time}] ${msg}</span>\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${msg}`);
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        function getVietQRUrl() {
+            const bankBin = document.getElementById('bankSelect').value;
+            // Test với tài khoản mẫu
+            const receiverBin = '970415'; // VietinBank
+            const accountNo = '123456789';
+            const amount = 10000;
+            const content = 'TEST123';
+            
+            return `https://dl.vietqr.io/pay?app=${bankBin}&ba=${receiverBin}-${accountNo}&am=${amount}&tn=${encodeURIComponent(content)}`;
+        }
+        
+        function updatePreview() {
+            document.getElementById('urlPreview').textContent = getVietQRUrl();
+        }
+        
+        // ==================== INIT ====================
+        window.addEventListener('load', () => {
+            updatePreview();
+            document.getElementById('bankSelect').addEventListener('change', updatePreview);
+            
+            // Check Capacitor
+            if (window.Capacitor) {
+                const isNative = window.Capacitor.isNativePlatform ? window.Capacitor.isNativePlatform() : false;
+                document.getElementById('capacitorStatus').textContent = `Capacitor: ${isNative ? 'Native (APK)' : 'Web'}`;
+                document.getElementById('capacitorStatus').className = 'status ready';
+                log('Capacitor detected: ' + (isNative ? 'Native' : 'Web'), 'success');
+            } else {
+                document.getElementById('capacitorStatus').textContent = 'Capacitor: Not found';
+                document.getElementById('capacitorStatus').className = 'status error';
+                log('Capacitor not detected', 'error');
+            }
+            
+            // Check NativeAppLauncher
+            if (window.NativeAppLauncher) {
+                document.getElementById('status').textContent = 'NativeAppLauncher: Ready ✓';
+                document.getElementById('status').className = 'status ready';
+                log('NativeAppLauncher ready!', 'success');
+            } else {
+                document.getElementById('status').textContent = 'NativeAppLauncher: Not found';
+                document.getElementById('status').className = 'status error';
+                log('NativeAppLauncher not available', 'error');
+            }
+            
+            // Log available plugins
+            if (window.Capacitor && window.Capacitor.Plugins) {
+                const plugins = Object.keys(window.Capacitor.Plugins);
+                log('Available plugins: ' + plugins.join(', '), 'info');
+            }
+        });
+        
+        // ==================== TEST METHODS ====================
+        
+        // Method 1: window.location.href
+        window.testMethod1 = function() {
+            const url = getVietQRUrl();
+            log('Method 1: window.location.href', 'info');
+            log('URL: ' + url, 'info');
+            try {
+                window.location.href = url;
+                log('Executed successfully', 'success');
+            } catch (e) {
+                log('Error: ' + e.message, 'error');
+            }
+        };
+        
+        // Method 2: window.open(_system)
+        window.testMethod2 = function() {
+            const url = getVietQRUrl();
+            log('Method 2: window.open(_system)', 'info');
+            try {
+                const w = window.open(url, '_system');
+                log('Result: ' + (w ? 'Window opened' : 'Blocked or null'), w ? 'success' : 'error');
+            } catch (e) {
+                log('Error: ' + e.message, 'error');
+            }
+        };
+        
+        // Method 3: window.open(_blank)
+        window.testMethod3 = function() {
+            const url = getVietQRUrl();
+            log('Method 3: window.open(_blank)', 'info');
+            try {
+                const w = window.open(url, '_blank');
+                log('Result: ' + (w ? 'Window opened' : 'Blocked or null'), w ? 'success' : 'error');
+            } catch (e) {
+                log('Error: ' + e.message, 'error');
+            }
+        };
+        
+        // Method 4: NativeAppLauncher
+        window.testMethod4 = function() {
+            const url = getVietQRUrl();
+            log('Method 4: NativeAppLauncher.openDeeplink()', 'info');
+            
+            if (!window.NativeAppLauncher) {
+                log('NativeAppLauncher not available!', 'error');
+                return;
+            }
+            
+            try {
+                const result = window.NativeAppLauncher.openDeeplink(url);
+                log('Result: ' + result, result === 'SUCCESS' ? 'success' : 'error');
+            } catch (e) {
+                log('Error: ' + e.message, 'error');
+            }
+        };
+        
+        // Method 5: Intent URL (for Chrome)
+        window.testMethod5 = function() {
+            const bankBin = document.getElementById('bankSelect').value;
+            const intentUrl = `intent://dl.vietqr.io/pay?app=${bankBin}&ba=970415-123456789&am=10000&tn=TEST123#Intent;scheme=https;package=com.android.chrome;end;`;
+            
+            log('Method 5: Intent URL', 'info');
+            log('URL: ' + intentUrl, 'info');
+            
+            try {
+                window.location.href = intentUrl;
+                log('Executed', 'success');
+            } catch (e) {
+                log('Error: ' + e.message, 'error');
+            }
+        };
+        
+        // Method 6: Capacitor Browser
+        window.testMethod6 = async function() {
+            const url = getVietQRUrl();
+            log('Method 6: Capacitor Browser.open()', 'info');
+            
+            if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.Browser) {
+                log('Browser plugin not available!', 'error');
+                return;
+            }
+            
+            try {
+                const { Browser } = window.Capacitor.Plugins;
+                await Browser.open({ url: url });
+                log('Browser opened successfully', 'success');
+            } catch (e) {
+                log('Error: ' + e.message, 'error');
+            }
+        };
+        
+        // Method 7: Capacitor AppLauncher
+        window.testMethod7 = async function() {
+            const url = getVietQRUrl();
+            log('Method 7: Capacitor AppLauncher.openUrl()', 'info');
+            
+            if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.AppLauncher) {
+                log('AppLauncher plugin not available!', 'error');
+                return;
+            }
+            
+            try {
+                const { AppLauncher } = window.Capacitor.Plugins;
+                const result = await AppLauncher.openUrl({ url: url });
+                log('Result: ' + JSON.stringify(result), result.completed ? 'success' : 'error');
+            } catch (e) {
+                log('Error: ' + JSON.stringify(e), 'error');
+            }
+        };
+        
+        // Method 8: BankLauncher Plugin (Custom)
+        window.testMethod8 = async function() {
+            const url = getVietQRUrl();
+            log('Method 8: BankLauncher.openUrl()', 'info');
+            
+            if (!window.Capacitor || !window.Capacitor.Plugins || !window.Capacitor.Plugins.BankLauncher) {
+                log('BankLauncher plugin not available!', 'error');
+                return;
+            }
+            
+            try {
+                const { BankLauncher } = window.Capacitor.Plugins;
+                const result = await BankLauncher.openUrl({ url: url });
+                log('Result: ' + JSON.stringify(result), result.success ? 'success' : 'error');
+            } catch (e) {
+                log('Error: ' + JSON.stringify(e), 'error');
+            }
+        };
+        
+        // Method 9: iframe
+        window.testMethod9 = function() {
+            const url = getVietQRUrl();
+            log('Method 9: iframe src', 'info');
+            
+            try {
+                document.getElementById('hiddenFrame').src = url;
+                log('iframe src set', 'success');
+            } catch (e) {
+                log('Error: ' + e.message, 'error');
+            }
+        };
+        
+        // Method 10: Create <a> and click
+        window.testMethod10 = function() {
+            const url = getVietQRUrl();
+            log('Method 10: Create <a> and click', 'info');
+            
+            try {
+                const a = document.createElement('a');
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                log('Link clicked', 'success');
+            } catch (e) {
+                log('Error: ' + e.message, 'error');
+            }
+        };
+    </script>
+</body>
+</html>

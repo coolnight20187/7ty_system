@@ -1,0 +1,36 @@
+{
+  "name": "7ty-agent-app",
+  "version": "2.41.0",
+  "description": "Ứng dụng Đại Lý 7TY.VN - Thu hộ hóa đơn điện, nạp tiền, thanh toán",
+  "main": "index.js",
+  "scripts": {
+    "start": "http-server www -p 3000",
+    "build": "node build.js",
+    "cap:init": "npx cap init \"7TY Agent\" com.ty7.agent --web-dir www",
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "build:android": "npm run build && npm run cap:sync && cd android && ./gradlew assembleRelease",
+    "build:ios": "npm run build && npm run cap:sync && cd ios && xcodebuild"
+  },
+  "dependencies": {
+    "@capacitor-community/barcode-scanner": "^4.0.1",
+    "@capacitor/android": "^5.0.0",
+    "@capacitor/app": "^5.0.0",
+    "@capacitor/browser": "^5.2.1",
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/ios": "^5.0.0",
+    "@capacitor/share": "^5.0.8",
+    "@capacitor/splash-screen": "^5.0.0",
+    "@capacitor/status-bar": "^5.0.0",
+    "@e-is/capacitor-bluetooth-serial": "^6.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^5.0.0",
+    "http-server": "^14.1.1"
+  },
+  "author": "7TY.VN",
+  "license": "MIT"
+}

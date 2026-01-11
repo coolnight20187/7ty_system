@@ -1,0 +1,37 @@
+{
+  "appId": "com.ty7.agent",
+  "appName": "7TY Agent",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "cleartext": true,
+    "androidScheme": "https",
+    "hostname": "app.7ty.vn"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0d4a4a",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": true,
+      "spinnerColor": "#c9a227"
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0d4a4a"
+    },
+    "BarcodeScanner": {
+      "cameraPermission": "Ứng dụng cần truy cập camera để quét mã QR"
+    }
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true,
+    "backgroundColor": "#00000000"
+  },
+  "ios": {
+    "contentInset": "always",
+    "allowsLinkPreview": false
+  }
+}

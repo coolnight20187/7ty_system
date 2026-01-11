@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1735948800000,
+    "bank_code": "ACB",
+    "account_number": "17246947",
+    "account_name": "PHAN MINH PHONG",
+    "branch": "Phan Rí Cửa",
+    "note": "Tài khoản chính hệ thống",
+    "is_active": true,
+    "created_at": "2026-01-04T00:00:00.000Z"
+  }
+]
