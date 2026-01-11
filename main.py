@@ -108,13 +108,78 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Error creating database tables: {e}")
     
-    # Khởi tạo dữ liệu mẫu (nếu cần) - comment out temporarily
-    # await initialize_sample_data()
+    # Khởi tạo tài khoản Admin chính thức
+    await init_admin_account()
     
     yield
     
     # Shutdown
     logger.info("Shutting down 7TY.VN System...")
+
+
+async def init_admin_account():
+    """
+    Khởi tạo tài khoản Admin chính thức khi server khởi động.
+    Sử dụng biến môi trường ADMIN_USERNAME và ADMIN_PASSWORD để bảo mật.
+    """
+    from sqlalchemy.orm import Session
+    from models import User, UserRole
+    from security import get_password_hash
+    from datetime import timezone
+    
+    # Lấy thông tin từ biến môi trường
+    admin_username = os.environ.get('ADMIN_USERNAME', 'phanminhphong')
+    admin_password = os.environ.get('ADMIN_PASSWORD')
+    admin_email = os.environ.get('ADMIN_EMAIL', f'{admin_username}@7ty.vn')
+    admin_fullname = os.environ.get('ADMIN_FULLNAME', 'Phan Minh Phong')
+    
+    # Chỉ tạo nếu có ADMIN_PASSWORD trong biến môi trường
+    if not admin_password:
+        logger.info("ADMIN_PASSWORD not set - skipping admin creation. Set environment variable to auto-create admin.")
+        return
+    
+    db: Session = next(get_db())
+    try:
+        # Kiểm tra admin đã tồn tại chưa
+        existing_admin = db.query(User).filter(
+            (User.username == admin_username) | (User.role == UserRole.ADMIN)
+        ).first()
+        
+        if existing_admin:
+            logger.info(f"Admin account already exists: {existing_admin.username}")
+            return
+        
+        # Tạo tài khoản admin mới
+        admin_user = User(
+            username=admin_username,
+            email=admin_email,
+            full_name=admin_fullname,
+            password_hash=get_password_hash(admin_password),
+            role=UserRole.ADMIN,
+            is_active=True,
+            is_staff=True,
+            is_verified=True,
+            is_deleted=False,
+            login_attempts=0,
+            two_factor_enabled=False,
+            api_calls_count=0,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
+        )
+        
+        db.add(admin_user)
+        db.commit()
+        
+        logger.info(f"✅ Admin account created successfully!")
+        logger.info(f"   Username: {admin_username}")
+        logger.info(f"   Email: {admin_email}")
+        logger.info(f"   Role: ADMIN")
+        
+    except Exception as e:
+        logger.error(f"Error creating admin account: {e}")
+        db.rollback()
+    finally:
+        db.close()
     # Đóng kết nối database, v.v.
 
 async def initialize_sample_data():
