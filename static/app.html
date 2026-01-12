@@ -10266,7 +10266,9 @@ PA12345678903"></textarea>
         }
 
         function getStatusClass(status) {
-            switch(status) {
+            // Normalize to lowercase for comparison
+            const s = (status || '').toLowerCase();
+            switch(s) {
                 case 'active': return 'status-active';
                 case 'pending': return 'status-pending';
                 case 'inactive': return 'status-inactive';
@@ -10278,7 +10280,9 @@ PA12345678903"></textarea>
         }
 
         function getStatusText(status) {
-            switch(status) {
+            // Normalize to lowercase for comparison
+            const s = (status || '').toLowerCase();
+            switch(s) {
                 case 'active': return 'Hoạt động';
                 case 'pending': return 'Chờ duyệt';
                 case 'inactive': return 'Ngừng hoạt động';
@@ -11272,12 +11276,12 @@ PA12345678903"></textarea>
                                                 </span>
                                             </span>
                                             <select name="agent_status" class="form-control edit-mode" style="display: ${isEditMode ? 'block' : 'none'};">
-                                                <option value="active" ${agent.status === 'active' ? 'selected' : ''}>✅ Hoạt động</option>
-                                                <option value="pending" ${agent.status === 'pending' ? 'selected' : ''}>⏳ Chờ duyệt</option>
-                                                <option value="suspended" ${agent.status === 'suspended' ? 'selected' : ''}>⏸️ Tạm ngưng</option>
-                                                <option value="inactive" ${agent.status === 'inactive' ? 'selected' : ''}>🔴 Ngừng hoạt động</option>
-                                                <option value="blocked" ${agent.status === 'blocked' ? 'selected' : ''}>🚫 Bị khóa</option>
-                                                <option value="rejected" ${agent.status === 'rejected' ? 'selected' : ''}>❌ Bị từ chối</option>
+                                                <option value="ACTIVE" ${agent.status === 'ACTIVE' || agent.status === 'active' ? 'selected' : ''}>✅ Hoạt động</option>
+                                                <option value="PENDING" ${agent.status === 'PENDING' || agent.status === 'pending' ? 'selected' : ''}>⏳ Chờ duyệt</option>
+                                                <option value="SUSPENDED" ${agent.status === 'SUSPENDED' || agent.status === 'suspended' ? 'selected' : ''}>⏸️ Tạm ngưng</option>
+                                                <option value="INACTIVE" ${agent.status === 'INACTIVE' || agent.status === 'inactive' ? 'selected' : ''}>🔴 Ngừng hoạt động</option>
+                                                <option value="BLOCKED" ${agent.status === 'BLOCKED' || agent.status === 'blocked' ? 'selected' : ''}>🚫 Bị khóa</option>
+                                                <option value="REJECTED" ${agent.status === 'REJECTED' || agent.status === 'rejected' ? 'selected' : ''}>❌ Bị từ chối</option>
                                             </select>
                                         </div>
                                         <div class="detail-row">

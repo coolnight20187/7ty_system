@@ -1386,13 +1386,16 @@ async def update_agent_with_files(
         # Update status if provided
         if agent_status:
             try:
-                agent.status = AgentStatus(agent_status)
+                # Convert lowercase to uppercase for enum compatibility
+                status_upper = agent_status.upper()
+                agent.status = AgentStatus(status_upper)
                 # If activating, set approved info
-                if agent_status == 'active' and not agent.approved_at:
+                if status_upper == 'ACTIVE' and not agent.approved_at:
                     agent.approved_at = datetime.utcnow()
                     agent.approved_by_id = current_user.id
-            except ValueError:
-                pass  # Invalid status, ignore
+                logger.info(f"Agent {agent.agent_code} status updated to {status_upper}")
+            except ValueError as e:
+                logger.warning(f"Invalid status value: {agent_status}, error: {e}")
         
         # Update commission settings
         if commission_rate is not None:
