@@ -243,40 +243,58 @@ async def change_agent_password(
     """
     Đổi mật khẩu đăng nhập cho đại lý
     """
-    current_password = password_data.get("current_password")
-    new_password = password_data.get("new_password")
-    
-    if not current_password or not new_password:
+    try:
+        current_password = password_data.get("current_password")
+        new_password = password_data.get("new_password")
+        
+        if not current_password or not new_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Vui lòng cung cấp mật khẩu hiện tại và mật khẩu mới"
+            )
+        
+        if len(new_password) < 6:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Mật khẩu mới phải có ít nhất 6 ký tự"
+            )
+        
+        # Get fresh user from database
+        user = db.query(User).filter(User.id == current_user.id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Không tìm thấy người dùng"
+            )
+        
+        # Verify current password
+        if not SecurityUtils.verify_password(current_password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Mật khẩu hiện tại không đúng"
+            )
+        
+        # Update password using set_password method
+        user.set_password(new_password)
+        user.updated_at = datetime.utcnow()
+        
+        db.commit()
+        
+        logger.info(f"Agent {user.id} changed password successfully")
+        
+        return {
+            "success": True,
+            "message": "Đổi mật khẩu thành công"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Change password error: {e}")
+        db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Vui lòng cung cấp mật khẩu hiện tại và mật khẩu mới"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi đổi mật khẩu: {str(e)}"
         )
-    
-    if len(new_password) < 6:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Mật khẩu mới phải có ít nhất 6 ký tự"
-        )
-    
-    # Verify current password
-    if not SecurityUtils.verify_password(current_password, current_user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Mật khẩu hiện tại không đúng"
-        )
-    
-    # Update password
-    current_user.password_hash = SecurityUtils.hash_password(new_password)
-    current_user.updated_at = datetime.utcnow()
-    
-    db.commit()
-    
-    logger.info(f"Agent {current_user.id} changed password successfully")
-    
-    return {
-        "success": True,
-        "message": "Đổi mật khẩu thành công"
-    }
 
 
 @router.post("/by-user/{user_id}/activate")
