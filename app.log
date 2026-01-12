@@ -5292,3 +5292,18 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2026-01-11 16:01:43,430 - database - ERROR - Database error: 401: Tên đăng nhập hoặc mật khẩu không chính xác
 2026-01-11 16:01:43,430 - main - WARNING - HTTPException: 401 - Tên đăng nhập hoặc mật khẩu không chính xác
 2026-01-11 16:01:46,180 - routers.auth - INFO - User logged in: admin from 14.184.59.231
+2026-01-12 01:57:49,347 - main - INFO - Starting 7TY.VN System...
+2026-01-12 01:57:49,386 - main - INFO - Database tables created successfully
+2026-01-12 01:57:49,388 - main - INFO - Database migrations completed
+2026-01-12 01:57:49,389 - main - INFO - ADMIN_PASSWORD not set - skipping admin creation. Set environment variable to auto-create admin.
+2026-01-12 01:57:59,762 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/home/codespace/.python/current/lib/python3.12/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-01-12 01:58:00,104 - routers.auth - INFO - User logged in: admin from 127.0.0.1
+2026-01-12 01:58:05,269 - routers.auth - INFO - User logged in: admin from 127.0.0.1
+2026-01-12 01:59:11,901 - routers.auth - INFO - User logged in: admin from 127.0.0.1
+2026-01-12 01:59:11,953 - routers.agents - INFO - Agent AG000001 status updated to ACTIVE
+2026-01-12 01:59:11,973 - routers.agents - INFO - Agent updated with files: AG000001 by admin
