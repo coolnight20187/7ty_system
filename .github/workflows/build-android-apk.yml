@@ -44,13 +44,12 @@ jobs:
       working-directory: sms_reader_app/android
       run: chmod +x gradlew
 
-    - name: Clean build cache
-      working-directory: sms_reader_app/android
-      run: ./gradlew clean
+    - name: Clean Gradle caches
+      run: rm -rf ~/.gradle/caches/jars-* ~/.gradle/caches/transforms-* || true
 
     - name: Build Debug APK
       working-directory: sms_reader_app/android
-      run: ./gradlew assembleDebug --no-daemon
+      run: ./gradlew assembleDebug --no-daemon --no-build-cache
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
