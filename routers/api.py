@@ -938,7 +938,11 @@ def parse_agent_code_from_content(content: str) -> Optional[str]:
     """
     Parse mã đại lý từ nội dung chuyển khoản
     
+    Format chuẩn từ app Đại lý: NAP {agent_code} {amount}
+    Ví dụ: NAP AG000001 1000000
+    
     Hỗ trợ các cú pháp:
+    - NAP AG000001 1000000 (format chuẩn app)
     - NAP 7TY001
     - 7TY 7TY001
     - 7TY001 NAP
@@ -955,24 +959,17 @@ def parse_agent_code_from_content(content: str) -> Optional[str]:
     content = re.sub(r'[^A-Z0-9\s]', ' ', content)
     content = ' '.join(content.split())  # Gộp nhiều space thành 1
     
-    # Pattern cho mã đại lý - hỗ trợ nhiều format:
-    # - 7TY001 (số + chữ + số)
-    # - AG000001 (chữ + số)
-    # - DL001 (chữ + số)
-    agent_code_pattern = r'\b([A-Z0-9]{2,8})\b'  # Tổng quát hơn
-    
-    # Pattern cụ thể cho các format phổ biến
-    specific_patterns = [
-        r'\b(\d?[A-Z]{2,5}\d{3,6})\b',  # 7TY001, DL001, AG000001
-        r'\b([A-Z]{2,5}\d{3,6})\b',      # DL001, AG000001
-    ]
-    
-    # Pattern kèm từ khóa
+    # Pattern kèm từ khóa - ưu tiên cao nhất
     keyword_patterns = [
-        r'(?:NAP|NAPTIEN|TOPUP|DEPOSIT)\s+(\d?[A-Z]{2,5}\d{3,6})',  # NAP 7TY001
-        r'(?:NAP|NAPTIEN|TOPUP|DEPOSIT)\s+([A-Z]{2,5}\d{3,6})',     # NAP DL001
-        r'(?:7TY|DL|DAILY|AGENT)\s+(\d?[A-Z]{2,5}\d{3,6})',         # 7TY 7TY001
-        r'(\d?[A-Z]{2,5}\d{3,6})\s+(?:NAP|NAPTIEN|TOPUP)',          # 7TY001 NAP
+        # Format chuẩn app Đại lý: NAP AG000001 1000000
+        r'(?:NAP|NAPTIEN|TOPUP|DEPOSIT)\s+(\d?[A-Z]{2,5}\d{3,6})\s+\d+',
+        r'(?:NAP|NAPTIEN|TOPUP|DEPOSIT)\s+([A-Z]{2,5}\d{3,6})\s+\d+',
+        # Không có số tiền
+        r'(?:NAP|NAPTIEN|TOPUP|DEPOSIT)\s+(\d?[A-Z]{2,5}\d{3,6})',
+        r'(?:NAP|NAPTIEN|TOPUP|DEPOSIT)\s+([A-Z]{2,5}\d{3,6})',
+        # Các format khác
+        r'(?:7TY|DL|DAILY|AGENT)\s+(\d?[A-Z]{2,5}\d{3,6})',
+        r'(\d?[A-Z]{2,5}\d{3,6})\s+(?:NAP|NAPTIEN|TOPUP)',
     ]
     
     # Thử với keyword patterns trước
@@ -980,6 +977,12 @@ def parse_agent_code_from_content(content: str) -> Optional[str]:
         match = re.search(pattern, content)
         if match:
             return match.group(1)
+    
+    # Pattern cụ thể cho các format phổ biến
+    specific_patterns = [
+        r'\b(\d?[A-Z]{2,5}\d{3,6})\b',  # 7TY001, DL001, AG000001
+        r'\b([A-Z]{2,5}\d{3,6})\b',      # DL001, AG000001
+    ]
     
     # Sau đó thử specific patterns
     for pattern in specific_patterns:

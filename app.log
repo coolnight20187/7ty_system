@@ -5307,3 +5307,70 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2026-01-12 01:59:11,901 - routers.auth - INFO - User logged in: admin from 127.0.0.1
 2026-01-12 01:59:11,953 - routers.agents - INFO - Agent AG000001 status updated to ACTIVE
 2026-01-12 01:59:11,973 - routers.agents - INFO - Agent updated with files: AG000001 by admin
+2026-01-12 09:37:16,487 - main - INFO - Starting 7TY.VN System...
+2026-01-12 09:37:16,488 - main - ERROR - Error creating database tables: (psycopg2.OperationalError) connection to server at "127.0.0.1", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-01-12 09:37:16,488 - main - ERROR - Migration error: (psycopg2.OperationalError) connection to server at "127.0.0.1", port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-01-12 09:37:16,489 - main - INFO - ADMIN_PASSWORD not set - skipping admin creation. Set environment variable to auto-create admin.
+2026-01-12 09:37:25,308 - main - INFO - Shutting down 7TY.VN System...
+2026-01-12 09:37:27,952 - main - INFO - Starting 7TY.VN System...
+2026-01-12 09:37:27,956 - main - INFO - Database tables created successfully
+2026-01-12 09:37:27,958 - main - INFO - Database migrations completed
+2026-01-12 09:37:27,958 - main - INFO - ADMIN_PASSWORD not set - skipping admin creation. Set environment variable to auto-create admin.
+2026-01-12 09:38:23,329 - routers.auth - WARNING - Failed login attempt for non-existent user: phanminhphong from 116.98.254.22
+2026-01-12 09:38:23,330 - database - ERROR - Database error: 401: Tên đăng nhập hoặc mật khẩu không chính xác
+2026-01-12 09:38:23,330 - main - WARNING - HTTPException: 401 - Tên đăng nhập hoặc mật khẩu không chính xác
+2026-01-12 09:38:29,754 - routers.auth - WARNING - Failed login attempt for non-existent user: phanminhphong from 116.98.254.22
+2026-01-12 09:38:29,754 - database - ERROR - Database error: 401: Tên đăng nhập hoặc mật khẩu không chính xác
+2026-01-12 09:38:29,755 - main - WARNING - HTTPException: 401 - Tên đăng nhập hoặc mật khẩu không chính xác
+2026-01-12 09:38:33,943 - routers.auth - WARNING - Failed login attempt for non-existent user: phanminhphong from 116.98.254.22
+2026-01-12 09:38:33,944 - database - ERROR - Database error: 401: Tên đăng nhập hoặc mật khẩu không chính xác
+2026-01-12 09:38:33,944 - main - WARNING - HTTPException: 401 - Tên đăng nhập hoặc mật khẩu không chính xác
+2026-01-12 09:38:42,255 - routers.auth - WARNING - Failed login attempt for non-existent user: phanminhphong from 116.98.254.22
+2026-01-12 09:38:42,255 - database - ERROR - Database error: 401: Tên đăng nhập hoặc mật khẩu không chính xác
+2026-01-12 09:38:42,256 - main - WARNING - HTTPException: 401 - Tên đăng nhập hoặc mật khẩu không chính xác
+2026-01-12 09:45:35,100 - main - INFO - Shutting down 7TY.VN System...
+2026-01-12 09:45:38,722 - main - INFO - Starting 7TY.VN System...
+2026-01-12 09:45:38,727 - main - INFO - Database tables created successfully
+2026-01-12 09:45:38,730 - main - INFO - Database migrations completed
+2026-01-12 09:45:38,731 - main - INFO - ADMIN_PASSWORD not set - skipping admin creation. Set environment variable to auto-create admin.
+2026-01-12 09:45:50,806 - routers.api - INFO - Received bank webhook: {"source": "sms_admin_test", "bank_code": "MB", "amount": 100000, "content": "NAP 7TY001", "transaction_id": "TEST_123", "transaction_type": "deposit", "raw_message": "MB Bank: TK 0123456789 +100000VND"}
+2026-01-12 09:45:50,807 - routers.api - WARNING - Could not parse agent code from: NAP 7TY001
+2026-01-12 09:45:50,829 - routers.api - INFO - Saved unmatched transaction: TXN1768211150809589561 - 100000
+2026-01-12 09:47:20,190 - routers.api - INFO - Received bank webhook: {"source": "sms_admin_test", "bank_code": "MB", "amount": 100000, "content": "NAP 7TY001", "transaction_id": "TEST_456", "transaction_type": "deposit", "raw_message": "MB Bank: TK 0123456789 +100000VND luc 12/01/2026. ND: NAP 7TY001"}
+2026-01-12 09:47:20,190 - routers.api - WARNING - Could not parse agent code from: NAP 7TY001
+2026-01-12 09:47:20,207 - routers.api - INFO - Saved unmatched transaction: TXN1768211240191599296 - 100000
+2026-01-12 09:48:10,881 - main - INFO - Shutting down 7TY.VN System...
+2026-01-12 09:48:14,800 - main - INFO - Starting 7TY.VN System...
+2026-01-12 09:48:14,804 - main - INFO - Database tables created successfully
+2026-01-12 09:48:14,807 - main - INFO - Database migrations completed
+2026-01-12 09:48:14,807 - main - INFO - ADMIN_PASSWORD not set - skipping admin creation. Set environment variable to auto-create admin.
+2026-01-12 09:48:26,986 - routers.api - INFO - Received bank webhook: {"source": "sms_admin_test", "bank_code": "MB", "amount": 100000, "content": "NAP 7TY001", "transaction_id": "TEST_789", "transaction_type": "deposit", "raw_message": "MB Bank: TK 0123456789 +100000VND"}
+2026-01-12 09:48:26,997 - routers.api - WARNING - Agent not found: 7TY001
+2026-01-12 09:48:27,017 - routers.api - INFO - Saved unmatched transaction: TXN1768211306997767237 - 100000
+2026-01-12 09:48:50,249 - main - INFO - Shutting down 7TY.VN System...
+2026-01-12 09:48:53,670 - main - INFO - Starting 7TY.VN System...
+2026-01-12 09:48:53,674 - main - INFO - Database tables created successfully
+2026-01-12 09:48:53,676 - main - INFO - Database migrations completed
+2026-01-12 09:48:53,676 - main - INFO - ADMIN_PASSWORD not set - skipping admin creation. Set environment variable to auto-create admin.
+2026-01-12 09:49:10,110 - routers.api - INFO - Received bank webhook: {"source": "sms_admin_test", "bank_code": "MB", "amount": 100000, "content": "NAP 7TY001", "transaction_id": "TEST_SUCCESS", "transaction_type": "deposit", "raw_message": "MB Bank: TK 0123456789 +100000VND luc 12/01/2026. ND: NAP 7TY001"}
+2026-01-12 09:49:10,143 - routers.api - INFO - Auto deposit successful: 7TY001 +100000 -> Balance: 100000
+2026-01-12 09:49:10,143 - routers.api - WARNING - Failed to send websocket notification: cannot import name 'ws_manager' from 'routers.websocket' (/workspaces/7ty_system/routers/websocket.py)
+2026-01-12 10:11:23,377 - main - INFO - Shutting down 7TY.VN System...
+2026-01-12 10:12:10,221 - main - INFO - Starting 7TY.VN System...
+2026-01-12 10:12:10,228 - main - INFO - Database tables created successfully
+2026-01-12 10:12:10,230 - main - INFO - Database migrations completed
+2026-01-12 10:12:10,231 - main - INFO - ADMIN_PASSWORD not set - skipping admin creation. Set environment variable to auto-create admin.
+2026-01-12 10:19:16,995 - main - INFO - Shutting down 7TY.VN System...
+2026-01-12 10:19:20,379 - main - INFO - Starting 7TY.VN System...
+2026-01-12 10:19:20,383 - main - INFO - Database tables created successfully
+2026-01-12 10:19:20,385 - main - INFO - Database migrations completed
+2026-01-12 10:19:20,386 - main - INFO - ADMIN_PASSWORD not set - skipping admin creation. Set environment variable to auto-create admin.
+2026-01-12 11:26:06,381 - routers.api - INFO - Received bank webhook: {"amount": 100000, "type": "credit", "content": "NAP 7TY001", "reference": "TEST123456"}
+2026-01-12 11:26:06,414 - routers.api - INFO - Auto deposit successful: 7TY001 +100000 -> Balance: 200000
+2026-01-12 11:26:06,414 - routers.api - WARNING - Failed to send websocket notification: cannot import name 'ws_manager' from 'routers.websocket' (/workspaces/7ty_system/routers/websocket.py)
