@@ -28,7 +28,7 @@ from dependencies import get_api_key
 from utils import generate_bill_code, generate_transaction_code, encrypt_data, decrypt_data
 from services.webhook_service import send_webhook_notification
 
-router = APIRouter(prefix="/v1", tags=["api"])
+router = APIRouter(tags=["api"])
 
 # API Authentication Middleware
 async def verify_api_signature(
@@ -757,9 +757,10 @@ async def receive_bank_webhook(
             }
         
         # Tìm đại lý
+        from models import AgentStatus
         agent = db.query(Agent).filter(
             Agent.agent_code == agent_code.upper(),
-            Agent.status == "active"
+            Agent.status == AgentStatus.ACTIVE
         ).first()
         
         if not agent:
@@ -943,7 +944,7 @@ def parse_agent_code_from_content(content: str) -> Optional[str]:
     - 7TY001 NAP
     - NAPTIEN 7TY001
     - DL 7TY001 (đại lý)
-    - Hoặc chỉ mã đại lý: 7TY001
+    - Hoặc chỉ mã đại lý: 7TY001, AG000001
     """
     if not content:
         return None
@@ -954,22 +955,39 @@ def parse_agent_code_from_content(content: str) -> Optional[str]:
     content = re.sub(r'[^A-Z0-9\s]', ' ', content)
     content = ' '.join(content.split())  # Gộp nhiều space thành 1
     
-    # Pattern cho mã đại lý (ví dụ: 7TY001, DL001, AG001...)
-    # Thường là 3-5 chữ cái + 3-6 số
-    agent_code_pattern = r'\b([A-Z]{2,5}\d{3,6})\b'
+    # Pattern cho mã đại lý - hỗ trợ nhiều format:
+    # - 7TY001 (số + chữ + số)
+    # - AG000001 (chữ + số)
+    # - DL001 (chữ + số)
+    agent_code_pattern = r'\b([A-Z0-9]{2,8})\b'  # Tổng quát hơn
     
-    # Pattern kèm từ khóa
-    patterns = [
-        r'(?:NAP|NAPTIEN|TOPUP|DEPOSIT)\s+([A-Z]{2,5}\d{3,6})',  # NAP 7TY001
-        r'(?:7TY|DL|DAILY|AGENT)\s+([A-Z]{2,5}\d{3,6})',  # 7TY 7TY001
-        r'([A-Z]{2,5}\d{3,6})\s+(?:NAP|NAPTIEN|TOPUP)',  # 7TY001 NAP
-        agent_code_pattern  # Chỉ mã đại lý
+    # Pattern cụ thể cho các format phổ biến
+    specific_patterns = [
+        r'\b(\d?[A-Z]{2,5}\d{3,6})\b',  # 7TY001, DL001, AG000001
+        r'\b([A-Z]{2,5}\d{3,6})\b',      # DL001, AG000001
     ]
     
-    for pattern in patterns:
+    # Pattern kèm từ khóa
+    keyword_patterns = [
+        r'(?:NAP|NAPTIEN|TOPUP|DEPOSIT)\s+(\d?[A-Z]{2,5}\d{3,6})',  # NAP 7TY001
+        r'(?:NAP|NAPTIEN|TOPUP|DEPOSIT)\s+([A-Z]{2,5}\d{3,6})',     # NAP DL001
+        r'(?:7TY|DL|DAILY|AGENT)\s+(\d?[A-Z]{2,5}\d{3,6})',         # 7TY 7TY001
+        r'(\d?[A-Z]{2,5}\d{3,6})\s+(?:NAP|NAPTIEN|TOPUP)',          # 7TY001 NAP
+    ]
+    
+    # Thử với keyword patterns trước
+    for pattern in keyword_patterns:
         match = re.search(pattern, content)
         if match:
             return match.group(1)
+    
+    # Sau đó thử specific patterns
+    for pattern in specific_patterns:
+        match = re.search(pattern, content)
+        if match:
+            return match.group(1)
+    
+    return None
     
     return None
 

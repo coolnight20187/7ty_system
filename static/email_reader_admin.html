@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#1e3a5f">
+    <title>7TY Email Reader - Admin</title>
+    <link rel="icon" type="image/png" href="/static/images/logo.png?v=2">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #1e3a5f;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        
+        body {
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .header p {
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-title i { color: var(--accent); }
+        
+        .status-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .status-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .status-dot.active {
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.inactive { background: var(--danger); }
+        .status-dot.warning { background: var(--warning); }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .status-info h3 { font-size: 14px; font-weight: 600; }
+        .status-info p { font-size: 12px; color: rgba(255,255,255,0.6); }
+        
+        .input-group {
+            margin-bottom: 16px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 14px;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .input-group input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #0891b2);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+        
+        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-group .btn {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .email-list {
+            margin-top: 16px;
+        }
+        
+        .email-item {
+            background: rgba(0,0,0,0.2);
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .email-item-info h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .email-item-info p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .email-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .btn-icon:hover { background: rgba(255,255,255,0.2); }
+        .btn-icon.danger:hover { background: var(--danger); }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-item {
+            background: rgba(0,0,0,0.2);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            margin-top: 4px;
+        }
+        
+        .transactions-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .tx-item {
+            background: rgba(0,0,0,0.2);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .tx-item.credit {
+            border-left: 3px solid var(--success);
+        }
+        
+        .tx-item.debit {
+            border-left: 3px solid var(--danger);
+        }
+        
+        .tx-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        
+        .tx-bank {
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .tx-amount {
+            font-weight: 700;
+        }
+        
+        .tx-amount.credit { color: var(--success); }
+        .tx-amount.debit { color: var(--danger); }
+        
+        .tx-content {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .tx-time {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+        }
+        
+        .info-box {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+        
+        .info-box h4 {
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+        
+        .info-box p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 4px;
+        }
+        
+        .info-box code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.show { display: block; }
+        
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .version {
+            text-align: center;
+            color: rgba(255,255,255,0.3);
+            font-size: 11px;
+            margin-top: 30px;
+        }
+        
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-envelope-open-text"></i> 7TY Email Reader</h1>
+        <p>Tự động đọc email ngân hàng để nạp tiền</p>
+    </div>
+    
+    <!-- Status Card -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-signal"></i> Trạng Thái</div>
+        <div class="status-box">
+            <div class="status-dot" id="statusDot"></div>
+            <div class="status-info">
+                <h3 id="statusText">Đang kiểm tra...</h3>
+                <p id="statusSubtext">Vui lòng đợi</p>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value" id="statEmails">0</div>
+                <div class="stat-label">Email đã cấu hình</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statChecked">0</div>
+                <div class="stat-label">Đã kiểm tra</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="statProcessed">0</div>
+                <div class="stat-label">Đã xử lý</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Info Box -->
+    <div class="info-box">
+        <h4><i class="fas fa-info-circle"></i> Hướng dẫn</h4>
+        <p><strong>Gmail:</strong> Cần bật 2FA và tạo <code>App Password</code></p>
+        <p><strong>Outlook:</strong> Dùng mật khẩu thường hoặc App Password</p>
+        <p>Email sẽ được kiểm tra tự động mỗi 60 giây</p>
+    </div>
+    
+    <!-- Add Email Card -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-plus-circle"></i> Thêm Email</div>
+        
+        <div class="input-group">
+            <label>Địa chỉ Email</label>
+            <input type="email" id="emailAddress" placeholder="your-email@gmail.com">
+        </div>
+        
+        <div class="input-group">
+            <label>Mật khẩu / App Password</label>
+            <input type="password" id="emailPassword" placeholder="App Password cho Gmail">
+        </div>
+        
+        <div class="input-group">
+            <label>IMAP Server (tùy chọn)</label>
+            <input type="text" id="imapServer" placeholder="imap.gmail.com (tự động detect)">
+        </div>
+        
+        <div class="input-group">
+            <label>Số tài khoản ngân hàng liên kết (tùy chọn)</label>
+            <input type="text" id="bankAccount" placeholder="VD: 0123456789">
+        </div>
+        
+        <div class="btn-group">
+            <button class="btn btn-outline" onclick="testConnection()">
+                <i class="fas fa-plug"></i> Test
+            </button>
+            <button class="btn btn-primary" onclick="addEmailConfig()">
+                <i class="fas fa-save"></i> Thêm
+            </button>
+        </div>
+    </div>
+    
+    <!-- Email List Card -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-list"></i> Email Đã Cấu Hình</div>
+        
+        <div id="emailList" class="email-list">
+            <div class="loading" id="loadingEmails">
+                <div class="spinner"></div>
+                <p>Đang tải...</p>
+            </div>
+            <div id="noEmails" class="hidden" style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">
+                Chưa có email nào được cấu hình
+            </div>
+        </div>
+    </div>
+    
+    <!-- Control Card -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-play-circle"></i> Điều Khiển</div>
+        
+        <button class="btn btn-success" onclick="checkEmailsNow()">
+            <i class="fas fa-sync"></i> Kiểm Tra Email Ngay
+        </button>
+        
+        <button class="btn btn-outline" onclick="viewTransactions()">
+            <i class="fas fa-history"></i> Xem Giao Dịch Gần Đây
+        </button>
+    </div>
+    
+    <!-- Transactions Card -->
+    <div class="card hidden" id="transactionsCard">
+        <div class="card-title"><i class="fas fa-exchange-alt"></i> Giao Dịch Từ Email</div>
+        
+        <div class="loading" id="loadingTx">
+            <div class="spinner"></div>
+            <p>Đang tải...</p>
+        </div>
+        
+        <div id="transactionsList" class="transactions-list"></div>
+    </div>
+    
+    <div class="version">7TY Email Reader v1.0.0 • © 2026 7TY.VN</div>
+
+    <script>
+        // Tự động detect server URL
+        const API_BASE = window.location.origin + '/api/v1';
+        let stats = { checked: 0, processed: 0 };
+        
+        // Load on init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEmailConfigs();
+            loadStats();
+        });
+        
+        function loadStats() {
+            const saved = localStorage.getItem('email_reader_stats');
+            if (saved) {
+                stats = JSON.parse(saved);
+                document.getElementById('statChecked').textContent = stats.checked;
+                document.getElementById('statProcessed').textContent = stats.processed;
+            }
+        }
+        
+        function saveStats() {
+            localStorage.setItem('email_reader_stats', JSON.stringify(stats));
+        }
+        
+        async function loadEmailConfigs() {
+            document.getElementById('loadingEmails').classList.add('show');
+            
+            try {
+                const response = await fetch(`${API_BASE}/email/configs`);
+                const data = await response.json();
+                
+                document.getElementById('loadingEmails').classList.remove('show');
+                
+                if (data.success && data.configs.length > 0) {
+                    document.getElementById('noEmails').classList.add('hidden');
+                    document.getElementById('statEmails').textContent = data.configs.length;
+                    
+                    const listHtml = data.configs.map(config => `
+                        <div class="email-item">
+                            <div class="email-item-info">
+                                <h4><i class="fas fa-envelope"></i> ${config.email}</h4>
+                                <p>${config.imap_server}:${config.imap_port} ${config.bank_account ? '• TK: ' + config.bank_account : ''}</p>
+                            </div>
+                            <div class="email-item-actions">
+                                <button class="btn-icon danger" onclick="removeEmail('${config.email}')" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('emailList').innerHTML = listHtml;
+                    updateStatus('active', 'Đang hoạt động', `${data.configs.length} email đã cấu hình`);
+                } else {
+                    document.getElementById('noEmails').classList.remove('hidden');
+                    document.getElementById('emailList').innerHTML = '';
+                    document.getElementById('emailList').appendChild(document.getElementById('noEmails'));
+                    updateStatus('warning', 'Chưa cấu hình', 'Thêm email để bắt đầu');
+                }
+            } catch (e) {
+                document.getElementById('loadingEmails').classList.remove('show');
+                updateStatus('inactive', 'Lỗi kết nối', e.message);
+            }
+        }
+        
+        function updateStatus(status, text, subtext) {
+            const dot = document.getElementById('statusDot');
+            dot.className = 'status-dot ' + status;
+            document.getElementById('statusText').textContent = text;
+            document.getElementById('statusSubtext').textContent = subtext || '';
+        }
+        
+        async function testConnection() {
+            const email = document.getElementById('emailAddress').value.trim();
+            const password = document.getElementById('emailPassword').value;
+            const imapServer = document.getElementById('imapServer').value.trim() || null;
+            
+            if (!email || !password) {
+                alert('Vui lòng nhập email và mật khẩu');
+                return;
+            }
+            
+            updateStatus('warning', 'Đang test...', 'Vui lòng đợi');
+            
+            try {
+                const response = await fetch(`${API_BASE}/email/test-connection`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        imap_server: imapServer
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateStatus('active', 'Kết nối thành công!', `Server: ${data.server}, ${data.total_emails} emails`);
+                    alert(`✅ Kết nối thành công!\n\nServer: ${data.server}\nTổng email: ${data.total_emails}`);
+                } else {
+                    updateStatus('inactive', 'Kết nối thất bại', data.message);
+                    alert(`❌ ${data.message}`);
+                }
+            } catch (e) {
+                updateStatus('inactive', 'Lỗi', e.message);
+                alert('Lỗi: ' + e.message);
+            }
+        }
+        
+        async function addEmailConfig() {
+            const email = document.getElementById('emailAddress').value.trim();
+            const password = document.getElementById('emailPassword').value;
+            const imapServer = document.getElementById('imapServer').value.trim() || null;
+            const bankAccount = document.getElementById('bankAccount').value.trim() || null;
+            
+            if (!email || !password) {
+                alert('Vui lòng nhập email và mật khẩu');
+                return;
+            }
+            
+            updateStatus('warning', 'Đang thêm...', 'Vui lòng đợi');
+            
+            try {
+                const response = await fetch(`${API_BASE}/email/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        imap_server: imapServer,
+                        bank_account: bankAccount
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success || response.ok) {
+                    alert('✅ ' + (data.message || 'Đã thêm email thành công!'));
+                    
+                    // Clear form
+                    document.getElementById('emailAddress').value = '';
+                    document.getElementById('emailPassword').value = '';
+                    document.getElementById('imapServer').value = '';
+                    document.getElementById('bankAccount').value = '';
+                    
+                    // Reload list
+                    loadEmailConfigs();
+                } else {
+                    alert('❌ ' + (data.detail || data.message || 'Lỗi thêm email'));
+                    updateStatus('inactive', 'Thêm thất bại', data.detail || data.message);
+                }
+            } catch (e) {
+                alert('Lỗi: ' + e.message);
+                updateStatus('inactive', 'Lỗi', e.message);
+            }
+        }
+        
+        async function removeEmail(email) {
+            if (!confirm(`Xóa cấu hình email: ${email}?`)) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/email/config/${encodeURIComponent(email)}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ Đã xóa email');
+                    loadEmailConfigs();
+                } else {
+                    alert('❌ ' + (data.message || 'Lỗi xóa email'));
+                }
+            } catch (e) {
+                alert('Lỗi: ' + e.message);
+            }
+        }
+        
+        async function checkEmailsNow() {
+            updateStatus('warning', 'Đang kiểm tra...', 'Vui lòng đợi');
+            
+            try {
+                const response = await fetch(`${API_BASE}/email/check-now`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    stats.checked++;
+                    stats.processed += data.processed || 0;
+                    saveStats();
+                    
+                    document.getElementById('statChecked').textContent = stats.checked;
+                    document.getElementById('statProcessed').textContent = stats.processed;
+                    
+                    updateStatus('active', 'Kiểm tra xong', data.message);
+                    
+                    if (data.results && data.results.length > 0) {
+                        let msg = `✅ ${data.message}\n\n`;
+                        data.results.forEach(r => {
+                            if (r.success && r.data) {
+                                msg += `• ${r.data.agent_code}: +${r.data.amount.toLocaleString()}đ\n`;
+                            }
+                        });
+                        alert(msg);
+                    } else {
+                        alert(`✅ ${data.message}`);
+                    }
+                } else {
+                    updateStatus('inactive', 'Lỗi', data.detail || data.message);
+                    alert('❌ ' + (data.detail || data.message));
+                }
+            } catch (e) {
+                updateStatus('inactive', 'Lỗi', e.message);
+                alert('Lỗi: ' + e.message);
+            }
+        }
+        
+        async function viewTransactions() {
+            document.getElementById('transactionsCard').classList.remove('hidden');
+            document.getElementById('loadingTx').classList.add('show');
+            document.getElementById('transactionsList').innerHTML = '';
+            
+            try {
+                const response = await fetch(`${API_BASE}/email/transactions?hours=24`);
+                const data = await response.json();
+                
+                document.getElementById('loadingTx').classList.remove('show');
+                
+                if (data.success && data.transactions.length > 0) {
+                    const html = data.transactions.map(tx => `
+                        <div class="tx-item ${tx.transaction_type}">
+                            <div class="tx-header">
+                                <span class="tx-bank">${tx.bank_code}</span>
+                                <span class="tx-amount ${tx.transaction_type}">
+                                    ${tx.transaction_type === 'credit' ? '+' : '-'}${tx.amount.toLocaleString()}đ
+                                </span>
+                            </div>
+                            <div class="tx-content">${tx.content.substring(0, 100)}</div>
+                            <div class="tx-time">
+                                <i class="fas fa-clock"></i> ${tx.transaction_time || 'N/A'}
+                                • <i class="fas fa-envelope"></i> ${tx.email}
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('transactionsList').innerHTML = html;
+                } else {
+                    document.getElementById('transactionsList').innerHTML = `
+                        <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 20px;">
+                            Không có giao dịch nào trong 24h qua
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                document.getElementById('loadingTx').classList.remove('show');
+                document.getElementById('transactionsList').innerHTML = `
+                    <div style="text-align: center; color: var(--danger); padding: 20px;">
+                        Lỗi: ${e.message}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

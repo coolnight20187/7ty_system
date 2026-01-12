@@ -196,7 +196,8 @@
     <div class="version">7TY SMS Reader v1.0.0 • © 2026 7TY.VN</div>
 
     <script>
-        const DEFAULT_SERVER = 'http://192.168.2.10:8000';
+        // Tự động detect server URL dựa trên hostname hiện tại
+        const DEFAULT_SERVER = window.location.origin || 'http://localhost:8000';
         let SMSReader = null;
         let logs = JSON.parse(localStorage.getItem('smsLogs') || '[]');
         let stats = JSON.parse(localStorage.getItem('smsStats') || '{"total":0,"success":0}');

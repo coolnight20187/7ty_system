@@ -83,6 +83,13 @@ try:
 except ImportError as e:
     logging.warning(f"Failed to import rewards router: {e}")
 
+# Email webhook router
+email_webhook = None
+try:
+    from routers import email_webhook
+except ImportError as e:
+    logging.warning(f"Failed to import email_webhook router: {e}")
+
 # Thiết lập logging
 logging.basicConfig(
     level=logging.INFO,
@@ -403,6 +410,8 @@ if system:
     app.include_router(system.router, prefix="/api/system", tags=["System"])
 if rewards:
     app.include_router(rewards.router, prefix="/api/rewards", tags=["Rewards"])
+if email_webhook:
+    app.include_router(email_webhook.router, prefix="/api/v1", tags=["Email Webhook"])
 
 # WebSocket endpoints
 @app.websocket("/ws")

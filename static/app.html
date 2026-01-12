@@ -2969,6 +2969,7 @@
             </button>
             <div class="submenu" id="settingsSubmenu">
                 <button class="submenu-item" data-page="settings-system">Cài đặt Hệ thống</button>
+                <button class="submenu-item" data-page="settings-email-reader"><i class="fas fa-envelope-open-text me-1"></i> Email Reader</button>
                 <button class="submenu-item" data-page="settings-security">Bảo mật</button>
                 <button class="submenu-item" data-page="settings-backup">Sao lưu & Khôi phục</button>
                 <button class="submenu-item" data-page="settings-proxy"><i class="fas fa-network-wired me-1"></i> Proxy Pool</button>
@@ -4234,6 +4235,142 @@ PA12345678903"></textarea>
             <!-- Settings System Page -->
             <div id="settings-system" class="page-content">
                 <div class="card"><div class="card-header"><h4>Cài đặt Hệ thống</h4></div><div class="card-body"><form id="systemSettingsForm"><div class="row"><div class="col-md-6"><div class="form-group"><label>Tên hệ thống</label><input type="text" class="form-control" name="system_name" value="7TY.VN"></div></div><div class="col-md-6"><div class="form-group"><label>Email hỗ trợ</label><input type="email" class="form-control" name="support_email" value="support@7ty.vn"></div></div></div><button type="submit" class="btn btn-primary mt-3"><i class="fas fa-save"></i> Lưu</button></form></div></div>
+            </div>
+            
+            <!-- Settings Email Reader Page -->
+            <div id="settings-email-reader" class="page-content">
+                <div class="row">
+                    <!-- Email Status & Stats -->
+                    <div class="col-md-4">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-envelope-open-text me-2 text-primary"></i>Email Reader</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="status-indicator me-3" id="emailReaderStatus" style="width: 14px; height: 14px; border-radius: 50%; background: #6c757d;"></div>
+                                    <div>
+                                        <strong id="emailReaderStatusText">Chưa cấu hình</strong>
+                                        <div class="text-muted small" id="emailReaderStatusSub">Thêm email để bắt đầu</div>
+                                    </div>
+                                </div>
+                                <div class="row text-center mb-3">
+                                    <div class="col-4">
+                                        <h4 class="text-primary mb-0" id="emailConfigCount">0</h4>
+                                        <small class="text-muted">Email</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <h4 class="text-success mb-0" id="emailCheckedCount">0</h4>
+                                        <small class="text-muted">Đã check</small>
+                                    </div>
+                                    <div class="col-4">
+                                        <h4 class="text-info mb-0" id="emailProcessedCount">0</h4>
+                                        <small class="text-muted">Đã xử lý</small>
+                                    </div>
+                                </div>
+                                <button class="btn btn-success btn-sm w-100 mb-2" onclick="checkEmailsNow()">
+                                    <i class="fas fa-sync"></i> Kiểm Tra Email Ngay
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm w-100" onclick="viewEmailTransactions()">
+                                    <i class="fas fa-history"></i> Xem Giao Dịch Email
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Info Box -->
+                        <div class="card mb-3 border-info">
+                            <div class="card-body">
+                                <h6 class="text-info"><i class="fas fa-info-circle"></i> Hướng dẫn</h6>
+                                <p class="small mb-1"><strong>Gmail:</strong> Cần bật 2FA và tạo <code>App Password</code></p>
+                                <p class="small mb-1"><strong>Outlook:</strong> Dùng mật khẩu thường hoặc App Password</p>
+                                <p class="small mb-0">Email sẽ được kiểm tra tự động mỗi 60 giây</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Email Form -->
+                    <div class="col-md-4">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Thêm Email</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Địa chỉ Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="newEmailAddress" placeholder="your-email@gmail.com">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Mật khẩu / App Password <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" id="newEmailPassword" placeholder="App Password cho Gmail">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">IMAP Server (tùy chọn)</label>
+                                    <input type="text" class="form-control" id="newImapServer" placeholder="imap.gmail.com (tự động detect)">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Số TK Ngân hàng liên kết</label>
+                                    <input type="text" class="form-control" id="newBankAccount" placeholder="VD: 0123456789">
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary" onclick="testEmailConnection()">
+                                        <i class="fas fa-plug"></i> Test Kết Nối
+                                    </button>
+                                    <button class="btn btn-primary" onclick="addEmailConfig()">
+                                        <i class="fas fa-save"></i> Thêm Email
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Email List -->
+                    <div class="col-md-4">
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Email Đã Cấu Hình</h5>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="loadEmailConfigs()">
+                                    <i class="fas fa-sync"></i>
+                                </button>
+                            </div>
+                            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                <div id="emailConfigList">
+                                    <div class="text-center text-muted py-3">
+                                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Email Transactions -->
+                <div class="card" id="emailTransactionsCard" style="display: none;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Giao Dịch Từ Email (24h)</h5>
+                        <button class="btn btn-sm btn-secondary" onclick="document.getElementById('emailTransactionsCard').style.display='none'">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Thời gian</th>
+                                        <th>Email</th>
+                                        <th>Ngân hàng</th>
+                                        <th>Loại</th>
+                                        <th>Số tiền</th>
+                                        <th>Nội dung</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="emailTransactionsTable">
+                                    <tr><td colspan="6" class="text-center text-muted">Chưa có dữ liệu</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Settings Proxy Page -->
@@ -6541,6 +6678,10 @@ PA12345678903"></textarea>
                 case 'settings-proxy':
                     initProxyPageEvents();
                     await loadProxyList();
+                    break;
+                case 'settings-email-reader':
+                    loadEmailConfigs();
+                    loadEmailReaderStats();
                     break;
                 case 'reports-sales':
                     initReportsPage();
@@ -16923,6 +17064,277 @@ PA12345678903"></textarea>
             const table2 = document.getElementById('topAgentsTable2');
             if (table1) table1.innerHTML = html;
             if (table2) table2.innerHTML = html;
+        }
+
+        // =====================================================
+        // EMAIL READER FUNCTIONS
+        // =====================================================
+        
+        let emailReaderStats = { checked: 0, processed: 0 };
+        
+        // Load email reader stats from localStorage
+        function loadEmailReaderStats() {
+            const saved = localStorage.getItem('email_reader_stats');
+            if (saved) {
+                emailReaderStats = JSON.parse(saved);
+                document.getElementById('emailCheckedCount').textContent = emailReaderStats.checked;
+                document.getElementById('emailProcessedCount').textContent = emailReaderStats.processed;
+            }
+        }
+        
+        // Load email configurations
+        async function loadEmailConfigs() {
+            const listEl = document.getElementById('emailConfigList');
+            if (!listEl) return;
+            
+            listEl.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/v1/email/configs`);
+                const data = await response.json();
+                
+                if (data.success && data.configs && data.configs.length > 0) {
+                    document.getElementById('emailConfigCount').textContent = data.configs.length;
+                    updateEmailReaderStatus('active', 'Đang hoạt động', `${data.configs.length} email đã cấu hình`);
+                    
+                    let html = '';
+                    data.configs.forEach(config => {
+                        html += `
+                            <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+                                <div>
+                                    <div class="fw-bold"><i class="fas fa-envelope me-1 text-primary"></i> ${config.email}</div>
+                                    <small class="text-muted">${config.imap_server}:${config.imap_port}</small>
+                                    ${config.bank_account ? `<br><small class="text-info">TK: ${config.bank_account}</small>` : ''}
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeEmailConfig('${config.email}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    listEl.innerHTML = html;
+                } else {
+                    listEl.innerHTML = '<div class="text-center text-muted py-3"><i class="fas fa-inbox"></i><br>Chưa có email nào</div>';
+                    updateEmailReaderStatus('inactive', 'Chưa cấu hình', 'Thêm email để bắt đầu');
+                }
+            } catch (e) {
+                console.error('Error loading email configs:', e);
+                listEl.innerHTML = '<div class="text-center text-danger py-3">Lỗi tải dữ liệu</div>';
+                updateEmailReaderStatus('error', 'Lỗi kết nối', e.message);
+            }
+        }
+        
+        // Update email reader status
+        function updateEmailReaderStatus(status, text, subtext) {
+            const indicator = document.getElementById('emailReaderStatus');
+            const textEl = document.getElementById('emailReaderStatusText');
+            const subEl = document.getElementById('emailReaderStatusSub');
+            
+            if (indicator) {
+                const colors = {
+                    'active': '#10b981',
+                    'inactive': '#6c757d',
+                    'warning': '#f59e0b',
+                    'error': '#ef4444'
+                };
+                indicator.style.background = colors[status] || colors.inactive;
+                if (status === 'active') {
+                    indicator.style.boxShadow = '0 0 10px #10b981';
+                } else {
+                    indicator.style.boxShadow = 'none';
+                }
+            }
+            if (textEl) textEl.textContent = text;
+            if (subEl) subEl.textContent = subtext;
+        }
+        
+        // Test email connection
+        async function testEmailConnection() {
+            const email = document.getElementById('newEmailAddress').value.trim();
+            const password = document.getElementById('newEmailPassword').value;
+            const imapServer = document.getElementById('newImapServer').value.trim() || null;
+            
+            if (!email || !password) {
+                showToast('Vui lòng nhập email và mật khẩu', 'warning');
+                return;
+            }
+            
+            updateEmailReaderStatus('warning', 'Đang test...', 'Vui lòng đợi');
+            
+            try {
+                const response = await fetch(`${API_BASE}/v1/email/test-connection`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, imap_server: imapServer })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateEmailReaderStatus('active', 'Kết nối thành công!', `Server: ${data.server}`);
+                    showToast(`✅ Kết nối thành công! Server: ${data.server}, ${data.total_emails} emails`, 'success');
+                } else {
+                    updateEmailReaderStatus('error', 'Kết nối thất bại', data.message);
+                    showToast('❌ ' + data.message, 'error');
+                }
+            } catch (e) {
+                updateEmailReaderStatus('error', 'Lỗi', e.message);
+                showToast('Lỗi: ' + e.message, 'error');
+            }
+        }
+        
+        // Add email configuration
+        async function addEmailConfig() {
+            const email = document.getElementById('newEmailAddress').value.trim();
+            const password = document.getElementById('newEmailPassword').value;
+            const imapServer = document.getElementById('newImapServer').value.trim() || null;
+            const bankAccount = document.getElementById('newBankAccount').value.trim() || null;
+            
+            if (!email || !password) {
+                showToast('Vui lòng nhập email và mật khẩu', 'warning');
+                return;
+            }
+            
+            updateEmailReaderStatus('warning', 'Đang thêm...', 'Vui lòng đợi');
+            
+            try {
+                const response = await fetch(`${API_BASE}/v1/email/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, imap_server: imapServer, bank_account: bankAccount })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success || response.ok) {
+                    showToast('✅ ' + (data.message || 'Đã thêm email thành công!'), 'success');
+                    
+                    // Clear form
+                    document.getElementById('newEmailAddress').value = '';
+                    document.getElementById('newEmailPassword').value = '';
+                    document.getElementById('newImapServer').value = '';
+                    document.getElementById('newBankAccount').value = '';
+                    
+                    // Reload list
+                    loadEmailConfigs();
+                } else {
+                    showToast('❌ ' + (data.detail || data.message || 'Lỗi thêm email'), 'error');
+                    updateEmailReaderStatus('error', 'Thêm thất bại', data.detail || data.message);
+                }
+            } catch (e) {
+                showToast('Lỗi: ' + e.message, 'error');
+                updateEmailReaderStatus('error', 'Lỗi', e.message);
+            }
+        }
+        
+        // Remove email configuration
+        async function removeEmailConfig(email) {
+            if (!confirm(`Xóa cấu hình email: ${email}?`)) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/v1/email/config/${encodeURIComponent(email)}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('✅ Đã xóa email', 'success');
+                    loadEmailConfigs();
+                } else {
+                    showToast('❌ ' + (data.message || 'Lỗi xóa email'), 'error');
+                }
+            } catch (e) {
+                showToast('Lỗi: ' + e.message, 'error');
+            }
+        }
+        
+        // Check emails now
+        async function checkEmailsNow() {
+            updateEmailReaderStatus('warning', 'Đang kiểm tra...', 'Vui lòng đợi');
+            
+            try {
+                const response = await fetch(`${API_BASE}/v1/email/check-now`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    emailReaderStats.checked++;
+                    emailReaderStats.processed += data.processed || 0;
+                    localStorage.setItem('email_reader_stats', JSON.stringify(emailReaderStats));
+                    
+                    document.getElementById('emailCheckedCount').textContent = emailReaderStats.checked;
+                    document.getElementById('emailProcessedCount').textContent = emailReaderStats.processed;
+                    
+                    updateEmailReaderStatus('active', 'Kiểm tra xong', data.message);
+                    
+                    if (data.results && data.results.length > 0) {
+                        let msg = data.message + '\n\n';
+                        data.results.forEach(r => {
+                            if (r.success && r.data) {
+                                msg += `• ${r.data.agent_code}: +${r.data.amount.toLocaleString()}đ\n`;
+                            }
+                        });
+                        showToast('✅ ' + msg, 'success');
+                    } else {
+                        showToast('✅ ' + data.message, 'success');
+                    }
+                } else {
+                    updateEmailReaderStatus('error', 'Lỗi', data.detail || data.message);
+                    showToast('❌ ' + (data.detail || data.message), 'error');
+                }
+            } catch (e) {
+                updateEmailReaderStatus('error', 'Lỗi', e.message);
+                showToast('Lỗi: ' + e.message, 'error');
+            }
+        }
+        
+        // View email transactions
+        async function viewEmailTransactions() {
+            const card = document.getElementById('emailTransactionsCard');
+            const tbody = document.getElementById('emailTransactionsTable');
+            
+            if (!card || !tbody) return;
+            
+            card.style.display = 'block';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/v1/email/transactions?hours=24`);
+                const data = await response.json();
+                
+                if (data.success && data.transactions && data.transactions.length > 0) {
+                    let html = '';
+                    data.transactions.forEach(tx => {
+                        const typeClass = tx.transaction_type === 'credit' ? 'text-success' : 'text-danger';
+                        const typeIcon = tx.transaction_type === 'credit' ? '+' : '-';
+                        
+                        html += `
+                            <tr>
+                                <td><small>${tx.transaction_time || 'N/A'}</small></td>
+                                <td><small>${tx.email}</small></td>
+                                <td><span class="badge bg-primary">${tx.bank_code}</span></td>
+                                <td><span class="badge ${tx.transaction_type === 'credit' ? 'bg-success' : 'bg-danger'}">${tx.transaction_type === 'credit' ? 'Nhận' : 'Gửi'}</span></td>
+                                <td class="${typeClass} fw-bold">${typeIcon}${tx.amount.toLocaleString()}đ</td>
+                                <td><small class="text-muted">${tx.content.substring(0, 50)}...</small></td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Không có giao dịch nào trong 24h qua</td></tr>';
+                }
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Lỗi: ${e.message}</td></tr>`;
+            }
+        }
+        
+        // Auto load email configs when page loads
+        if (document.getElementById('emailConfigList')) {
+            loadEmailConfigs();
+            loadEmailReaderStats();
         }
     </script>
 </body>
