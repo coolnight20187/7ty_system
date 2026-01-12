@@ -427,12 +427,15 @@ public class BankNotificationService extends NotificationListenerService {
      */
     private void sendToServer(final TransactionInfo txInfo, final String rawContent, final String bankCode) {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        final String serverUrl = prefs.getString(KEY_SERVER_URL, "");
+        String serverUrl = prefs.getString(KEY_SERVER_URL, "");
         
+        // Use default URL if not configured
         if (serverUrl.isEmpty()) {
-            Log.e(TAG, "Server URL not configured");
-            return;
+            serverUrl = "https://sevenapp.onrender.com";
+            Log.i(TAG, "Using default server URL: " + serverUrl);
         }
+        
+        final String finalServerUrl = serverUrl;
         
         executor.execute(new Runnable() {
             @Override
@@ -452,7 +455,7 @@ public class BankNotificationService extends NotificationListenerService {
                     payload.put("timestamp", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
                     
                     // Send to server
-                    URL url = new URL(serverUrl + "/api/v1/bank-webhook");
+                    URL url = new URL(finalServerUrl + "/api/v1/bank-webhook");
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("POST");
                     conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");

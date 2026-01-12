@@ -91,10 +91,10 @@ public class NotificationReaderPlugin extends Plugin {
                 return;
             }
             
-            // Save to SharedPreferences
-            getContext().getSharedPreferences("BankReaderConfig", 0)
+            // Save to SharedPreferences - use same key as BankNotificationService
+            getContext().getSharedPreferences("SMSReaderPrefs", 0)
                 .edit()
-                .putString("serverUrl", serverUrl)
+                .putString("server_url", serverUrl)
                 .apply();
             
             // Update the service if running
@@ -115,8 +115,8 @@ public class NotificationReaderPlugin extends Plugin {
     @PluginMethod
     public void getConfig(PluginCall call) {
         try {
-            String serverUrl = getContext().getSharedPreferences("BankReaderConfig", 0)
-                .getString("serverUrl", "https://sevenapp.onrender.com");
+            String serverUrl = getContext().getSharedPreferences("SMSReaderPrefs", 0)
+                .getString("server_url", "https://sevenapp.onrender.com");
             
             JSObject result = new JSObject();
             result.put("serverUrl", serverUrl);
