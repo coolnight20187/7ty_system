@@ -988,8 +988,6 @@ def parse_agent_code_from_content(content: str) -> Optional[str]:
             return match.group(1)
     
     return None
-    
-    return None
 
 
 async def save_unmatched_transaction(db: Session, amount: float, content: str, bank_ref: str, payload: Dict):
