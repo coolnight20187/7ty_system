@@ -210,6 +210,43 @@ public class NotificationReaderPlugin extends Plugin {
     }
     
     /**
+     * Get debug logs from the service
+     */
+    @PluginMethod
+    public void getDebugLogs(PluginCall call) {
+        try {
+            java.util.List<String> logs = BankNotificationService.getDebugLogs();
+            JSObject result = new JSObject();
+            
+            org.json.JSONArray logsArray = new org.json.JSONArray();
+            for (String log : logs) {
+                logsArray.put(log);
+            }
+            result.put("logs", logsArray);
+            result.put("count", logs.size());
+            call.resolve(result);
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting debug logs", e);
+            call.reject("Error getting debug logs: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Clear debug logs
+     */
+    @PluginMethod
+    public void clearDebugLogs(PluginCall call) {
+        try {
+            BankNotificationService.clearDebugLogs();
+            JSObject result = new JSObject();
+            result.put("success", true);
+            call.resolve(result);
+        } catch (Exception e) {
+            call.reject("Error clearing debug logs: " + e.getMessage());
+        }
+    }
+    
+    /**
      * Check if the notification listener service is enabled for this app
      */
     private boolean isNotificationServiceEnabled() {

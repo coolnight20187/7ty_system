@@ -282,16 +282,16 @@
             </button>
         </div>
         
-        <!-- Config Card -->
+        <!-- Config Card - Auto-filled -->
         <div class="card">
             <div class="card-title"><i class="fas fa-cog"></i> Cấu Hình Server</div>
             <div class="input-group">
-                <label>Server URL</label>
-                <input type="text" id="serverUrl" placeholder="https://sevenapp.onrender.com">
+                <label>Server URL (Đã tự động cấu hình)</label>
+                <input type="text" id="serverUrl" value="https://sevenapp.onrender.com" readonly style="background: rgba(16, 185, 129, 0.1); border-color: var(--success);">
             </div>
-            <button class="btn btn-primary" onclick="saveConfig()">
-                <i class="fas fa-save"></i> Lưu Cấu Hình
-            </button>
+            <div style="font-size: 12px; color: var(--success); margin-bottom: 12px;">
+                <i class="fas fa-check-circle"></i> Server đã được cấu hình sẵn
+            </div>
         </div>
         
         <!-- Control Card -->
@@ -302,6 +302,9 @@
             </button>
             <button class="btn btn-outline" onclick="testNotification()">
                 <i class="fas fa-flask"></i> Gửi Test Thông Báo
+            </button>
+            <button class="btn btn-warning" style="margin-top: 8px;" onclick="showDebugLogs()">
+                <i class="fas fa-bug"></i> Xem Debug Logs
             </button>
         </div>
     </div>
@@ -319,11 +322,28 @@
         </div>
     </div>
     
+    <!-- Debug Modal -->
+    <div id="debugModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; padding: 20px; overflow-y: auto;">
+        <div class="card" style="max-height: 90vh; overflow-y: auto;">
+            <div class="card-title">
+                <i class="fas fa-bug"></i> Debug Logs
+                <button onclick="closeDebugModal()" style="margin-left: auto; background: transparent; border: none; color: white; font-size: 20px; cursor: pointer;">×</button>
+            </div>
+            <div id="debugLogContainer" style="font-family: monospace; font-size: 11px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; max-height: 60vh; overflow-y: auto;">
+                Loading...
+            </div>
+            <button class="btn btn-danger" style="margin-top: 12px;" onclick="clearDebugLogs()">
+                <i class="fas fa-trash"></i> Xóa Debug Logs
+            </button>
+        </div>
+    </div>
+    
     <!-- Info Box -->
     <div class="info-box">
         <i class="fas fa-info-circle"></i>
+        <strong>Ngân hàng hỗ trợ:</strong> ACB, VPBank, MB Bank, Vietcombank, Techcombank, TPBank, BIDV, VietinBank, Sacombank<br><br>
         <strong>Cách hoạt động:</strong><br>
-        1. App đọc thông báo từ ACB khi có giao dịch mới<br>
+        1. App đọc thông báo từ ngân hàng khi có giao dịch mới<br>
         2. Parse số tiền và nội dung chuyển khoản<br>
         3. Nội dung theo format: <strong>NAP {mã_đại_lý} {số_tiền}</strong><br>
         &nbsp;&nbsp;&nbsp;Ví dụ: NAP AG000001 1000000<br>
@@ -599,16 +619,66 @@
             saveStats();
         };
         
+        // Debug logs functions
+        async function showDebugLogs() {
+            document.getElementById('debugModal').style.display = 'block';
+            const container = document.getElementById('debugLogContainer');
+            
+            if (NotificationReader) {
+                try {
+                    const result = await NotificationReader.getDebugLogs();
+                    if (result.logs && result.logs.length > 0) {
+                        container.innerHTML = result.logs.map(log => 
+                            `<div style="padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">${log}</div>`
+                        ).join('');
+                    } else {
+                        container.innerHTML = '<div style="color: rgba(255,255,255,0.5);">Chưa có debug logs. Hãy thử gửi một thông báo từ app ngân hàng.</div>';
+                    }
+                } catch (e) {
+                    container.innerHTML = '<div style="color: var(--danger);">Lỗi: ' + e.message + '</div>';
+                }
+            } else {
+                container.innerHTML = '<div style="color: rgba(255,255,255,0.5);">Plugin chưa sẵn sàng. Đang chạy trên web?</div>';
+            }
+        }
+        
+        function closeDebugModal() {
+            document.getElementById('debugModal').style.display = 'none';
+        }
+        
+        async function clearDebugLogs() {
+            if (NotificationReader) {
+                try {
+                    await NotificationReader.clearDebugLogs();
+                    showDebugLogs();
+                } catch (e) {
+                    alert('Lỗi: ' + e.message);
+                }
+            }
+        }
+        
         // Init
         document.addEventListener('DOMContentLoaded', async function() {
+            // Set default server URL
+            config.serverUrl = 'https://sevenapp.onrender.com';
+            document.getElementById('serverUrl').value = config.serverUrl;
+            
             // Initialize Capacitor plugin
             try {
                 if (window.Capacitor && window.Capacitor.Plugins) {
                     NotificationReader = window.Capacitor.Plugins.NotificationReader;
                     console.log('NotificationReader plugin loaded');
                     
-                    // Load config from native
+                    // Save default config to native immediately
                     if (NotificationReader) {
+                        try {
+                            await NotificationReader.saveConfig({ serverUrl: config.serverUrl });
+                            console.log('Default server URL saved to native');
+                        } catch (e) {
+                            console.log('Could not save default config:', e);
+                        }
+                        
+                        // Load config from native (might override with user-saved config)
                         try {
                             const nativeConfig = await NotificationReader.getConfig();
                             if (nativeConfig.serverUrl) {

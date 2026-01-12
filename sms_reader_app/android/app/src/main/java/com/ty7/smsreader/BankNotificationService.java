@@ -47,26 +47,38 @@ public class BankNotificationService extends NotificationListenerService {
     
     // Mapping package name -> Bank code
     private static final Map<String, String> BANK_PACKAGES = new HashMap<String, String>() {{
-        // ACB
+        // ACB - Asia Commercial Bank
         put("com.acb.acbmobile", "ACB");
         put("vn.com.acb.acbmobile", "ACB");
         put("com.acb.one", "ACB");
+        put("com.acb", "ACB");
+        put("vn.acb.acbmobile", "ACB");
+        put("com.acb.acb", "ACB");
         
         // MB Bank
         put("com.mbmobile", "MB");
         put("vn.com.mbbank.mb", "MB");
+        put("com.mbbank.mb", "MB");
+        put("vn.mbbank.mb", "MB");
         
         // Vietcombank
         put("com.VCB", "VCB");
         put("vn.com.vietcombank.vcbmobile", "VCB");
+        put("com.vietcombank", "VCB");
         
         // Techcombank
         put("vn.com.techcombank.bb.app", "TCB");
         put("com.techcombank.mobile", "TCB");
+        put("vn.techcombank.mobile", "TCB");
         
-        // VPBank
+        // VPBank - VPBank NEO
         put("com.vnpay.vpbankonline", "VPB");
         put("vn.com.vpbank.smartone", "VPB");
+        put("com.vpbank.neo", "VPB");
+        put("vn.vpbank.neo", "VPB");
+        put("com.vpbank", "VPB");
+        put("vn.com.vpbank.neo", "VPB");
+        put("com.vpb.vpbank", "VPB");
         
         // TPBank
         put("vn.tpb.mb.gprsandroid", "TPB");
@@ -165,6 +177,28 @@ public class BankNotificationService extends NotificationListenerService {
         return staticServerUrl;
     }
     
+    // Debug log storage
+    private static java.util.List<String> debugLogs = new java.util.ArrayList<>();
+    private static final int MAX_DEBUG_LOGS = 100;
+    
+    private void saveDebugLog(String message) {
+        String timestamp = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
+        String log = timestamp + " | " + message;
+        debugLogs.add(0, log);
+        if (debugLogs.size() > MAX_DEBUG_LOGS) {
+            debugLogs.remove(debugLogs.size() - 1);
+        }
+        Log.d(TAG, "Debug: " + message);
+    }
+    
+    public static java.util.List<String> getDebugLogs() {
+        return new java.util.ArrayList<>(debugLogs);
+    }
+    
+    public static void clearDebugLogs() {
+        debugLogs.clear();
+    }
+    
     /**
      * Static method to send transaction to server - can be called from Plugin for testing
      */
@@ -233,22 +267,11 @@ public class BankNotificationService extends NotificationListenerService {
         
         String packageName = sbn.getPackageName();
         
-        // Kiểm tra có phải app ngân hàng không
-        String bankCode = BANK_PACKAGES.get(packageName);
-        if (bankCode == null) {
-            return; // Không phải app ngân hàng
-        }
+        // DEBUG: Log tất cả notifications để debug
+        Log.i(TAG, "=== NOTIFICATION RECEIVED ===");
+        Log.i(TAG, "Package: " + packageName);
         
-        // Kiểm tra tính năng có được bật không
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        boolean isEnabled = prefs.getBoolean(KEY_ENABLED, true); // Default enabled
-        
-        if (!isEnabled) {
-            Log.d(TAG, "Notification reading is disabled");
-            return;
-        }
-        
-        // Lấy nội dung notification
+        // Lấy nội dung notification để log
         Notification notification = sbn.getNotification();
         Bundle extras = notification.extras;
         
@@ -264,6 +287,30 @@ public class BankNotificationService extends NotificationListenerService {
             if (titleCs != null) title = titleCs.toString();
             if (textCs != null) text = textCs.toString();
             if (bigTextCs != null) bigText = bigTextCs.toString();
+        }
+        
+        Log.i(TAG, "Title: " + title);
+        Log.i(TAG, "Text: " + text);
+        Log.i(TAG, "BigText: " + bigText);
+        
+        // Kiểm tra có phải app ngân hàng không
+        String bankCode = BANK_PACKAGES.get(packageName);
+        if (bankCode == null) {
+            Log.d(TAG, "Not a bank app, skipping: " + packageName);
+            // Save to debug log for unknown packages
+            saveDebugLog("Unknown package: " + packageName + " | " + title + " | " + text);
+            return;
+        }
+        
+        Log.i(TAG, "Bank detected: " + bankCode);
+        
+        // Kiểm tra tính năng có được bật không
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean isEnabled = prefs.getBoolean(KEY_ENABLED, true); // Default enabled
+        
+        if (!isEnabled) {
+            Log.d(TAG, "Notification reading is disabled");
+            return;
         }
         
         // Combine content
