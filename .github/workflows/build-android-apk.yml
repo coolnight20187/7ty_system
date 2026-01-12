@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'sms_reader_app/**'
+      - '.github/workflows/build-android-apk.yml'
   workflow_dispatch:
 
 jobs:
