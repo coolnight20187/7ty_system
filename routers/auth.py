@@ -1140,13 +1140,16 @@ async def agent_login(
     User must have an active Agent record linked to their account
     """
     try:
-        # Normalize username - remove leading zeros
-        input_username = credentials.username.lstrip('0') if credentials.username else credentials.username
+        # Try to find user with original username first, then with normalized (stripped zeros)
+        input_username = credentials.username
+        normalized_username = credentials.username.lstrip('0') if credentials.username else credentials.username
         
-        logger.info(f"Agent login attempt: input={credentials.username}, normalized={input_username}")
+        logger.info(f"Agent login attempt: input={input_username}, normalized={normalized_username}")
         
-        # Get user by normalized username only
+        # Try original username first, then normalized
         user = db.query(User).filter(User.username == input_username).first()
+        if not user and input_username != normalized_username:
+            user = db.query(User).filter(User.username == normalized_username).first()
         
         logger.info(f"User found: {user.username if user else 'None'}")
         
