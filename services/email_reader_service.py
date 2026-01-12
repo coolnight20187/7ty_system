@@ -111,18 +111,39 @@ class EmailReaderService:
     
     def connect(self) -> bool:
         """Kết nối đến email server"""
+        self.last_error = None
         try:
+            logger.info(f"Connecting to {self.imap_server}:{self.imap_port} for {self.email_address}")
             self.connection = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
             self.connection.login(self.email_address, self.password)
             self.is_connected = True
             logger.info(f"Connected to email: {self.email_address}")
             return True
         except imaplib.IMAP4.error as e:
-            logger.error(f"IMAP login failed: {e}")
+            error_msg = str(e)
+            logger.error(f"IMAP login failed for {self.email_address}: {error_msg}")
+            self.is_connected = False
+            # Parse common errors
+            if 'AUTHENTICATIONFAILED' in error_msg or 'Invalid credentials' in error_msg.lower():
+                self.last_error = 'Sai mật khẩu hoặc App Password. Với Gmail, cần dùng App Password (16 ký tự).'
+            elif 'Web login required' in error_msg:
+                self.last_error = 'Gmail yêu cầu bật "Less secure apps" hoặc dùng App Password.'
+            else:
+                self.last_error = f'Lỗi đăng nhập IMAP: {error_msg}'
+            return False
+        except ConnectionRefusedError:
+            self.last_error = f'Không thể kết nối đến server {self.imap_server}:{self.imap_port}'
+            logger.error(self.last_error)
+            self.is_connected = False
+            return False
+        except TimeoutError:
+            self.last_error = 'Timeout khi kết nối. Kiểm tra kết nối mạng.'
+            logger.error(self.last_error)
             self.is_connected = False
             return False
         except Exception as e:
-            logger.error(f"Connection error: {e}")
+            self.last_error = f'Lỗi kết nối: {str(e)}'
+            logger.error(f"Connection error for {self.email_address}: {e}")
             self.is_connected = False
             return False
     
@@ -431,7 +452,7 @@ class EmailReaderService:
             else:
                 return {
                     'success': False,
-                    'message': 'Không thể kết nối. Kiểm tra lại email và mật khẩu.',
+                    'message': getattr(self, 'last_error', None) or 'Không thể kết nối. Kiểm tra lại email và mật khẩu.',
                     'email': self.email_address,
                     'server': self.imap_server
                 }
