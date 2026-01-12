@@ -1352,11 +1352,7 @@ async def update_agent_with_files(
                     detail="Bạn không có quyền truy cập"
                 )
         
-        # Create upload directory for agent
-        upload_base = Path("static/uploads/agents")
-        upload_base.mkdir(parents=True, exist_ok=True)
-        agent_upload_dir = upload_base / agent.agent_code
-        agent_upload_dir.mkdir(parents=True, exist_ok=True)
+        # Note: Images are now saved as Base64 in database, no need for file system
         
         # Update user info
         if full_name and agent.user:
@@ -1407,41 +1403,48 @@ async def update_agent_with_files(
         if tax_code:
             agent.tax_code = tax_code
         
-        # Save uploaded files
+        # Save uploaded files as Base64 in database for persistence
+        import base64
+        
         if cccd_front and cccd_front.filename:
-            cccd_front_path = agent_upload_dir / f"cccd_front_{cccd_front.filename}"
-            with open(cccd_front_path, "wb") as f:
-                content = await cccd_front.read()
-                f.write(content)
-            agent.cccd_front_path = str(cccd_front_path)
+            content = await cccd_front.read()
+            cccd_front_b64 = base64.b64encode(content).decode('utf-8')
+            cccd_front_ext = cccd_front.filename.split('.')[-1].lower() if '.' in cccd_front.filename else 'jpg'
+            agent.cccd_front_data = f"data:image/{cccd_front_ext};base64,{cccd_front_b64}"
+            agent.cccd_front_path = f"cccd_front_{cccd_front.filename}"
+            logger.info(f"Saved cccd_front to database for agent {agent.agent_code}")
         
         if cccd_back and cccd_back.filename:
-            cccd_back_path = agent_upload_dir / f"cccd_back_{cccd_back.filename}"
-            with open(cccd_back_path, "wb") as f:
-                content = await cccd_back.read()
-                f.write(content)
-            agent.cccd_back_path = str(cccd_back_path)
+            content = await cccd_back.read()
+            cccd_back_b64 = base64.b64encode(content).decode('utf-8')
+            cccd_back_ext = cccd_back.filename.split('.')[-1].lower() if '.' in cccd_back.filename else 'jpg'
+            agent.cccd_back_data = f"data:image/{cccd_back_ext};base64,{cccd_back_b64}"
+            agent.cccd_back_path = f"cccd_back_{cccd_back.filename}"
+            logger.info(f"Saved cccd_back to database for agent {agent.agent_code}")
         
         if store_image_1 and store_image_1.filename:
-            store_image_1_path = agent_upload_dir / f"store_1_{store_image_1.filename}"
-            with open(store_image_1_path, "wb") as f:
-                content = await store_image_1.read()
-                f.write(content)
-            agent.store_image_1_path = str(store_image_1_path)
+            content = await store_image_1.read()
+            store_image_1_b64 = base64.b64encode(content).decode('utf-8')
+            store_image_1_ext = store_image_1.filename.split('.')[-1].lower() if '.' in store_image_1.filename else 'jpg'
+            agent.store_image_1_data = f"data:image/{store_image_1_ext};base64,{store_image_1_b64}"
+            agent.store_image_1_path = f"store_1_{store_image_1.filename}"
+            logger.info(f"Saved store_image_1 to database for agent {agent.agent_code}")
         
         if store_image_2 and store_image_2.filename:
-            store_image_2_path = agent_upload_dir / f"store_2_{store_image_2.filename}"
-            with open(store_image_2_path, "wb") as f:
-                content = await store_image_2.read()
-                f.write(content)
-            agent.store_image_2_path = str(store_image_2_path)
+            content = await store_image_2.read()
+            store_image_2_b64 = base64.b64encode(content).decode('utf-8')
+            store_image_2_ext = store_image_2.filename.split('.')[-1].lower() if '.' in store_image_2.filename else 'jpg'
+            agent.store_image_2_data = f"data:image/{store_image_2_ext};base64,{store_image_2_b64}"
+            agent.store_image_2_path = f"store_2_{store_image_2.filename}"
+            logger.info(f"Saved store_image_2 to database for agent {agent.agent_code}")
         
         if store_image_3 and store_image_3.filename:
-            store_image_3_path = agent_upload_dir / f"store_3_{store_image_3.filename}"
-            with open(store_image_3_path, "wb") as f:
-                content = await store_image_3.read()
-                f.write(content)
-            agent.store_image_3_path = str(store_image_3_path)
+            content = await store_image_3.read()
+            store_image_3_b64 = base64.b64encode(content).decode('utf-8')
+            store_image_3_ext = store_image_3.filename.split('.')[-1].lower() if '.' in store_image_3.filename else 'jpg'
+            agent.store_image_3_data = f"data:image/{store_image_3_ext};base64,{store_image_3_b64}"
+            agent.store_image_3_path = f"store_3_{store_image_3.filename}"
+            logger.info(f"Saved store_image_3 to database for agent {agent.agent_code}")
         
         agent.updated_at = datetime.utcnow()
         db.commit()

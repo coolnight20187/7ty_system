@@ -11227,8 +11227,8 @@ PA12345678903"></textarea>
                                     <div class="section-content">
                                         <div class="document-gallery">
                                             <div class="doc-item">
-                                                ${agent.store_image_1_path ? `
-                                                <img src="/${agent.store_image_1_path}" alt="Ảnh cửa hàng 1" class="preview-image" onclick="showImagePreview('/${agent.store_image_1_path}', 'Ảnh cửa hàng 1')">
+                                                ${(agent.store_image_1_data || agent.store_image_1_path) ? `
+                                                <img src="${agent.store_image_1_data || '/' + agent.store_image_1_path}" alt="Ảnh cửa hàng 1" class="preview-image" onclick="showImagePreview('${agent.store_image_1_data || '/' + agent.store_image_1_path}', 'Ảnh cửa hàng 1')">
                                                 ` : '<div class="no-image"><i class="fas fa-image"></i><small>Chưa có ảnh</small></div>'}
                                                 <span>Ảnh 1</span>
                                                 <div class="edit-mode" style="display: ${isEditMode ? 'block' : 'none'};">
@@ -11237,8 +11237,8 @@ PA12345678903"></textarea>
                                                 </div>
                                             </div>
                                             <div class="doc-item">
-                                                ${agent.store_image_2_path ? `
-                                                <img src="/${agent.store_image_2_path}" alt="Ảnh cửa hàng 2" class="preview-image" onclick="showImagePreview('/${agent.store_image_2_path}', 'Ảnh cửa hàng 2')">
+                                                ${(agent.store_image_2_data || agent.store_image_2_path) ? `
+                                                <img src="${agent.store_image_2_data || '/' + agent.store_image_2_path}" alt="Ảnh cửa hàng 2" class="preview-image" onclick="showImagePreview('${agent.store_image_2_data || '/' + agent.store_image_2_path}', 'Ảnh cửa hàng 2')">
                                                 ` : '<div class="no-image"><i class="fas fa-image"></i><small>Chưa có ảnh</small></div>'}
                                                 <span>Ảnh 2</span>
                                                 <div class="edit-mode" style="display: ${isEditMode ? 'block' : 'none'};">
@@ -11247,8 +11247,8 @@ PA12345678903"></textarea>
                                                 </div>
                                             </div>
                                             <div class="doc-item">
-                                                ${agent.store_image_3_path ? `
-                                                <img src="/${agent.store_image_3_path}" alt="Ảnh cửa hàng 3" class="preview-image" onclick="showImagePreview('/${agent.store_image_3_path}', 'Ảnh cửa hàng 3')">
+                                                ${(agent.store_image_3_data || agent.store_image_3_path) ? `
+                                                <img src="${agent.store_image_3_data || '/' + agent.store_image_3_path}" alt="Ảnh cửa hàng 3" class="preview-image" onclick="showImagePreview('${agent.store_image_3_data || '/' + agent.store_image_3_path}', 'Ảnh cửa hàng 3')">
                                                 ` : '<div class="no-image"><i class="fas fa-image"></i><small>Chưa có ảnh</small></div>'}
                                                 <span>Ảnh 3</span>
                                                 <div class="edit-mode" style="display: ${isEditMode ? 'block' : 'none'};">
@@ -11706,37 +11706,42 @@ PA12345678903"></textarea>
                 
                 // Hiển thị ảnh CCCD nếu có
                 const cccdFrontPreview = document.getElementById('editCccdFrontPreview');
-                if (agent.cccd_front_path) {
-                    cccdFrontPreview.innerHTML = `<img src="/${agent.cccd_front_path}" alt="CCCD Mặt trước" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="window.open('/${agent.cccd_front_path}', '_blank')">`;
+                const cccdFrontSrc = agent.cccd_front_data || (agent.cccd_front_path ? '/' + agent.cccd_front_path : null);
+                if (cccdFrontSrc) {
+                    cccdFrontPreview.innerHTML = `<img src="${cccdFrontSrc}" alt="CCCD Mặt trước" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="showImagePreview('${cccdFrontSrc}', 'CCCD Mặt trước')">`;
                 } else {
                     cccdFrontPreview.innerHTML = '<small class="text-muted">Chưa có ảnh</small>';
                 }
                 
                 const cccdBackPreview = document.getElementById('editCccdBackPreview');
-                if (agent.cccd_back_path) {
-                    cccdBackPreview.innerHTML = `<img src="/${agent.cccd_back_path}" alt="CCCD Mặt sau" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="window.open('/${agent.cccd_back_path}', '_blank')">`;
+                const cccdBackSrc = agent.cccd_back_data || (agent.cccd_back_path ? '/' + agent.cccd_back_path : null);
+                if (cccdBackSrc) {
+                    cccdBackPreview.innerHTML = `<img src="${cccdBackSrc}" alt="CCCD Mặt sau" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="showImagePreview('${cccdBackSrc}', 'CCCD Mặt sau')">`;
                 } else {
                     cccdBackPreview.innerHTML = '<small class="text-muted">Chưa có ảnh</small>';
                 }
                 
                 // Hiển thị ảnh cửa hàng nếu có
                 const storeImage1Preview = document.getElementById('editStoreImage1Preview');
-                if (agent.store_image_1_path) {
-                    storeImage1Preview.innerHTML = `<img src="/${agent.store_image_1_path}" alt="Ảnh cửa hàng 1" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="window.open('/${agent.store_image_1_path}', '_blank')">`;
+                const storeImg1Src = agent.store_image_1_data || (agent.store_image_1_path ? '/' + agent.store_image_1_path : null);
+                if (storeImg1Src) {
+                    storeImage1Preview.innerHTML = `<img src="${storeImg1Src}" alt="Ảnh cửa hàng 1" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="showImagePreview('${storeImg1Src}', 'Ảnh cửa hàng 1')">`;
                 } else {
                     storeImage1Preview.innerHTML = '<small class="text-muted">Chưa có ảnh</small>';
                 }
                 
                 const storeImage2Preview = document.getElementById('editStoreImage2Preview');
-                if (agent.store_image_2_path) {
-                    storeImage2Preview.innerHTML = `<img src="/${agent.store_image_2_path}" alt="Ảnh cửa hàng 2" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="window.open('/${agent.store_image_2_path}', '_blank')">`;
+                const storeImg2Src = agent.store_image_2_data || (agent.store_image_2_path ? '/' + agent.store_image_2_path : null);
+                if (storeImg2Src) {
+                    storeImage2Preview.innerHTML = `<img src="${storeImg2Src}" alt="Ảnh cửa hàng 2" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="showImagePreview('${storeImg2Src}', 'Ảnh cửa hàng 2')">`;
                 } else {
                     storeImage2Preview.innerHTML = '<small class="text-muted">Chưa có ảnh</small>';
                 }
                 
                 const storeImage3Preview = document.getElementById('editStoreImage3Preview');
-                if (agent.store_image_3_path) {
-                    storeImage3Preview.innerHTML = `<img src="/${agent.store_image_3_path}" alt="Ảnh cửa hàng 3" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="window.open('/${agent.store_image_3_path}', '_blank')">`;
+                const storeImg3Src = agent.store_image_3_data || (agent.store_image_3_path ? '/' + agent.store_image_3_path : null);
+                if (storeImg3Src) {
+                    storeImage3Preview.innerHTML = `<img src="${storeImg3Src}" alt="Ảnh cửa hàng 3" style="max-width: 100%; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="showImagePreview('${storeImg3Src}', 'Ảnh cửa hàng 3')">`;
                 } else {
                     storeImage3Preview.innerHTML = '<small class="text-muted">Chưa có ảnh</small>';
                 }

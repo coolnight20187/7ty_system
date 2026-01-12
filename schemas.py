@@ -311,12 +311,18 @@ class AgentBase(BaseModel):
     balance: Optional[Decimal] = Field(None, ge=0)
     daily_limit: Optional[Decimal] = None
     per_transaction_limit: Optional[Decimal] = None
-    # Image paths
+    # Image paths (file system - legacy)
     cccd_front_path: Optional[str] = None
     cccd_back_path: Optional[str] = None
     store_image_1_path: Optional[str] = None
     store_image_2_path: Optional[str] = None
     store_image_3_path: Optional[str] = None
+    # Image data (Base64 - persistent storage)
+    cccd_front_data: Optional[str] = None
+    cccd_back_data: Optional[str] = None
+    store_image_1_data: Optional[str] = None
+    store_image_2_data: Optional[str] = None
+    store_image_3_data: Optional[str] = None
     
     class Config:
         from_attributes = True
