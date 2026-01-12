@@ -146,6 +146,71 @@ def create_agent_activity_log(
 
 # Routes
 
+@router.get("/{agent_id}/images", response_model=Dict[str, Any])
+async def get_agent_images(
+    agent_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get agent document images (CCCD, store photos) from database.
+    Returns Base64 encoded images that can be displayed directly in HTML.
+    """
+    try:
+        agent = db.query(Agent).filter(Agent.id == agent_id).first()
+        
+        if not agent:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Không tìm thấy đại lý"
+            )
+        
+        # Check permissions - Admin/Manager can view all, agents can view their own
+        if current_user.role not in [UserRole.ADMIN, UserRole.MANAGER]:
+            if agent.user_id != current_user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Bạn không có quyền xem ảnh của đại lý này"
+                )
+        
+        return {
+            "success": True,
+            "agent_id": agent_id,
+            "agent_code": agent.agent_code,
+            "images": {
+                "cccd_front": {
+                    "filename": agent.cccd_front_path,
+                    "data": agent.cccd_front_data  # Base64 data URI
+                },
+                "cccd_back": {
+                    "filename": agent.cccd_back_path,
+                    "data": agent.cccd_back_data
+                },
+                "store_image_1": {
+                    "filename": agent.store_image_1_path,
+                    "data": agent.store_image_1_data
+                },
+                "store_image_2": {
+                    "filename": agent.store_image_2_path,
+                    "data": agent.store_image_2_data
+                },
+                "store_image_3": {
+                    "filename": agent.store_image_3_path,
+                    "data": agent.store_image_3_data
+                }
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get agent images error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Không thể lấy ảnh đại lý"
+        )
+
+
 @router.get("/me", response_model=AgentResponse)
 async def get_current_agent(
     current_user: User = Depends(get_current_active_user),
@@ -704,35 +769,36 @@ async def link_user_to_agent(
         next_number = (last_agent.id + 1) if last_agent else 1
         agent_code = f"AG{next_number:06d}"
         
-        # Create upload directory for agent
-        upload_base = Path("static/uploads/agents")
-        upload_base.mkdir(parents=True, exist_ok=True)
-        agent_upload_dir = upload_base / agent_code
-        agent_upload_dir.mkdir(parents=True, exist_ok=True)
+        # Read and encode images as Base64 for database storage
+        import base64
         
-        # Save uploaded files
         saved_files = {}
+        image_data = {}
         
-        # Save store images
-        store_image_1_path = agent_upload_dir / f"store_1_{store_image_1.filename}"
-        with open(store_image_1_path, "wb") as f:
-            content = await store_image_1.read()
-            f.write(content)
-        saved_files["store_image_1"] = str(store_image_1_path)
+        # Read store image 1
+        store_image_1_content = await store_image_1.read()
+        store_image_1_b64 = base64.b64encode(store_image_1_content).decode('utf-8')
+        store_image_1_ext = store_image_1.filename.split('.')[-1].lower() if '.' in store_image_1.filename else 'jpg'
+        image_data["store_image_1"] = f"data:image/{store_image_1_ext};base64,{store_image_1_b64}"
+        saved_files["store_image_1"] = f"store_1_{store_image_1.filename}"
         
+        # Read store image 2 (optional)
         if store_image_2:
-            store_image_2_path = agent_upload_dir / f"store_2_{store_image_2.filename}"
-            with open(store_image_2_path, "wb") as f:
-                content = await store_image_2.read()
-                f.write(content)
-            saved_files["store_image_2"] = str(store_image_2_path)
+            store_image_2_content = await store_image_2.read()
+            store_image_2_b64 = base64.b64encode(store_image_2_content).decode('utf-8')
+            store_image_2_ext = store_image_2.filename.split('.')[-1].lower() if '.' in store_image_2.filename else 'jpg'
+            image_data["store_image_2"] = f"data:image/{store_image_2_ext};base64,{store_image_2_b64}"
+            saved_files["store_image_2"] = f"store_2_{store_image_2.filename}"
         
+        # Read store image 3 (optional)
         if store_image_3:
-            store_image_3_path = agent_upload_dir / f"store_3_{store_image_3.filename}"
-            with open(store_image_3_path, "wb") as f:
-                content = await store_image_3.read()
-                f.write(content)
-            saved_files["store_image_3"] = str(store_image_3_path)
+            store_image_3_content = await store_image_3.read()
+            store_image_3_b64 = base64.b64encode(store_image_3_content).decode('utf-8')
+            store_image_3_ext = store_image_3.filename.split('.')[-1].lower() if '.' in store_image_3.filename else 'jpg'
+            image_data["store_image_3"] = f"data:image/{store_image_3_ext};base64,{store_image_3_b64}"
+            saved_files["store_image_3"] = f"store_3_{store_image_3.filename}"
+        
+        logger.info(f"Encoded {len(image_data)} store images for agent {agent_code}")
         
         # Update user role to AGENT
         user.role = UserRole.AGENT
@@ -740,7 +806,7 @@ async def link_user_to_agent(
         # Parse agent type
         agent_type_enum = AgentType.INDIVIDUAL if agent_type == "individual" else AgentType.COMPANY
         
-        # Create agent record
+        # Create agent record with image data stored in database
         new_agent = Agent(
             user_id=user.id,
             agent_code=agent_code,
@@ -754,7 +820,16 @@ async def link_user_to_agent(
             commission_rate=Decimal('0'),
             balance=Decimal('0'),
             created_by_id=current_user.id,
-            approval_notes=f"Store Images: {', '.join([v for k, v in saved_files.items() if k.startswith('store_')])}"
+            # Store file names in path fields (for reference)
+            store_image_1_path=saved_files.get('store_image_1'),
+            store_image_2_path=saved_files.get('store_image_2'),
+            store_image_3_path=saved_files.get('store_image_3'),
+            # Store Base64 image data in database (persistent storage)
+            store_image_1_data=image_data.get('store_image_1'),
+            store_image_2_data=image_data.get('store_image_2'),
+            store_image_3_data=image_data.get('store_image_3'),
+            # Note about stored images
+            approval_notes=f"Store images stored in database. Files: {', '.join(saved_files.values())}"
         )
         
         db.add(new_agent)
@@ -878,49 +953,50 @@ async def register_agent(
         next_number = (last_agent.id + 1) if last_agent else 1
         agent_code = f"AG{next_number:06d}"  # Format: AGxxxxxx
         
-        # Create upload directory for agent
-        upload_base = Path("static/uploads/agents")
-        upload_base.mkdir(parents=True, exist_ok=True)
-        agent_upload_dir = upload_base / agent_code
-        agent_upload_dir.mkdir(parents=True, exist_ok=True)
+        # Read and encode images as Base64 for database storage
+        import base64
         
-        # Save uploaded files
         saved_files = {}
+        image_data = {}
         
-        # Save CCCD front
-        cccd_front_path = agent_upload_dir / f"cccd_front_{cccd_front.filename}"
-        with open(cccd_front_path, "wb") as f:
-            content = await cccd_front.read()
-            f.write(content)
-        saved_files["cccd_front"] = str(cccd_front_path)
+        # Read CCCD front
+        cccd_front_content = await cccd_front.read()
+        cccd_front_b64 = base64.b64encode(cccd_front_content).decode('utf-8')
+        cccd_front_ext = cccd_front.filename.split('.')[-1].lower() if '.' in cccd_front.filename else 'jpg'
+        image_data["cccd_front"] = f"data:image/{cccd_front_ext};base64,{cccd_front_b64}"
+        saved_files["cccd_front"] = f"cccd_front_{cccd_front.filename}"
         
-        # Save CCCD back
-        cccd_back_path = agent_upload_dir / f"cccd_back_{cccd_back.filename}"
-        with open(cccd_back_path, "wb") as f:
-            content = await cccd_back.read()
-            f.write(content)
-        saved_files["cccd_back"] = str(cccd_back_path)
+        # Read CCCD back
+        cccd_back_content = await cccd_back.read()
+        cccd_back_b64 = base64.b64encode(cccd_back_content).decode('utf-8')
+        cccd_back_ext = cccd_back.filename.split('.')[-1].lower() if '.' in cccd_back.filename else 'jpg'
+        image_data["cccd_back"] = f"data:image/{cccd_back_ext};base64,{cccd_back_b64}"
+        saved_files["cccd_back"] = f"cccd_back_{cccd_back.filename}"
         
-        # Save store images
-        store_image_1_path = agent_upload_dir / f"store_1_{store_image_1.filename}"
-        with open(store_image_1_path, "wb") as f:
-            content = await store_image_1.read()
-            f.write(content)
-        saved_files["store_image_1"] = str(store_image_1_path)
+        # Read store image 1
+        store_image_1_content = await store_image_1.read()
+        store_image_1_b64 = base64.b64encode(store_image_1_content).decode('utf-8')
+        store_image_1_ext = store_image_1.filename.split('.')[-1].lower() if '.' in store_image_1.filename else 'jpg'
+        image_data["store_image_1"] = f"data:image/{store_image_1_ext};base64,{store_image_1_b64}"
+        saved_files["store_image_1"] = f"store_1_{store_image_1.filename}"
         
+        # Read store image 2 (optional)
         if store_image_2:
-            store_image_2_path = agent_upload_dir / f"store_2_{store_image_2.filename}"
-            with open(store_image_2_path, "wb") as f:
-                content = await store_image_2.read()
-                f.write(content)
-            saved_files["store_image_2"] = str(store_image_2_path)
+            store_image_2_content = await store_image_2.read()
+            store_image_2_b64 = base64.b64encode(store_image_2_content).decode('utf-8')
+            store_image_2_ext = store_image_2.filename.split('.')[-1].lower() if '.' in store_image_2.filename else 'jpg'
+            image_data["store_image_2"] = f"data:image/{store_image_2_ext};base64,{store_image_2_b64}"
+            saved_files["store_image_2"] = f"store_2_{store_image_2.filename}"
         
+        # Read store image 3 (optional)
         if store_image_3:
-            store_image_3_path = agent_upload_dir / f"store_3_{store_image_3.filename}"
-            with open(store_image_3_path, "wb") as f:
-                content = await store_image_3.read()
-                f.write(content)
-            saved_files["store_image_3"] = str(store_image_3_path)
+            store_image_3_content = await store_image_3.read()
+            store_image_3_b64 = base64.b64encode(store_image_3_content).decode('utf-8')
+            store_image_3_ext = store_image_3.filename.split('.')[-1].lower() if '.' in store_image_3.filename else 'jpg'
+            image_data["store_image_3"] = f"data:image/{store_image_3_ext};base64,{store_image_3_b64}"
+            saved_files["store_image_3"] = f"store_3_{store_image_3.filename}"
+        
+        logger.info(f"Encoded {len(image_data)} images for agent {agent_code}")
         
         # Hash password
         logger.info(f"Hashing password for user {username}")
@@ -952,7 +1028,7 @@ async def register_agent(
         # Parse agent type
         agent_type_enum = AgentType.INDIVIDUAL if agent_type == "individual" else AgentType.COMPANY
         
-        # Create agent record
+        # Create agent record with image data stored in database
         new_agent = Agent(
             user_id=new_user.id,
             agent_code=agent_code,
@@ -960,18 +1036,31 @@ async def register_agent(
             agent_type=agent_type_enum,
             company_name=company_name,
             address=store_address,
+            store_address=store_address,
             status=AgentStatus.PENDING,
             commission_rate=Decimal('0'),
             balance=Decimal('0'),
             created_by_id=current_user.id,
-            # Store file paths in approval_notes
-            approval_notes=f"CCCD Front: {saved_files.get('cccd_front')}\nCCCD Back: {saved_files.get('cccd_back')}\nStore Images: {', '.join([v for k, v in saved_files.items() if k.startswith('store_')])}"
+            # Store file names in path fields (for reference)
+            cccd_front_path=saved_files.get('cccd_front'),
+            cccd_back_path=saved_files.get('cccd_back'),
+            store_image_1_path=saved_files.get('store_image_1'),
+            store_image_2_path=saved_files.get('store_image_2'),
+            store_image_3_path=saved_files.get('store_image_3'),
+            # Store Base64 image data in database (persistent storage)
+            cccd_front_data=image_data.get('cccd_front'),
+            cccd_back_data=image_data.get('cccd_back'),
+            store_image_1_data=image_data.get('store_image_1'),
+            store_image_2_data=image_data.get('store_image_2'),
+            store_image_3_data=image_data.get('store_image_3'),
+            # Note about stored images
+            approval_notes=f"Images stored in database. Files: {', '.join(saved_files.values())}"
         )
         
         db.add(new_agent)
         db.commit()
         db.refresh(new_agent)
-        logger.info(f"Agent created with ID: {new_agent.id}, code: {agent_code}")
+        logger.info(f"Agent created with ID: {new_agent.id}, code: {agent_code}, images saved to database")
         
         # Log activity
         activity = ActivityLog(

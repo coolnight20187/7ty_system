@@ -108,6 +108,9 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Error creating database tables: {e}")
     
+    # Chạy migrations cho các cột mới
+    await run_migrations()
+    
     # Khởi tạo tài khoản Admin chính thức
     await init_admin_account()
     
@@ -115,6 +118,48 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     logger.info("Shutting down 7TY.VN System...")
+
+
+async def run_migrations():
+    """Chạy migrations để thêm các cột mới vào database"""
+    from sqlalchemy import text
+    
+    try:
+        with engine.connect() as conn:
+            db_url = str(engine.url)
+            is_postgres = 'postgresql' in db_url or 'postgres' in db_url
+            
+            # Danh sách các cột cần thêm vào bảng agents
+            new_columns = [
+                ("cccd_front_data", "TEXT"),
+                ("cccd_back_data", "TEXT"),
+                ("store_image_1_data", "TEXT"),
+                ("store_image_2_data", "TEXT"),
+                ("store_image_3_data", "TEXT"),
+            ]
+            
+            for col_name, col_type in new_columns:
+                try:
+                    if is_postgres:
+                        sql = text(f"ALTER TABLE agents ADD COLUMN IF NOT EXISTS {col_name} {col_type}")
+                        conn.execute(sql)
+                        conn.commit()
+                    else:
+                        # SQLite - check if column exists
+                        result = conn.execute(text("PRAGMA table_info(agents)"))
+                        columns = [row[1] for row in result.fetchall()]
+                        if col_name not in columns:
+                            sql = text(f"ALTER TABLE agents ADD COLUMN {col_name} {col_type}")
+                            conn.execute(sql)
+                            conn.commit()
+                            logger.info(f"Added column: {col_name}")
+                except Exception as e:
+                    if "duplicate" not in str(e).lower() and "already exists" not in str(e).lower():
+                        logger.warning(f"Migration warning for {col_name}: {e}")
+            
+            logger.info("Database migrations completed")
+    except Exception as e:
+        logger.error(f"Migration error: {e}")
 
 
 async def init_admin_account():

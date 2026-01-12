@@ -279,12 +279,19 @@ class Agent(Base, TimestampMixin):
     # Store Info
     store_address = Column(String(500), nullable=True)
     
-    # Document Images
+    # Document Images - File paths (legacy)
     cccd_front_path = Column(String(500), nullable=True)
     cccd_back_path = Column(String(500), nullable=True)
     store_image_1_path = Column(String(500), nullable=True)
     store_image_2_path = Column(String(500), nullable=True)
     store_image_3_path = Column(String(500), nullable=True)
+    
+    # Document Images - Base64 Data (stored in database for persistence)
+    cccd_front_data = Column(Text, nullable=True)      # Base64 encoded CCCD front
+    cccd_back_data = Column(Text, nullable=True)       # Base64 encoded CCCD back
+    store_image_1_data = Column(Text, nullable=True)   # Base64 encoded store image 1
+    store_image_2_data = Column(Text, nullable=True)   # Base64 encoded store image 2
+    store_image_3_data = Column(Text, nullable=True)   # Base64 encoded store image 3
     
     # Audit
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
