@@ -73,3 +73,40 @@ jobs:
         name: 7ty-bank-reader-release
         path: sms_reader_app/android/app/build/outputs/apk/release/app-release-unsigned.apk
         retention-days: 30
+
+    - name: Get current date
+      id: date
+      run: echo "date=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+
+    - name: Rename APK files
+      run: |
+        cp sms_reader_app/android/app/build/outputs/apk/debug/app-debug.apk ./7ty-bank-reader-v${{ steps.date.outputs.date }}.apk
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.date.outputs.date }}
+        name: 7TY Bank Reader ${{ steps.date.outputs.date }}
+        body: |
+          ## 7TY Bank Notification Reader
+          
+          ### Tải APK trực tiếp:
+          Click vào file `7ty-bank-reader-v${{ steps.date.outputs.date }}.apk` bên dưới để tải.
+          
+          ### Cài đặt:
+          1. Tải file APK
+          2. Cài đặt trên điện thoại Android
+          3. Cấp quyền Notification Access
+          4. App sẽ tự động đọc thông báo ngân hàng
+          
+          ### Ngân hàng hỗ trợ:
+          ACB, VPBank, MB Bank, Vietcombank, Techcombank, TPBank, BIDV, VietinBank, Sacombank
+          
+          ### Format nạp tiền:
+          `NAP {mã_đại_lý} {số_tiền}`
+          Ví dụ: `NAP AG000001 1000000`
+        files: ./7ty-bank-reader-v${{ steps.date.outputs.date }}.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
