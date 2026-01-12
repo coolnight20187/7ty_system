@@ -259,14 +259,14 @@ async def change_agent_password(
         )
     
     # Verify current password
-    if not SecurityUtils.verify_password(current_password, current_user.hashed_password):
+    if not SecurityUtils.verify_password(current_password, current_user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Mật khẩu hiện tại không đúng"
         )
     
     # Update password
-    current_user.hashed_password = SecurityUtils.hash_password(new_password)
+    current_user.password_hash = SecurityUtils.hash_password(new_password)
     current_user.updated_at = datetime.utcnow()
     
     db.commit()
