@@ -347,7 +347,11 @@
     
     <div class="version">7TY Bank Reader v2.0.0 • ACB Edition • © 2026 7TY.VN</div>
 
+    <script src="capacitor.js"></script>
     <script>
+        // Capacitor Plugin
+        let NotificationReader = null;
+        
         // Config
         const PREFS_KEY = 'bankReaderConfig';
         let config = {
@@ -385,7 +389,7 @@
             renderLogs();
         }
         
-        function saveConfig() {
+        async function saveConfig() {
             config.serverUrl = document.getElementById('serverUrl').value.trim();
             
             if (!config.serverUrl) {
@@ -395,13 +399,20 @@
             
             localStorage.setItem(PREFS_KEY, JSON.stringify(config));
             
-            // Save to Android SharedPreferences if available
-            if (window.Android) {
-                window.Android.saveConfig(config.serverUrl);
+            // Save to Android SharedPreferences via Capacitor plugin
+            if (NotificationReader) {
+                try {
+                    await NotificationReader.saveConfig({ serverUrl: config.serverUrl });
+                    addLog('success', 'Đã lưu cấu hình server: ' + config.serverUrl);
+                    alert('✅ Đã lưu cấu hình!');
+                } catch (e) {
+                    addLog('error', 'Lỗi lưu cấu hình: ' + e.message);
+                    alert('Lỗi: ' + e.message);
+                }
+            } else {
+                addLog('info', 'Đã lưu cấu hình (web mode): ' + config.serverUrl);
+                alert('✅ Đã lưu cấu hình!');
             }
-            
-            addLog('info', 'Đã lưu cấu hình server: ' + config.serverUrl);
-            alert('✅ Đã lưu cấu hình!');
         }
         
         function updateStats() {
@@ -424,13 +435,17 @@
         }
         
         // Permission
-        function checkNotificationPermission() {
-            if (window.Android && window.Android.hasNotificationAccess) {
-                const hasAccess = window.Android.hasNotificationAccess();
-                updatePermissionUI(hasAccess);
-                return hasAccess;
+        async function checkNotificationPermission() {
+            try {
+                if (NotificationReader) {
+                    const result = await NotificationReader.hasNotificationAccess();
+                    updatePermissionUI(result.granted);
+                    return result.granted;
+                }
+            } catch (e) {
+                console.log('Plugin not available:', e);
             }
-            // For web testing
+            // For web testing or fallback
             updatePermissionUI(true);
             return true;
         }
@@ -460,16 +475,21 @@
             }
         }
         
-        function openNotificationSettings() {
-            if (window.Android && window.Android.openNotificationSettings) {
-                window.Android.openNotificationSettings();
-            } else {
-                alert('Vui lòng vào: Cài đặt → Ứng dụng → 7TY Bank Reader → Quyền thông báo');
+        async function openNotificationSettings() {
+            try {
+                if (NotificationReader) {
+                    await NotificationReader.openNotificationSettings();
+                } else {
+                    alert('Vui lòng vào: Cài đặt → Ứng dụng → 7TY Bank Reader → Quyền thông báo');
+                }
+            } catch (e) {
+                alert('Vui lòng vào: Cài đặt → Ứng dụng → Special Access → Notification Access');
             }
         }
         
-        function startNotificationReader() {
-            if (!checkNotificationPermission()) {
+        async function startNotificationReader() {
+            const hasAccess = await checkNotificationPermission();
+            if (!hasAccess) {
                 openNotificationSettings();
                 return;
             }
@@ -477,8 +497,13 @@
             config.notificationEnabled = true;
             localStorage.setItem(PREFS_KEY, JSON.stringify(config));
             
-            if (window.Android && window.Android.startNotificationReader) {
-                window.Android.startNotificationReader();
+            // Save config to native
+            if (NotificationReader) {
+                try {
+                    await NotificationReader.saveConfig({ serverUrl: config.serverUrl });
+                } catch (e) {
+                    console.error('Error saving config:', e);
+                }
             }
             
             addLog('success', 'Đã bật đọc thông báo ngân hàng');
@@ -575,12 +600,65 @@
         };
         
         // Init
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize Capacitor plugin
+            try {
+                if (window.Capacitor && window.Capacitor.Plugins) {
+                    NotificationReader = window.Capacitor.Plugins.NotificationReader;
+                    console.log('NotificationReader plugin loaded');
+                    
+                    // Load config from native
+                    if (NotificationReader) {
+                        try {
+                            const nativeConfig = await NotificationReader.getConfig();
+                            if (nativeConfig.serverUrl) {
+                                config.serverUrl = nativeConfig.serverUrl;
+                                document.getElementById('serverUrl').value = config.serverUrl;
+                            }
+                        } catch (e) {
+                            console.log('Could not load native config:', e);
+                        }
+                        
+                        // Get service status
+                        try {
+                            const status = await NotificationReader.getServiceStatus();
+                            console.log('Service status:', status);
+                            if (status.totalProcessed > 0) {
+                                stats.total = status.totalProcessed;
+                                stats.success = status.successCount;
+                                stats.amount = status.totalAmount;
+                                updateStats();
+                            }
+                        } catch (e) {
+                            console.log('Could not get service status:', e);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('Capacitor not available:', e);
+            }
+            
             loadConfig();
             checkNotificationPermission();
             
             // Check permission periodically
             setInterval(checkNotificationPermission, 5000);
+            
+            // Refresh service status periodically
+            setInterval(async () => {
+                if (NotificationReader) {
+                    try {
+                        const status = await NotificationReader.getServiceStatus();
+                        if (status.totalProcessed > stats.total) {
+                            stats.total = status.totalProcessed;
+                            stats.success = status.successCount;
+                            stats.amount = status.totalAmount;
+                            updateStats();
+                            saveStats();
+                        }
+                    } catch (e) {}
+                }
+            }, 3000);
         });
     </script>
 </body>
