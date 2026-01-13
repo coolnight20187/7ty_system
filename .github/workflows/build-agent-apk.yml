@@ -81,11 +81,18 @@ jobs:
       working-directory: mobile_app/android
       run: ./gradlew assembleRelease
 
+    - name: List APK files
+      run: |
+        echo "=== Debug APKs ==="
+        ls -la mobile_app/android/app/build/outputs/apk/debug/ || true
+        echo "=== Release APKs ==="
+        ls -la mobile_app/android/app/build/outputs/apk/release/ || true
+
     - name: Upload Release APK
       uses: actions/upload-artifact@v4
       with:
         name: 7ty-agent-release
-        path: mobile_app/android/app/build/outputs/apk/release/app-release-unsigned.apk
+        path: mobile_app/android/app/build/outputs/apk/release/app-release.apk
         retention-days: 30
 
     - name: Get current date
@@ -95,14 +102,15 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: agent-v2.125.0
-        name: "7TY Agent v2.125.0"
+        tag_name: agent-v2.126.0
+        name: "7TY Agent v2.126.0"
         body: |
-          ## 📱 7TY Agent App v2.125.0
+          ## 📱 7TY Agent App v2.126.0
           
           ### ✨ Tính năng mới:
           - 📱 **Đọc SMS Ngân Hàng**: Tự động nạp tiền khi nhận SMS chuyển khoản với cú pháp NAP {mã đại lý}
           - 🔄 Cải thiện hiệu suất và độ ổn định
+          - 🔐 APK đã được ký với chữ ký chính thức
           
           ### 📥 Cài đặt:
           1. Tải file APK bên dưới
@@ -115,7 +123,7 @@ jobs:
           
           **Build Date**: ${{ steps.date.outputs.date }}
         files: |
-          mobile_app/android/app/build/outputs/apk/debug/app-debug.apk
+          mobile_app/android/app/build/outputs/apk/release/app-release.apk
         draft: false
         prerelease: false
       env:
