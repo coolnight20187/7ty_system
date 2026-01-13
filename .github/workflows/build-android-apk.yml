@@ -36,9 +36,19 @@ jobs:
       working-directory: sms_reader_app
       run: npm ci
 
-    - name: Sync Capacitor
+    - name: Clean old Android assets
       working-directory: sms_reader_app
-      run: npx cap sync android
+      run: |
+        rm -rf android/app/src/main/assets/public || true
+        rm -rf android/app/build || true
+
+    - name: Sync Capacitor (force copy)
+      working-directory: sms_reader_app
+      run: |
+        npx cap sync android --inline
+        echo "=== Checking synced files ==="
+        ls -la android/app/src/main/assets/public/ || true
+        cat android/app/src/main/assets/public/notification_reader.html | head -50 || true
 
     - name: Make gradlew executable
       working-directory: sms_reader_app/android
