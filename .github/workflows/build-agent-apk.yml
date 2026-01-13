@@ -102,18 +102,21 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: agent-v2.127.0
-        name: "7TY Agent v2.127.0"
+        tag_name: agent-v2.128.0
+        name: "7TY Agent v2.128.0"
         body: |
-          ## 📱 7TY Agent App v2.127.0
+          ## 📱 7TY Agent App v2.128.0
           
-          ### ✨ Tính năng mới:
+          ### 🔧 Sửa lỗi:
+          - ✅ **Sửa lỗi không đăng nhập được**: Đã cập nhật SERVER_URL từ IP local sang server thực
+          
+          ### ✨ Tính năng:
           - 📱 **Đọc SMS Ngân Hàng**: Tự động nạp tiền khi nhận SMS chuyển khoản với cú pháp NAP {mã đại lý}
           - 🔄 Cải thiện hiệu suất và độ ổn định
           - 🔐 APK đã được ký với chữ ký SHA256withRSA 4096-bit
           
           ### 📥 Cài đặt:
-          1. Tải file APK từ link: https://sevenapp.onrender.com/download/apk
+          1. Tải file APK bên dưới
           2. Nếu bị chặn bởi Play Protect: Nhấn "Cài đặt anyway" hoặc "More details → Install anyway"
           3. Cho phép cài đặt từ nguồn không xác định
           

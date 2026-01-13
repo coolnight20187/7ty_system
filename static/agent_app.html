@@ -911,7 +911,7 @@
             </form>
 
             <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #999;">
-                <p>Phiên bản: <strong>v2.127.0</strong></p>
+                <p>Phiên bản: <strong>v2.128.0</strong></p>
                 <p>7ty.vn © 2026</p>
             </div>
         </div>
@@ -1753,7 +1753,7 @@
                     <!-- Version -->
                     <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
                         <span style="color: #666; font-size: 14px;">Phiên bản</span>
-                        <span style="font-weight: 600; font-size: 14px;">v2.127.0</span>
+                        <span style="font-weight: 600; font-size: 14px;">v2.128.0</span>
                     </div>
                     
                     <!-- Update Date -->
@@ -1799,7 +1799,7 @@
                             <i class="fab fa-android" style="color: #3ddc84; font-size: 18px;"></i>
                             <div>
                                 <span style="color: var(--primary); font-size: 14px; font-weight: 600; display: block;">Tải APK Mới Nhất</span>
-                                <span style="color: #999; font-size: 11px;">v2.127.0 • 4.5 MB • Đã ký</span>
+                                <span style="color: #999; font-size: 11px;">v2.128.0 • 4.5 MB • Đã ký</span>
                             </div>
                         </div>
                         <div id="apkDownloadBtn" style="background: linear-gradient(135deg, #3ddc84, #00c853); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">
@@ -1811,10 +1811,10 @@
                     <div style="padding: 12px 0; border-bottom: 1px solid #f5f5f5;">
                         <span style="color: #666; font-size: 13px; display: block; margin-bottom: 6px;">Link tải trực tiếp:</span>
                         <div style="background: #f8fafc; padding: 10px; border-radius: 8px; word-break: break-all;">
-                            <a href="https://github.com/coolnight20187/7ty_system/releases/download/agent-v2.127.0/app-release.apk" 
+                            <a href="https://github.com/coolnight20187/7ty_system/releases/download/agent-v2.128.0/app-release.apk" 
                                target="_blank" 
                                style="color: var(--secondary); font-size: 12px; text-decoration: none; font-family: monospace;">
-                                <i class="fas fa-download me-1"></i>GitHub Release - agent-v2.127.0
+                                <i class="fas fa-download me-1"></i>GitHub Release - agent-v2.128.0
                             </a>
                         </div>
                         <div style="margin-top: 8px; font-size: 11px; color: #999;">
@@ -1896,12 +1896,12 @@
         }
         
         // Constants - Server URL for API calls
-        // Web browser: dùng localhost
-        // Capacitor/APK: dùng IP thực của server
+        // Web browser: dùng localhost hoặc origin
+        // Capacitor/APK: dùng server thực
         function getServerUrl() {
-            // Nếu đang chạy trong Capacitor (APK)
+            // Nếu đang chạy trong Capacitor (APK) - kết nối tới server thực
             if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-                return 'http://192.168.2.10:8000';
+                return 'https://sevenapp.onrender.com';
             }
             // Nếu đang chạy trên web nhưng không phải localhost
             if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
@@ -8043,7 +8043,7 @@ ${qrImageUrl}`;
                 }
                 
                 // Download từ GitHub Release
-                const downloadUrl = 'https://github.com/coolnight20187/7ty_system/releases/download/agent-v2.127.0/app-release.apk';
+                const downloadUrl = 'https://github.com/coolnight20187/7ty_system/releases/download/agent-v2.128.0/app-release.apk';
                 console.log('Downloading APK from GitHub:', downloadUrl);
                 
                 // Mở URL trực tiếp để download
@@ -8062,7 +8062,7 @@ ${qrImageUrl}`;
                     }, 3000);
                 }
                 
-                showToast('Đang tải APK v2.127.0...', 'success');
+                showToast('Đang tải APK v2.128.0...', 'success');
             } catch (error) {
                 console.error('Download error:', error);
                 if (btn) {
