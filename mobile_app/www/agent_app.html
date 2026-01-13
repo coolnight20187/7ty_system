@@ -1809,13 +1809,16 @@
                     
                     <!-- Direct Link -->
                     <div style="padding: 12px 0; border-bottom: 1px solid #f5f5f5;">
-                        <span style="color: #666; font-size: 13px; display: block; margin-bottom: 6px;">Link tải trực tiếp:</span>
+                        <span style="color: #666; font-size: 13px; display: block; margin-bottom: 6px;">Link tải trực tiếp (không cần tài khoản):</span>
                         <div style="background: #f8fafc; padding: 10px; border-radius: 8px; word-break: break-all;">
-                            <a href="https://github.com/coolnight20187/7ty_system/releases/download/agent-v2.126.0/app-release.apk" 
+                            <a href="https://sevenapp.onrender.com/download/apk" 
                                target="_blank" 
                                style="color: var(--secondary); font-size: 12px; text-decoration: none; font-family: monospace;">
-                                <i class="fas fa-link me-1"></i>github.com/.../agent-v2.126.0/app-release.apk
+                                <i class="fas fa-download me-1"></i>sevenapp.onrender.com/download/apk
                             </a>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 11px; color: #999;">
+                            <i class="fas fa-info-circle me-1"></i>Có thể copy link này gửi cho người khác tải trực tiếp
                         </div>
                     </div>
                     
@@ -8028,7 +8031,7 @@ ${qrImageUrl}`;
             setTimeout(initSMSReader, 1000);
         });
 
-        // Download APK from GitHub Release
+        // Download APK from Server (không cần tài khoản GitHub)
         async function downloadAPK() {
             const btn = document.getElementById('apkDownloadBtn');
             const originalContent = btn ? btn.innerHTML : '';
@@ -8039,9 +8042,10 @@ ${qrImageUrl}`;
                     btn.style.pointerEvents = 'none';
                 }
                 
-                // Download from GitHub Release - luôn có bản mới nhất
-                const downloadUrl = 'https://github.com/coolnight20187/7ty_system/releases/download/agent-v2.126.0/app-release.apk';
-                console.log('Downloading APK from GitHub:', downloadUrl);
+                // Download từ server - không cần tài khoản GitHub
+                const timestamp = Date.now();
+                const downloadUrl = SERVER_URL + '/download/apk?t=' + timestamp;
+                console.log('Downloading APK from Server:', downloadUrl);
                 
                 // Mở URL trực tiếp để download
                 window.location.href = downloadUrl;
@@ -8059,7 +8063,7 @@ ${qrImageUrl}`;
                     }, 3000);
                 }
                 
-                showToast('Đang tải APK v2.126.0 từ GitHub...', 'success');
+                showToast('Đang tải APK v2.126.0...', 'success');
             } catch (error) {
                 console.error('Download error:', error);
                 if (btn) {
