@@ -911,7 +911,7 @@
             </form>
 
             <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #999;">
-                <p>Phiên bản: <strong>v2.121.0</strong></p>
+                <p>Phiên bản: <strong>v2.125.0</strong></p>
                 <p>7ty.vn © 2026</p>
             </div>
         </div>
@@ -1702,6 +1702,39 @@
                     </div>
                 </div>
 
+                <!-- SMS Banking Reader - Auto Deposit -->
+                <div style="background: white; border-radius: 16px; margin-bottom: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+                    <div style="padding: 16px 18px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid #f0f0f0;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #06b6d4, #0891b2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-sms" style="color: white; font-size: 16px;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 15px; font-weight: 700; color: var(--primary-dark);">📱 Đọc SMS Ngân Hàng</div>
+                            <div style="font-size: 12px; color: #999;">Auto-deposit khi nhận SMS chuyển khoản</div>
+                        </div>
+                    </div>
+                    <div style="padding: 16px 18px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                            <span style="font-size: 14px; color: #666;">Trạng thái:</span>
+                            <span id="smsReaderStatus" style="font-weight: 600; color: #999;">Đang kiểm tra...</span>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="enableSMSReader()" id="btnEnableSMS" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #06b6d4, #0891b2); color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                                <i class="fas fa-play"></i> Bật Đọc SMS
+                            </button>
+                            <button onclick="disableSMSReader()" id="btnDisableSMS" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; display: none;">
+                                <i class="fas fa-stop"></i> Tắt
+                            </button>
+                            <button onclick="testSMSReader()" style="padding: 12px 16px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                                <i class="fas fa-flask"></i> Test
+                            </button>
+                        </div>
+                        <div style="margin-top: 12px; padding: 10px; background: #f0fdfa; border-radius: 8px; font-size: 12px; color: #0d9488;">
+                            <i class="fas fa-info-circle"></i> Khi bật, app sẽ tự động đọc SMS ngân hàng và nạp tiền vào số dư của bạn nếu nội dung chứa mã đại lý (VD: NAP 7TY001)
+                        </div>
+                    </div>
+                </div>
+
                 <!-- App Info -->
                 <div style="background: white; border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
@@ -1712,11 +1745,11 @@
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
                         <span style="color: #666; font-size: 14px;">Phiên bản</span>
-                        <span style="font-weight: 600; font-size: 14px;">v2.121.0</span>
+                        <span style="font-weight: 600; font-size: 14px;">v2.125.0</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
                         <span style="color: #666; font-size: 14px;">Cập nhật</span>
-                        <span style="font-weight: 600; font-size: 14px;">07/01/2026</span>
+                        <span style="font-weight: 600; font-size: 14px;">11/01/2026</span>
                     </div>
                     <div onclick="downloadAPK()" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; cursor: pointer; border-bottom: 1px solid #f5f5f5;">
                         <div style="display: flex; align-items: center; gap: 10px;">
@@ -7707,6 +7740,235 @@ ${qrImageUrl}`;
             }
         }
 
+        // =====================================================
+        // SMS READER - Đọc SMS Ngân hàng để Auto-Deposit
+        // =====================================================
+        
+        let SMSReader = null;
+        
+        // Initialize SMS Reader plugin
+        async function initSMSReader() {
+            try {
+                if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+                    if (window.Capacitor.Plugins && window.Capacitor.Plugins.SMSReader) {
+                        SMSReader = window.Capacitor.Plugins.SMSReader;
+                        console.log('SMSReader plugin initialized');
+                        await checkSMSReaderStatus();
+                    } else {
+                        console.log('SMSReader plugin not found');
+                        updateSMSReaderUI(false, false);
+                    }
+                } else {
+                    console.log('Not running in native app - SMS Reader disabled');
+                    updateSMSReaderUI(false, false);
+                }
+            } catch (e) {
+                console.error('Error initializing SMS Reader:', e);
+                updateSMSReaderUI(false, false);
+            }
+        }
+        
+        // Check SMS Reader status
+        async function checkSMSReaderStatus() {
+            if (!SMSReader) {
+                updateSMSReaderUI(false, false);
+                return;
+            }
+            
+            try {
+                const status = await SMSReader.getStatus();
+                console.log('SMS Reader status:', status);
+                updateSMSReaderUI(status.isRunning, status.hasPermission);
+            } catch (e) {
+                console.error('Error checking SMS status:', e);
+                updateSMSReaderUI(false, false);
+            }
+        }
+        
+        // Update UI based on status
+        function updateSMSReaderUI(isRunning, hasPermission) {
+            const statusEl = document.getElementById('smsReaderStatus');
+            const btnEnable = document.getElementById('btnEnableSMS');
+            const btnDisable = document.getElementById('btnDisableSMS');
+            
+            if (!statusEl) return;
+            
+            if (!window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) {
+                statusEl.innerHTML = '<span style="color: #999;">Chỉ hỗ trợ trên app</span>';
+                if (btnEnable) btnEnable.style.display = 'none';
+                if (btnDisable) btnDisable.style.display = 'none';
+                return;
+            }
+            
+            if (isRunning) {
+                statusEl.innerHTML = '<span style="color: #10b981;"><i class="fas fa-check-circle"></i> Đang chạy</span>';
+                if (btnEnable) btnEnable.style.display = 'none';
+                if (btnDisable) btnDisable.style.display = 'inline-flex';
+            } else if (hasPermission) {
+                statusEl.innerHTML = '<span style="color: #f59e0b;"><i class="fas fa-pause-circle"></i> Đã tắt</span>';
+                if (btnEnable) btnEnable.style.display = 'inline-flex';
+                if (btnDisable) btnDisable.style.display = 'none';
+            } else {
+                statusEl.innerHTML = '<span style="color: #999;"><i class="fas fa-times-circle"></i> Chưa cấp quyền</span>';
+                if (btnEnable) {
+                    btnEnable.style.display = 'inline-flex';
+                    btnEnable.innerHTML = '<i class="fas fa-shield-alt"></i> Cấp quyền SMS';
+                }
+                if (btnDisable) btnDisable.style.display = 'none';
+            }
+        }
+        
+        // Enable SMS Reader
+        async function enableSMSReader() {
+            if (!SMSReader) {
+                showToast('Plugin SMS Reader không khả dụng', 'error');
+                return;
+            }
+            
+            try {
+                // Check and request permissions
+                const perms = await SMSReader.checkPermissions();
+                console.log('SMS Permissions:', perms);
+                
+                if (!perms.allGranted) {
+                    const result = await Swal.fire({
+                        title: 'Cấp Quyền SMS',
+                        html: `<div style="text-align: center;">
+                            <i class="fas fa-sms" style="font-size: 48px; color: #06b6d4; margin-bottom: 16px;"></i>
+                            <p>Để tự động đọc SMS ngân hàng, bạn cần cấp quyền SMS cho ứng dụng.</p>
+                            <p style="color: #666; font-size: 13px; margin-top: 10px;">Ứng dụng chỉ đọc SMS từ ngân hàng và không lưu trữ tin nhắn cá nhân.</p>
+                        </div>`,
+                        icon: null,
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="fas fa-shield-alt"></i> Cấp Quyền',
+                        cancelButtonText: 'Hủy',
+                        confirmButtonColor: '#06b6d4'
+                    });
+                    
+                    if (!result.isConfirmed) return;
+                    
+                    const reqResult = await SMSReader.requestPermissions();
+                    console.log('Permission request result:', reqResult);
+                    
+                    if (!reqResult.allGranted) {
+                        Swal.fire({
+                            title: 'Cần Cấp Quyền',
+                            html: '<p>Vui lòng cấp quyền SMS trong Cài đặt > Ứng dụng > 7TY Agent > Quyền</p>',
+                            icon: 'warning',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: 'var(--primary)'
+                        });
+                        return;
+                    }
+                }
+                
+                // Enable SMS reading
+                const enableResult = await SMSReader.enableSMSReading({
+                    serverUrl: SERVER_URL,
+                    authToken: localStorage.getItem('token') || ''
+                });
+                
+                console.log('Enable SMS reading result:', enableResult);
+                
+                showToast('Đã bật đọc SMS ngân hàng', 'success');
+                await checkSMSReaderStatus();
+                
+            } catch (e) {
+                console.error('Error enabling SMS reader:', e);
+                showToast('Lỗi bật SMS Reader: ' + e.message, 'error');
+            }
+        }
+        
+        // Disable SMS Reader
+        async function disableSMSReader() {
+            if (!SMSReader) return;
+            
+            try {
+                await SMSReader.disableSMSReading();
+                showToast('Đã tắt đọc SMS ngân hàng', 'info');
+                await checkSMSReaderStatus();
+            } catch (e) {
+                console.error('Error disabling SMS reader:', e);
+                showToast('Lỗi: ' + e.message, 'error');
+            }
+        }
+        
+        // Test SMS Reader
+        async function testSMSReader() {
+            if (!SMSReader) {
+                showToast('Plugin SMS Reader không khả dụng', 'error');
+                return;
+            }
+            
+            const { value: formValues } = await Swal.fire({
+                title: '🧪 Test SMS Ngân Hàng',
+                html: `
+                    <div style="text-align: left;">
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; color: #666;">Số tiền (VND):</label>
+                            <input type="number" id="testAmount" class="swal2-input" value="100000" style="margin-top: 5px;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; color: #666;">Nội dung (chứa mã đại lý):</label>
+                            <input type="text" id="testContent" class="swal2-input" value="NAP ${agentData?.code || '7TY001'}" style="margin-top: 5px;">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-paper-plane"></i> Gửi Test',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#8b5cf6',
+                preConfirm: () => {
+                    return {
+                        amount: document.getElementById('testAmount').value,
+                        content: document.getElementById('testContent').value
+                    };
+                }
+            });
+            
+            if (!formValues) return;
+            
+            try {
+                showToast('Đang gửi test SMS...', 'info');
+                
+                const result = await SMSReader.testSendSMS({
+                    amount: parseInt(formValues.amount),
+                    content: formValues.content,
+                    message: `+${formValues.amount}VND ND: ${formValues.content}`
+                });
+                
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Test Thành Công!',
+                        html: `<p>Đã gửi dữ liệu test lên server.</p>
+                               <p style="color: #666; font-size: 13px;">Kiểm tra số dư của bạn.</p>`,
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: 'var(--primary)'
+                    });
+                    
+                    // Refresh data
+                    setTimeout(loadDashboard, 2000);
+                } else {
+                    throw new Error('Server response: ' + result.responseCode);
+                }
+            } catch (e) {
+                console.error('Test SMS error:', e);
+                Swal.fire({
+                    title: 'Test Thất Bại',
+                    html: `<p>Không thể gửi test SMS.</p><p style="color: #999; font-size: 13px;">${e.message}</p>`,
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: 'var(--primary)'
+                });
+            }
+        }
+        
+        // Initialize SMS Reader on app load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initSMSReader, 1000);
+        });
+
         // Download APK via blob to bypass security warning
         async function downloadAPK() {
             const btn = document.getElementById('apkDownloadBtn');
@@ -7740,7 +8002,7 @@ ${qrImageUrl}`;
                     }, 3000);
                 }
                 
-                showToast('Đang tải APK v2.121.0...', 'success');
+                showToast('Đang tải APK v2.125.0...', 'success');
             } catch (error) {
                 console.error('Download error:', error);
                 if (btn) {
