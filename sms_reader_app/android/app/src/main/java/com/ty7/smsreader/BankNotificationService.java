@@ -71,7 +71,7 @@ public class BankNotificationService extends NotificationListenerService {
         put("com.techcombank.mobile", "TCB");
         put("vn.techcombank.mobile", "TCB");
         
-        // VPBank - VPBank NEO
+        // VPBank - VPBank NEO, VPBank Online
         put("com.vnpay.vpbankonline", "VPB");
         put("vn.com.vpbank.smartone", "VPB");
         put("com.vpbank.neo", "VPB");
@@ -79,6 +79,13 @@ public class BankNotificationService extends NotificationListenerService {
         put("com.vpbank", "VPB");
         put("vn.com.vpbank.neo", "VPB");
         put("com.vpb.vpbank", "VPB");
+        put("vn.vpbank", "VPB");
+        put("com.vpbank.vpbankonline", "VPB");
+        put("vn.com.vpbank", "VPB");
+        put("com.vp.vpbank", "VPB");
+        put("vn.vpbank.online", "VPB");
+        put("com.vpbank.mobile", "VPB");
+        put("vn.vpbank.mobile", "VPB");
         
         // TPBank
         put("vn.tpb.mb.gprsandroid", "TPB");
