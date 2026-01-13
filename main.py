@@ -90,6 +90,13 @@ try:
 except ImportError as e:
     logging.warning(f"Failed to import email_webhook router: {e}")
 
+# Deposit security router  
+deposit = None
+try:
+    from routers import deposit
+except ImportError as e:
+    logging.warning(f"Failed to import deposit router: {e}")
+
 # Thiết lập logging
 logging.basicConfig(
     level=logging.INFO,
@@ -412,6 +419,8 @@ if rewards:
     app.include_router(rewards.router, prefix="/api/rewards", tags=["Rewards"])
 if email_webhook:
     app.include_router(email_webhook.router, prefix="/api/v1", tags=["Email Webhook"])
+if deposit:
+    app.include_router(deposit.router, prefix="/api/v1", tags=["Deposit"])
 
 # WebSocket endpoints
 @app.websocket("/ws")

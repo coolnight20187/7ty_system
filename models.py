@@ -1033,4 +1033,274 @@ class RewardTransaction(Base):
         return f"<RewardTransaction {self.transaction_code}: {self.points} points>"
 
 
+# =========================================
+# DEPOSIT REQUEST - HỆ THỐNG NẠP TIỀN BẢO MẬT
+# =========================================
+
+class DepositStatus(str, enum.Enum):
+    """Trạng thái yêu cầu nạp tiền"""
+    PENDING = "pending"              # Chờ xác nhận
+    VERIFIED = "verified"            # Đã xác minh
+    APPROVED = "approved"            # Đã duyệt (Admin)
+    PROCESSING = "processing"        # Đang xử lý
+    COMPLETED = "completed"          # Hoàn thành
+    REJECTED = "rejected"            # Từ chối
+    CANCELLED = "cancelled"          # Đã hủy
+    EXPIRED = "expired"              # Hết hạn
+
+class DepositMethod(str, enum.Enum):
+    """Phương thức nạp tiền"""
+    BANK_TRANSFER = "bank_transfer"  # Chuyển khoản ngân hàng
+    BANK_WEBHOOK = "bank_webhook"    # Webhook tự động
+    CASH = "cash"                    # Tiền mặt
+    CARD = "card"                    # Thẻ cào
+    MANUAL = "manual"                # Nhân viên nạp thủ công
+
+class DepositRequest(Base, TimestampMixin):
+    """
+    Yêu cầu nạp tiền - Hệ thống bảo mật nâng cao
+    
+    Flow: 
+    1. Agent tạo yêu cầu (PENDING)
+    2. Agent xác minh OTP/PIN (VERIFIED) 
+    3. Admin duyệt (APPROVED) hoặc Webhook tự động
+    4. Hệ thống xử lý (PROCESSING)
+    5. Hoàn thành (COMPLETED) / Từ chối (REJECTED)
+    """
+    __tablename__ = "deposit_requests"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    request_code = Column(String(50), unique=True, index=True, nullable=False)
+    
+    # Agent info
+    agent_id = Column(Integer, ForeignKey("agents.id"), nullable=False, index=True)
+    agent_code = Column(String(20), nullable=False, index=True)
+    
+    # Amount
+    amount = Column(Numeric(15, 0), nullable=False)
+    actual_amount = Column(Numeric(15, 0), nullable=True)  # Số tiền thực nhận
+    fee = Column(Numeric(15, 0), default=0)
+    
+    # Method & Status
+    method = Column(Enum(DepositMethod), nullable=False)
+    status = Column(Enum(DepositStatus), default=DepositStatus.PENDING, nullable=False, index=True)
+    
+    # Bank transfer details
+    bank_account_id = Column(Integer, ForeignKey("system_bank_accounts.id"), nullable=True)
+    bank_reference = Column(String(100), nullable=True, index=True)  # Mã giao dịch ngân hàng
+    transfer_content = Column(String(255), nullable=True)  # Nội dung chuyển khoản
+    transfer_time = Column(DateTime, nullable=True)  # Thời gian chuyển khoản
+    
+    # Security - Xác thực 2 lớp
+    verification_code = Column(String(10), nullable=True)  # OTP/PIN
+    verification_expires_at = Column(DateTime, nullable=True)
+    is_verified = Column(Boolean, default=False, nullable=False)
+    verified_at = Column(DateTime, nullable=True)
+    verification_attempts = Column(Integer, default=0)  # Số lần thử sai
+    max_verification_attempts = Column(Integer, default=3)
+    
+    # Security - IP & Device tracking
+    request_ip = Column(String(45), nullable=True)  # IPv4/IPv6
+    request_user_agent = Column(String(500), nullable=True)
+    request_device_id = Column(String(100), nullable=True)
+    
+    # Security - Signature verification (for webhooks)
+    webhook_signature = Column(String(255), nullable=True)
+    webhook_verified = Column(Boolean, default=False)
+    webhook_source = Column(String(50), nullable=True)  # casso, sepay, etc.
+    
+    # Processing
+    processed_at = Column(DateTime, nullable=True)
+    processed_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    
+    # Approval
+    approved_at = Column(DateTime, nullable=True)
+    approved_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    rejection_reason = Column(Text, nullable=True)
+    
+    # Transaction link
+    transaction_id = Column(Integer, ForeignKey("transactions.id"), nullable=True)
+    
+    # Balance tracking
+    previous_balance = Column(Numeric(15, 0), nullable=True)
+    new_balance = Column(Numeric(15, 0), nullable=True)
+    
+    # Rate limiting
+    daily_deposit_count = Column(Integer, default=0)  # Số lần nạp trong ngày
+    daily_deposit_total = Column(Numeric(15, 0), default=0)  # Tổng số tiền nạp trong ngày
+    
+    # Audit & Notes
+    admin_notes = Column(Text, nullable=True)
+    agent_notes = Column(Text, nullable=True)
+    audit_log = Column(JSON, nullable=True)  # Lịch sử thay đổi trạng thái
+    
+    # Expiration
+    expires_at = Column(DateTime, nullable=True)  # Thời hạn yêu cầu
+    
+    # Extra data
+    extra_data = Column(JSON, nullable=True)
+    
+    # Relationships
+    agent = relationship("Agent", backref="deposit_requests")
+    bank_account = relationship("SystemBankAccount")
+    transaction = relationship("Transaction")
+    processed_by = relationship("User", foreign_keys=[processed_by_id])
+    approved_by = relationship("User", foreign_keys=[approved_by_id])
+    
+    # Indexes
+    __table_args__ = (
+        Index('idx_deposit_agent', 'agent_id'),
+        Index('idx_deposit_status', 'status'),
+        Index('idx_deposit_code', 'request_code'),
+        Index('idx_deposit_bank_ref', 'bank_reference'),
+        Index('idx_deposit_date', 'created_at'),
+    )
+    
+    def add_audit_log(self, action: str, user_id: int = None, details: dict = None):
+        """Thêm log audit trail"""
+        if not self.audit_log:
+            self.audit_log = []
+        
+        log_entry = {
+            "action": action,
+            "timestamp": datetime.utcnow().isoformat(),
+            "user_id": user_id,
+            "details": details
+        }
+        self.audit_log.append(log_entry)
+    
+    def is_expired(self) -> bool:
+        """Kiểm tra yêu cầu đã hết hạn chưa"""
+        if self.expires_at:
+            return datetime.utcnow() > self.expires_at
+        return False
+    
+    def can_verify(self) -> bool:
+        """Kiểm tra có thể xác minh không"""
+        return (
+            self.status == DepositStatus.PENDING and
+            not self.is_verified and
+            self.verification_attempts < self.max_verification_attempts and
+            not self.is_expired()
+        )
+    
+    def __repr__(self):
+        return f"<DepositRequest {self.request_code}: {self.amount} - {self.status.value}>"
+
+
+class DepositLimit(Base, TimestampMixin):
+    """
+    Giới hạn nạp tiền - Bảo mật và quản lý rủi ro
+    """
+    __tablename__ = "deposit_limits"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # Scope
+    agent_id = Column(Integer, ForeignKey("agents.id"), nullable=True)  # None = global
+    agent_level = Column(String(20), nullable=True)  # Áp dụng theo level đại lý
+    
+    # Limits
+    min_amount = Column(Numeric(15, 0), default=100000)  # Tối thiểu 100k
+    max_amount = Column(Numeric(15, 0), default=100000000)  # Tối đa 100M/lần
+    daily_limit = Column(Numeric(15, 0), default=500000000)  # 500M/ngày
+    monthly_limit = Column(Numeric(15, 0), default=5000000000)  # 5 tỷ/tháng
+    
+    # Count limits
+    max_daily_count = Column(Integer, default=10)  # Tối đa 10 lần/ngày
+    max_hourly_count = Column(Integer, default=3)  # Tối đa 3 lần/giờ
+    
+    # Verification requirements
+    require_otp = Column(Boolean, default=True)  # Yêu cầu OTP
+    require_admin_approval = Column(Boolean, default=False)  # Cần Admin duyệt
+    approval_threshold = Column(Numeric(15, 0), default=50000000)  # >50M cần duyệt
+    
+    # Active
+    is_active = Column(Boolean, default=True)
+    
+    # Notes
+    description = Column(Text, nullable=True)
+    
+    def __repr__(self):
+        return f"<DepositLimit agent={self.agent_id} min={self.min_amount} max={self.max_amount}>"
+
+
+class DepositSecurityLog(Base):
+    """
+    Log bảo mật cho giao dịch nạp tiền
+    """
+    __tablename__ = "deposit_security_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    deposit_request_id = Column(Integer, ForeignKey("deposit_requests.id"), nullable=True, index=True)
+    agent_id = Column(Integer, ForeignKey("agents.id"), nullable=False, index=True)
+    
+    # Event
+    event_type = Column(String(50), nullable=False)  # otp_sent, otp_verified, otp_failed, limit_exceeded, suspicious, etc.
+    event_description = Column(Text, nullable=True)
+    
+    # Security data
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(String(500), nullable=True)
+    device_fingerprint = Column(String(255), nullable=True)
+    
+    # Risk assessment
+    risk_score = Column(Integer, default=0)  # 0-100
+    risk_factors = Column(JSON, nullable=True)  # Các yếu tố rủi ro
+    is_flagged = Column(Boolean, default=False)
+    
+    # Timestamp
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    # Extra
+    extra_data = Column(JSON, nullable=True)
+    
+    def __repr__(self):
+        return f"<DepositSecurityLog {self.event_type} agent={self.agent_id}>"
+
+
+# =========================================
+# SYSTEM BANK ACCOUNT MODEL
+# =========================================
+
+class SystemBankAccount(Base):
+    """
+    Tài khoản ngân hàng hệ thống (nhận tiền nạp)
+    """
+    __tablename__ = "system_bank_accounts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    bank_name = Column(String(100), nullable=False)          # Tên ngân hàng (VCB, TCB, MB...)
+    bank_full_name = Column(String(255), nullable=True)      # Tên đầy đủ
+    account_number = Column(String(50), nullable=False)      # Số tài khoản
+    account_name = Column(String(255), nullable=False)       # Tên chủ tài khoản
+    branch = Column(String(255), nullable=True)              # Chi nhánh
+    
+    # Settings
+    is_active = Column(Boolean, default=True)
+    is_default = Column(Boolean, default=False)              # Tài khoản mặc định
+    priority = Column(Integer, default=0)                    # Thứ tự ưu tiên
+    
+    # QR Code
+    qr_code = Column(Text, nullable=True)                    # QR code base64
+    
+    # Webhook config
+    webhook_secret = Column(String(255), nullable=True)      # Secret key cho webhook
+    webhook_source = Column(String(50), nullable=True)       # Nguồn: casso, sepay, manual
+    
+    # Stats
+    total_received = Column(Numeric(18, 2), default=0)       # Tổng tiền đã nhận
+    transaction_count = Column(Integer, default=0)           # Số giao dịch
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Notes
+    notes = Column(Text, nullable=True)
+    
+    def __repr__(self):
+        return f"<SystemBankAccount {self.bank_name} - {self.account_number}>"
+
+
 # Add reward fields to Agent model - will be handled via migration or direct add
