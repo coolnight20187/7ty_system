@@ -356,9 +356,9 @@ async def download_apk():
     return FileResponse(
         path=apk_path,
         media_type="application/vnd.android.package-archive",
-        filename="7ty-agent-v126.apk",
+        filename="7ty-agent-v127.apk",
         headers={
-            "Content-Disposition": "attachment; filename=7ty-agent-v126.apk",
+            "Content-Disposition": "attachment; filename=7ty-agent-v127.apk",
             "Content-Type": "application/vnd.android.package-archive",
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "X-Content-Type-Options": "nosniff"
