@@ -1743,23 +1743,82 @@
                         </div>
                         <span style="font-size: 15px; font-weight: 700; color: var(--primary-dark);">Thông Tin Ứng Dụng</span>
                     </div>
+                    
+                    <!-- App Name -->
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
+                        <span style="color: #666; font-size: 14px;">Tên ứng dụng</span>
+                        <span style="font-weight: 600; font-size: 14px; color: var(--primary);">7TY Agent</span>
+                    </div>
+                    
+                    <!-- Version -->
                     <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
                         <span style="color: #666; font-size: 14px;">Phiên bản</span>
                         <span style="font-weight: 600; font-size: 14px;">v2.126.0</span>
                     </div>
+                    
+                    <!-- Update Date -->
                     <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
                         <span style="color: #666; font-size: 14px;">Cập nhật</span>
                         <span style="font-weight: 600; font-size: 14px;">13/01/2026</span>
                     </div>
+                    
+                    <!-- Developer -->
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
+                        <span style="color: #666; font-size: 14px;">Nhà phát triển</span>
+                        <span style="font-weight: 600; font-size: 14px;">7TY.VN Team</span>
+                    </div>
+                    
+                    <!-- Website -->
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
+                        <span style="color: #666; font-size: 14px;">Website</span>
+                        <a href="https://sevenapp.onrender.com" target="_blank" style="font-weight: 600; font-size: 14px; color: var(--secondary); text-decoration: none;">sevenapp.onrender.com</a>
+                    </div>
+                    
+                    <!-- Support -->
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
+                        <span style="color: #666; font-size: 14px;">Hỗ trợ</span>
+                        <a href="tel:0123456789" style="font-weight: 600; font-size: 14px; color: var(--success); text-decoration: none;">
+                            <i class="fas fa-phone-alt me-1"></i>Hotline
+                        </a>
+                    </div>
+                    
+                    <!-- Features -->
+                    <div style="padding: 12px 0; border-bottom: 1px solid #f5f5f5;">
+                        <span style="color: #666; font-size: 14px; display: block; margin-bottom: 8px;">Tính năng chính:</span>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            <span style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">💰 Thu hộ hóa đơn</span>
+                            <span style="background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">📱 Nạp tiền điện thoại</span>
+                            <span style="background: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">⚡ Thanh toán điện</span>
+                            <span style="background: #ede9fe; color: #7c3aed; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">📲 SMS Auto-Deposit</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Download APK -->
                     <div onclick="downloadAPK()" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; cursor: pointer; border-bottom: 1px solid #f5f5f5;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <i class="fab fa-android" style="color: #3ddc84; font-size: 18px;"></i>
-                            <span style="color: var(--primary); font-size: 14px; font-weight: 600;">Tải APK Mới Nhất</span>
+                            <div>
+                                <span style="color: var(--primary); font-size: 14px; font-weight: 600; display: block;">Tải APK Mới Nhất</span>
+                                <span style="color: #999; font-size: 11px;">v2.126.0 • 4.5 MB • Đã ký</span>
+                            </div>
                         </div>
                         <div id="apkDownloadBtn" style="background: linear-gradient(135deg, #3ddc84, #00c853); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">
                             <i class="fas fa-download me-1"></i> Tải Về
                         </div>
                     </div>
+                    
+                    <!-- Direct Link -->
+                    <div style="padding: 12px 0; border-bottom: 1px solid #f5f5f5;">
+                        <span style="color: #666; font-size: 13px; display: block; margin-bottom: 6px;">Link tải trực tiếp:</span>
+                        <div style="background: #f8fafc; padding: 10px; border-radius: 8px; word-break: break-all;">
+                            <a href="https://github.com/coolnight20187/7ty_system/releases/download/agent-v2.126.0/app-release.apk" 
+                               target="_blank" 
+                               style="color: var(--secondary); font-size: 12px; text-decoration: none; font-family: monospace;">
+                                <i class="fas fa-link me-1"></i>github.com/.../agent-v2.126.0/app-release.apk
+                            </a>
+                        </div>
+                    </div>
+                    
                     <!-- Test VietQR Button -->
                     <div onclick="showVietQRTest()" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; cursor: pointer;">
                         <div style="display: flex; align-items: center; gap: 10px;">
