@@ -9,9 +9,9 @@
     <meta name="apple-mobile-web-app-title" content="7TY Agent">
     <!-- Disabled for mobile app -->
     <!-- <link rel="manifest" href="/static/manifest_agent.json"> -->
-    <link rel="apple-touch-icon" href="/static/images/logo.png?v=2">
+    <link rel="apple-touch-icon" href="images/logo.png">
     <title>7TY.VN - Ứng dụng Đại Lý</title>
-    <link rel="icon" type="image/png" href="/static/images/logo.png?v=2">
+    <link rel="icon" type="image/png" href="images/logo.png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.min.css" rel="stylesheet">
@@ -879,7 +879,6 @@
     <div class="login-container" id="loginPage">
         <div class="login-box">
             <div class="login-logo">
-                <img src="/static/images/logo.png?v=2" alt="7TY Logo" style="width: 80px; height: 80px; border-radius: 16px; margin-bottom: 12px; box-shadow: 0 8px 25px rgba(201, 162, 39, 0.4);">
                 <h1>7TY</h1>
                 <p>Đại Lý App</p>
             </div>
@@ -928,8 +927,6 @@
                     <button id="backBtn" class="back-btn" onclick="goBack()">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <!-- Logo nhỏ trong header -->
-                    <img src="/static/images/logo.png?v=2" alt="7TY" style="width: 38px; height: 38px; border-radius: 10px; box-shadow: 0 4px 12px rgba(201, 162, 39, 0.3);">
                     <div>
                         <h1 style="font-size: 13px; font-weight: 400; opacity: 0.85; margin-bottom: 4px;" id="headerTitle">Xin chào,</h1>
                         <div style="font-size: 20px; font-weight: 700; color: var(--gold);" id="headerSubtitle">Đại Lý 7TY</div>
@@ -1279,7 +1276,6 @@
                     <div style="font-family: 'Times New Roman', Times, serif; background: white; border: 2px solid #333; border-radius: 8px; padding: 16px; max-width: 300px; margin: 0 auto 15px auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" id="electricityReceipt">
                         <!-- Header -->
                         <div style="text-align: center; border-bottom: 2px dashed #333; padding-bottom: 12px; margin-bottom: 12px;">
-                            <img src="/static/images/logo.png?v=2" alt="7TY" style="width: 45px; height: 45px; border-radius: 10px; margin-bottom: 6px; box-shadow: 0 4px 12px rgba(201, 162, 39, 0.3);">
                             <div id="receiptStoreName" style="font-size: 20px; font-weight: bold; color: #0d4a4a; letter-spacing: 2px;">7TY.VN</div>
                             <div style="font-size: 11px; color: #666; margin-top: 4px;">HỆ THỐNG THANH TOÁN</div>
                             <div id="receiptStoreAddress" style="font-size: 10px; color: #999; margin-top: 2px;"></div>
@@ -7973,7 +7969,7 @@ ${qrImageUrl}`;
             setTimeout(initSMSReader, 1000);
         });
 
-        // Download APK via blob to bypass security warning
+        // Download APK from GitHub Release
         async function downloadAPK() {
             const btn = document.getElementById('apkDownloadBtn');
             const originalContent = btn ? btn.innerHTML : '';
@@ -7984,13 +7980,11 @@ ${qrImageUrl}`;
                     btn.style.pointerEvents = 'none';
                 }
                 
-                // Use SERVER_URL constant for mobile app compatibility
-                // Thêm timestamp để tránh cache
-                const timestamp = Date.now();
-                const downloadUrl = SERVER_URL + '/download/apk?t=' + timestamp;
-                console.log('Downloading APK from:', downloadUrl);
+                // Download from GitHub Release - luôn có bản mới nhất
+                const downloadUrl = 'https://github.com/coolnight20187/7ty_system/releases/download/agent-v2.125.0/app-debug.apk';
+                console.log('Downloading APK from GitHub:', downloadUrl);
                 
-                // Trong WebView của Capacitor, cần mở URL trực tiếp để download
+                // Mở URL trực tiếp để download
                 window.location.href = downloadUrl;
                 
                 if (btn) {
@@ -8006,7 +8000,7 @@ ${qrImageUrl}`;
                     }, 3000);
                 }
                 
-                showToast('Đang tải APK v2.125.0...', 'success');
+                showToast('Đang tải APK v2.125.0 từ GitHub...', 'success');
             } catch (error) {
                 console.error('Download error:', error);
                 if (btn) {

@@ -7969,7 +7969,7 @@ ${qrImageUrl}`;
             setTimeout(initSMSReader, 1000);
         });
 
-        // Download APK via blob to bypass security warning
+        // Download APK from GitHub Release
         async function downloadAPK() {
             const btn = document.getElementById('apkDownloadBtn');
             const originalContent = btn ? btn.innerHTML : '';
@@ -7980,13 +7980,11 @@ ${qrImageUrl}`;
                     btn.style.pointerEvents = 'none';
                 }
                 
-                // Use SERVER_URL constant for mobile app compatibility
-                // Thêm timestamp để tránh cache
-                const timestamp = Date.now();
-                const downloadUrl = SERVER_URL + '/download/apk?t=' + timestamp;
-                console.log('Downloading APK from:', downloadUrl);
+                // Download from GitHub Release - luôn có bản mới nhất
+                const downloadUrl = 'https://github.com/coolnight20187/7ty_system/releases/download/agent-v2.125.0/app-debug.apk';
+                console.log('Downloading APK from GitHub:', downloadUrl);
                 
-                // Trong WebView của Capacitor, cần mở URL trực tiếp để download
+                // Mở URL trực tiếp để download
                 window.location.href = downloadUrl;
                 
                 if (btn) {
@@ -8002,7 +8000,7 @@ ${qrImageUrl}`;
                     }, 3000);
                 }
                 
-                showToast('Đang tải APK v2.125.0...', 'success');
+                showToast('Đang tải APK v2.125.0 từ GitHub...', 'success');
             } catch (error) {
                 console.error('Download error:', error);
                 if (btn) {
