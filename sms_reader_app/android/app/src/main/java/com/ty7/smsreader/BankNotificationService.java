@@ -54,6 +54,7 @@ public class BankNotificationService extends NotificationListenerService {
         put("com.acb", "ACB");
         put("vn.acb.acbmobile", "ACB");
         put("com.acb.acb", "ACB");
+        put("mobile.acb.com.vn", "ACB");  // ACB Mobile app
         
         // MB Bank
         put("com.mbmobile", "MB");

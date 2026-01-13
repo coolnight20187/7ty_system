@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#1e3a5f">
+    <title>7TY Bank Reader - ACB</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #1e3a5f;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --acb-color: #1a4789;
+        }
+        
+        body {
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--acb-color) 0%, #0f172a 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .header p { color: rgba(255,255,255,0.7); font-size: 13px; }
+        
+        .bank-logo {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-weight: bold;
+            color: var(--acb-color);
+            font-size: 20px;
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-title i { color: var(--accent); }
+        
+        .status-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .status-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .status-dot.active {
+            background: var(--success);
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.inactive { background: var(--danger); }
+        .status-dot.warning { background: var(--warning); }
+        
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        
+        .input-group { margin-bottom: 14px; }
+        .input-group label { display: block; font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 14px;
+        }
+        .input-group input:focus { outline: none; border-color: var(--accent); }
+        .input-group input::placeholder { color: rgba(255,255,255,0.4); }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary { background: linear-gradient(135deg, var(--accent), #0891b2); color: white; }
+        .btn-success { background: linear-gradient(135deg, var(--success), #059669); color: white; }
+        .btn-danger { background: linear-gradient(135deg, var(--danger), #dc2626); color: white; }
+        .btn-warning { background: linear-gradient(135deg, var(--warning), #d97706); color: white; }
+        .btn-outline { background: transparent; border: 2px solid rgba(255,255,255,0.3); color: white; }
+        .btn:active { transform: scale(0.98); }
+        
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+        .stat-item { background: rgba(0,0,0,0.2); padding: 14px; border-radius: 10px; text-align: center; }
+        .stat-value { font-size: 22px; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+        
+        .permission-box {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--danger);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .permission-box.granted {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--success);
+        }
+        
+        .permission-box h4 { font-size: 14px; margin-bottom: 8px; }
+        .permission-box p { font-size: 12px; color: rgba(255,255,255,0.8); line-height: 1.5; }
+        
+        .log-container {
+            max-height: 250px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+        }
+        
+        .log-item {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 13px;
+        }
+        
+        .log-item:last-child { border-bottom: none; }
+        .log-item .time { color: rgba(255,255,255,0.5); font-size: 11px; }
+        .log-item .amount { color: var(--success); font-weight: 700; }
+        .log-item .bank { color: var(--accent); font-weight: 600; }
+        
+        .log-success { border-left: 3px solid var(--success); }
+        .log-error { border-left: 3px solid var(--danger); }
+        .log-info { border-left: 3px solid var(--accent); }
+        
+        .info-box {
+            background: rgba(6, 182, 212, 0.15);
+            border: 1px solid var(--accent);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        
+        .info-box i { color: var(--accent); margin-right: 6px; }
+        
+        .version { text-align: center; color: rgba(255,255,255,0.4); font-size: 11px; margin-top: 20px; }
+        .hidden { display: none !important; }
+        
+        .tabs {
+            display: flex;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 16px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="bank-logo">ACB</div>
+        <h1><i class="fas fa-bell"></i> 7TY Bank Reader</h1>
+        <p>Tự động đọc thông báo ACB để nạp tiền đại lý</p>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('notification')">
+            <i class="fas fa-bell"></i> Notification
+        </div>
+        <div class="tab" onclick="switchTab('sms')">
+            <i class="fas fa-sms"></i> SMS
+        </div>
+    </div>
+    
+    <!-- Notification Tab -->
+    <div id="tab-notification" class="tab-content active">
+        <!-- Status Card -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-signal"></i> Trạng Thái</div>
+            <div class="status-box">
+                <div class="status-dot" id="notifStatusDot"></div>
+                <div style="flex: 1;">
+                    <div id="notifStatusText" style="font-weight: 600;">Đang kiểm tra...</div>
+                    <div id="notifStatusSubtext" style="font-size: 12px; color: rgba(255,255,255,0.6);"></div>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="statNotifTotal">0</div>
+                    <div class="stat-label">Đã nhận</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="statNotifSuccess">0</div>
+                    <div class="stat-label">Thành công</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="statNotifAmount">0</div>
+                    <div class="stat-label">Tổng tiền (K)</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Permission Card -->
+        <div class="permission-box" id="permissionBox">
+            <h4><i class="fas fa-exclamation-triangle"></i> Cần cấp quyền Notification Access</h4>
+            <p>Để đọc thông báo từ app ACB, bạn cần cấp quyền "Notification Access" trong Cài đặt.</p>
+            <button class="btn btn-warning" style="margin-top: 12px;" onclick="openNotificationSettings()">
+                <i class="fas fa-cog"></i> Mở Cài Đặt Quyền
+            </button>
+        </div>
+        
+        <!-- Config Card - Auto-filled -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-cog"></i> Cấu Hình Server</div>
+            <div class="input-group">
+                <label>Server URL (Đã tự động cấu hình)</label>
+                <input type="text" id="serverUrl" value="https://sevenapp.onrender.com" readonly style="background: rgba(16, 185, 129, 0.1); border-color: var(--success);">
+            </div>
+            <div style="font-size: 12px; color: var(--success); margin-bottom: 12px;">
+                <i class="fas fa-check-circle"></i> Server đã được cấu hình sẵn
+            </div>
+        </div>
+        
+        <!-- Control Card -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-play-circle"></i> Điều Khiển</div>
+            <button class="btn btn-success" id="btnStartNotif" onclick="startNotificationReader()">
+                <i class="fas fa-play"></i> Bật Đọc Thông Báo
+            </button>
+            <button class="btn btn-outline" onclick="testNotification()">
+                <i class="fas fa-flask"></i> Gửi Test Thông Báo
+            </button>
+            <button class="btn btn-warning" style="margin-top: 8px;" onclick="showDebugLogs()">
+                <i class="fas fa-bug"></i> Xem Debug Logs
+            </button>
+        </div>
+    </div>
+    
+    <!-- SMS Tab -->
+    <div id="tab-sms" class="tab-content">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-sms"></i> SMS Reader</div>
+            <p style="font-size: 13px; color: rgba(255,255,255,0.7); margin-bottom: 16px;">
+                Nếu bạn đăng ký SMS Banking, có thể dùng SMS Reader thay vì Notification.
+            </p>
+            <button class="btn btn-primary" onclick="openSMSReader()">
+                <i class="fas fa-external-link-alt"></i> Mở SMS Reader
+            </button>
+        </div>
+    </div>
+    
+    <!-- Debug Modal -->
+    <div id="debugModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; padding: 20px; overflow-y: auto;">
+        <div class="card" style="max-height: 90vh; overflow-y: auto;">
+            <div class="card-title">
+                <i class="fas fa-bug"></i> Debug Logs
+                <button onclick="closeDebugModal()" style="margin-left: auto; background: transparent; border: none; color: white; font-size: 20px; cursor: pointer;">×</button>
+            </div>
+            <div id="debugLogContainer" style="font-family: monospace; font-size: 11px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; max-height: 60vh; overflow-y: auto;">
+                Loading...
+            </div>
+            <button class="btn btn-danger" style="margin-top: 12px;" onclick="clearDebugLogs()">
+                <i class="fas fa-trash"></i> Xóa Debug Logs
+            </button>
+        </div>
+    </div>
+    
+    <!-- Info Box -->
+    <div class="info-box">
+        <i class="fas fa-info-circle"></i>
+        <strong>Ngân hàng hỗ trợ:</strong> ACB, VPBank, MB Bank, Vietcombank, Techcombank, TPBank, BIDV, VietinBank, Sacombank<br><br>
+        <strong>Cách hoạt động:</strong><br>
+        1. App đọc thông báo từ ngân hàng khi có giao dịch mới<br>
+        2. Parse số tiền và nội dung chuyển khoản<br>
+        3. Nội dung theo format: <strong>NAP {mã_đại_lý} {số_tiền}</strong><br>
+        &nbsp;&nbsp;&nbsp;Ví dụ: NAP AG000001 1000000<br>
+        4. Số dư đại lý được cập nhật ngay lập tức
+    </div>
+    
+    <!-- Log Card -->
+    <div class="card">
+        <div class="card-title">
+            <i class="fas fa-list"></i> Nhật Ký Giao Dịch
+            <button onclick="clearLogs()" style="margin-left: auto; background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer;">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="log-container" id="logContainer">
+            <div class="log-item log-info">
+                <div>Chưa có giao dịch nào</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="version">7TY Bank Reader v2.0.0 • ACB Edition • © 2026 7TY.VN</div>
+
+    <script src="capacitor.js"></script>
+    <script>
+        // Capacitor Plugin
+        let NotificationReader = null;
+        
+        // Config
+        const PREFS_KEY = 'bankReaderConfig';
+        let config = {
+            serverUrl: 'https://sevenapp.onrender.com',
+            notificationEnabled: true,
+            smsEnabled: false
+        };
+        let stats = { total: 0, success: 0, amount: 0 };
+        let logs = [];
+        
+        // Load saved config
+        function loadConfig() {
+            try {
+                const saved = localStorage.getItem(PREFS_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    config = { ...config, ...parsed };
+                }
+                
+                const savedStats = localStorage.getItem('bankReaderStats');
+                if (savedStats) {
+                    stats = JSON.parse(savedStats);
+                }
+                
+                const savedLogs = localStorage.getItem('bankReaderLogs');
+                if (savedLogs) {
+                    logs = JSON.parse(savedLogs);
+                }
+            } catch (e) {
+                console.error('Error loading config:', e);
+            }
+            
+            document.getElementById('serverUrl').value = config.serverUrl || '';
+            updateStats();
+            renderLogs();
+        }
+        
+        async function saveConfig() {
+            config.serverUrl = document.getElementById('serverUrl').value.trim();
+            
+            if (!config.serverUrl) {
+                alert('Vui lòng nhập Server URL');
+                return;
+            }
+            
+            localStorage.setItem(PREFS_KEY, JSON.stringify(config));
+            
+            // Save to Android SharedPreferences via Capacitor plugin
+            if (NotificationReader) {
+                try {
+                    await NotificationReader.saveConfig({ serverUrl: config.serverUrl });
+                    addLog('success', 'Đã lưu cấu hình server: ' + config.serverUrl);
+                    alert('✅ Đã lưu cấu hình!');
+                } catch (e) {
+                    addLog('error', 'Lỗi lưu cấu hình: ' + e.message);
+                    alert('Lỗi: ' + e.message);
+                }
+            } else {
+                addLog('info', 'Đã lưu cấu hình (web mode): ' + config.serverUrl);
+                alert('✅ Đã lưu cấu hình!');
+            }
+        }
+        
+        function updateStats() {
+            document.getElementById('statNotifTotal').textContent = stats.total;
+            document.getElementById('statNotifSuccess').textContent = stats.success;
+            document.getElementById('statNotifAmount').textContent = Math.round(stats.amount / 1000);
+        }
+        
+        function saveStats() {
+            localStorage.setItem('bankReaderStats', JSON.stringify(stats));
+        }
+        
+        // Tabs
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.querySelector(`.tab[onclick*="${tabName}"]`).classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+        }
+        
+        // Permission
+        async function checkNotificationPermission() {
+            try {
+                if (NotificationReader) {
+                    const result = await NotificationReader.hasNotificationAccess();
+                    updatePermissionUI(result.granted);
+                    return result.granted;
+                }
+            } catch (e) {
+                console.log('Plugin not available:', e);
+            }
+            // For web testing or fallback
+            updatePermissionUI(true);
+            return true;
+        }
+        
+        function updatePermissionUI(hasAccess) {
+            const box = document.getElementById('permissionBox');
+            const dot = document.getElementById('notifStatusDot');
+            const text = document.getElementById('notifStatusText');
+            const subtext = document.getElementById('notifStatusSubtext');
+            
+            if (hasAccess) {
+                box.classList.add('granted');
+                box.innerHTML = `
+                    <h4><i class="fas fa-check-circle" style="color: var(--success);"></i> Đã cấp quyền Notification Access</h4>
+                    <p>App đang lắng nghe thông báo từ ACB. Khi có giao dịch mới, hệ thống sẽ tự động xử lý.</p>
+                `;
+                dot.classList.remove('inactive', 'warning');
+                dot.classList.add('active');
+                text.textContent = 'Đang hoạt động';
+                subtext.textContent = 'Lắng nghe thông báo từ ACB';
+            } else {
+                box.classList.remove('granted');
+                dot.classList.remove('active');
+                dot.classList.add('warning');
+                text.textContent = 'Chưa cấp quyền';
+                subtext.textContent = 'Cần cấp quyền Notification Access';
+            }
+        }
+        
+        async function openNotificationSettings() {
+            try {
+                if (NotificationReader) {
+                    await NotificationReader.openNotificationSettings();
+                } else {
+                    alert('Vui lòng vào: Cài đặt → Ứng dụng → 7TY Bank Reader → Quyền thông báo');
+                }
+            } catch (e) {
+                alert('Vui lòng vào: Cài đặt → Ứng dụng → Special Access → Notification Access');
+            }
+        }
+        
+        async function startNotificationReader() {
+            const hasAccess = await checkNotificationPermission();
+            if (!hasAccess) {
+                openNotificationSettings();
+                return;
+            }
+            
+            config.notificationEnabled = true;
+            localStorage.setItem(PREFS_KEY, JSON.stringify(config));
+            
+            // Save config to native
+            if (NotificationReader) {
+                try {
+                    await NotificationReader.saveConfig({ serverUrl: config.serverUrl });
+                } catch (e) {
+                    console.error('Error saving config:', e);
+                }
+            }
+            
+            addLog('success', 'Đã bật đọc thông báo ngân hàng');
+        }
+        
+        function testNotification() {
+            addLog('info', 'Gửi giao dịch test...');
+            
+            // Format chuẩn từ app Đại lý: NAP {agent_code} {amount}
+            const testPayload = {
+                type: 'credit',
+                amount: 1000000,
+                content: 'NAP 7TY001 1000000',
+                reference: 'TEST_' + Date.now(),
+                bank_code: 'ACB',
+                source: 'notification_test'
+            };
+            
+            fetch(config.serverUrl + '/api/v1/bank-webhook', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(testPayload)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    addLog('success', `Test thành công! Agent: ${data.data?.agent_code}, +${data.data?.amount?.toLocaleString()}đ`);
+                    stats.total++;
+                    stats.success++;
+                    stats.amount += 100000;
+                    updateStats();
+                    saveStats();
+                } else {
+                    addLog('error', 'Test thất bại: ' + data.message);
+                }
+            })
+            .catch(e => {
+                addLog('error', 'Lỗi kết nối: ' + e.message);
+            });
+        }
+        
+        function openSMSReader() {
+            window.location.href = 'index.html';
+        }
+        
+        // Logs
+        function addLog(type, message) {
+            const log = {
+                type: type,
+                message: message,
+                time: new Date().toLocaleTimeString('vi-VN')
+            };
+            logs.unshift(log);
+            if (logs.length > 50) logs.pop();
+            localStorage.setItem('bankReaderLogs', JSON.stringify(logs));
+            renderLogs();
+        }
+        
+        function renderLogs() {
+            const container = document.getElementById('logContainer');
+            if (logs.length === 0) {
+                container.innerHTML = '<div class="log-item log-info"><div>Chưa có giao dịch nào</div></div>';
+                return;
+            }
+            
+            container.innerHTML = logs.map(log => `
+                <div class="log-item log-${log.type}">
+                    <div class="time">${log.time}</div>
+                    <div>${log.message}</div>
+                </div>
+            `).join('');
+        }
+        
+        function clearLogs() {
+            if (confirm('Xóa tất cả nhật ký?')) {
+                logs = [];
+                localStorage.removeItem('bankReaderLogs');
+                renderLogs();
+            }
+        }
+        
+        // Called from Android when notification received
+        window.onBankNotification = function(bankCode, amount, content, success) {
+            stats.total++;
+            if (success) {
+                stats.success++;
+                stats.amount += amount;
+                addLog('success', `+${amount.toLocaleString()}đ từ ${bankCode}: ${content}`);
+            } else {
+                addLog('error', `Không xử lý được: ${content}`);
+            }
+            updateStats();
+            saveStats();
+        };
+        
+        // Debug logs functions
+        async function showDebugLogs() {
+            document.getElementById('debugModal').style.display = 'block';
+            const container = document.getElementById('debugLogContainer');
+            
+            if (NotificationReader) {
+                try {
+                    const result = await NotificationReader.getDebugLogs();
+                    if (result.logs && result.logs.length > 0) {
+                        container.innerHTML = result.logs.map(log => 
+                            `<div style="padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">${log}</div>`
+                        ).join('');
+                    } else {
+                        container.innerHTML = '<div style="color: rgba(255,255,255,0.5);">Chưa có debug logs. Hãy thử gửi một thông báo từ app ngân hàng.</div>';
+                    }
+                } catch (e) {
+                    container.innerHTML = '<div style="color: var(--danger);">Lỗi: ' + e.message + '</div>';
+                }
+            } else {
+                container.innerHTML = '<div style="color: rgba(255,255,255,0.5);">Plugin chưa sẵn sàng. Đang chạy trên web?</div>';
+            }
+        }
+        
+        function closeDebugModal() {
+            document.getElementById('debugModal').style.display = 'none';
+        }
+        
+        async function clearDebugLogs() {
+            if (NotificationReader) {
+                try {
+                    await NotificationReader.clearDebugLogs();
+                    showDebugLogs();
+                } catch (e) {
+                    alert('Lỗi: ' + e.message);
+                }
+            }
+        }
+        
+        // Init
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Set default server URL
+            config.serverUrl = 'https://sevenapp.onrender.com';
+            document.getElementById('serverUrl').value = config.serverUrl;
+            
+            // Initialize Capacitor plugin
+            try {
+                if (window.Capacitor && window.Capacitor.Plugins) {
+                    NotificationReader = window.Capacitor.Plugins.NotificationReader;
+                    console.log('NotificationReader plugin loaded');
+                    
+                    // Save default config to native immediately
+                    if (NotificationReader) {
+                        try {
+                            await NotificationReader.saveConfig({ serverUrl: config.serverUrl });
+                            console.log('Default server URL saved to native');
+                        } catch (e) {
+                            console.log('Could not save default config:', e);
+                        }
+                        
+                        // Load config from native (might override with user-saved config)
+                        try {
+                            const nativeConfig = await NotificationReader.getConfig();
+                            if (nativeConfig.serverUrl) {
+                                config.serverUrl = nativeConfig.serverUrl;
+                                document.getElementById('serverUrl').value = config.serverUrl;
+                            }
+                        } catch (e) {
+                            console.log('Could not load native config:', e);
+                        }
+                        
+                        // Get service status
+                        try {
+                            const status = await NotificationReader.getServiceStatus();
+                            console.log('Service status:', status);
+                            if (status.totalProcessed > 0) {
+                                stats.total = status.totalProcessed;
+                                stats.success = status.successCount;
+                                stats.amount = status.totalAmount;
+                                updateStats();
+                            }
+                        } catch (e) {
+                            console.log('Could not get service status:', e);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.log('Capacitor not available:', e);
+            }
+            
+            loadConfig();
+            checkNotificationPermission();
+            
+            // Check permission periodically
+            setInterval(checkNotificationPermission, 5000);
+            
+            // Refresh service status periodically
+            setInterval(async () => {
+                if (NotificationReader) {
+                    try {
+                        const status = await NotificationReader.getServiceStatus();
+                        if (status.totalProcessed > stats.total) {
+                            stats.total = status.totalProcessed;
+                            stats.success = status.successCount;
+                            stats.amount = status.totalAmount;
+                            updateStats();
+                            saveStats();
+                        }
+                    } catch (e) {}
+                }
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
+// Build Tue Jan 13 08:17:23 UTC 2026
