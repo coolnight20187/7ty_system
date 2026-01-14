@@ -2765,10 +2765,10 @@
             renderBankAppSelector();
         }
         
-        // Mở app ngân hàng được chọn - v96 - Sử dụng Browser plugin
+        // Mở app ngân hàng được chọn - v131 - Mở thẳng app, bỏ popup xác nhận
         async function openSelectedBankApp() {
             try {
-                console.log('🔵 openSelectedBankApp() v110 - Direct Deeplink');
+                console.log('🔵 openSelectedBankApp() v131 - Direct Open, No Confirmation');
                 
                 const packageName = document.getElementById('selectedBankAppForTransfer').value;
                 
@@ -2811,172 +2811,85 @@
                 // Copy nội dung CK trước
                 copyToClipboard(transferContent);
                 
-                // v110: Tạo deeplink trực tiếp với thông tin giao dịch
+                // v131: Mở thẳng app ngân hàng không popup
                 const receiverBankBin = bank.bank_code || '970415';
                 
-                // Build direct deeplink với thông tin giao dịch
-                let directDeeplink = null;
-                if (bankInfo.deeplink) {
-                    directDeeplink = bankInfo.deeplink
-                        .replace('{accountNo}', bank.account_number)
-                        .replace('{bankBin}', receiverBankBin)
-                        .replace('{amount}', amount)
-                        .replace('{content}', encodeURIComponent(transferContent));
-                }
+                console.log('🚀 v131: Direct open bank app:', bankInfo.name);
+                showToast(`Đang mở ${bankInfo.name}...`, 'info');
                 
-                // v113: VietQR Deeplink chuẩn - dùng bankBin của USER (người gửi) làm app
-                // Format: https://dl.vietqr.io/pay?app=SENDER_BIN&ba=RECEIVER_BIN-ACCOUNT&am=AMOUNT&tn=CONTENT
-                const vietQRDeeplink = `https://dl.vietqr.io/pay?app=${bankInfo.bankBin}&ba=${receiverBankBin}-${bank.account_number}&am=${amount}&tn=${encodeURIComponent(transferContent)}`;
-            
-            console.log('🚀 VietQR Deeplink:', vietQRDeeplink);
-            console.log('📱 Bank App:', bankInfo.name, 'BIN:', bankInfo.bankBin, 'Package:', packageName);
-            
-            // Copy nội dung CK vào clipboard
-            copyToClipboard(transferContent);
-            
-            // MỞ APP NGÂN HÀNG - v113 - VietQR Deeplink trong Chrome
-            const openBankAppUrl = async () => {
-                // Tạo QR Image URL để hiển thị
+                // Tạo QR Image URL
                 const qrImageUrl = `https://img.vietqr.io/image/${receiverBankBin}-${bank.account_number}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(bank.account_name)}`;
                 
-                // Hiển thị popup với thông tin chuyển khoản
-                const result = await Swal.fire({
-                    title: `<i class="fas fa-bolt" style="color: #0068ff;"></i> Chuyển khoản nhanh`,
-                    html: `
-                        <div style="text-align: center;">
-                            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
-                                <img src="${bankInfo.logo}" style="width: 40px; height: 40px; border-radius: 8px; margin-right: 10px;">
-                                <span style="font-size: 18px; font-weight: 600; color: #333;">${bankInfo.name}</span>
-                            </div>
-                            
-                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                                <div style="font-size: 24px; font-weight: 700;">${formatCurrency(amount)}đ</div>
-                                <div style="font-size: 11px; opacity: 0.9; margin-top: 5px;">Số tiền chuyển</div>
-                            </div>
-                            
-                            <div style="background: #f8f9fa; padding: 12px; border-radius: 10px; text-align: left; font-size: 13px;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #666;">Số tài khoản:</span>
-                                    <strong>${bank.account_number}</strong>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                    <span style="color: #666;">Chủ tài khoản:</span>
-                                    <strong>${bank.account_name}</strong>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span style="color: #666;">Nội dung:</span>
-                                    <strong style="color: #0068ff;">${transferContent}</strong>
-                                </div>
-                            </div>
-                            
-                            <div style="background: #e3f2fd; color: #1565c0; padding: 10px; border-radius: 8px; margin-top: 12px; font-size: 11px; text-align: left;">
-                                <div style="font-weight: 600; margin-bottom: 5px;"><i class="fas fa-qrcode"></i> QR sẽ tự lưu vào thư viện!</div>
-                                <div>1. Nhấn <strong>MỞ ${bankInfo.name.toUpperCase()}</strong></div>
-                                <div>2. Chọn <strong>Quét mã QR</strong> → <strong>📷 Chọn ảnh</strong></div>
-                                <div>3. Chọn ảnh QR <strong>gần nhất</strong> → Xác nhận</div>
-                            </div>
-                        </div>
-                    `,
-                    showConfirmButton: true,
-                    confirmButtonText: `<i class="fas fa-external-link-alt"></i> MỞ ${bankInfo.name.toUpperCase()}`,
-                    confirmButtonColor: '#0068ff',
-                    showCancelButton: true,
-                    cancelButtonText: 'Đóng',
-                    showDenyButton: true,
-                    denyButtonText: '<i class="fas fa-check"></i> Đã chuyển xong',
-                    denyButtonColor: '#10b981',
-                    allowOutsideClick: false
-                });
-                
-                if (result.isConfirmed) {
-                    // v116: Lưu QR vào gallery + mở app ngân hàng
-                    // User vào app -> Quét QR -> Chọn ảnh từ gallery
-                    console.log('🚀 v118: Open QR in Bank App...');
-                    showToast(`Đang mở ${bankInfo.name}...`, 'info');
+                try {
+                    const { BankLauncher } = window.Capacitor?.Plugins || {};
                     
-                    try {
-                        const { BankLauncher } = window.Capacitor?.Plugins || {};
+                    if (BankLauncher && BankLauncher.openQRInBankApp) {
+                        // v131: Mở thẳng app với QR
+                        const fileName = `QR_${transferContent}_${Date.now()}.png`;
                         
-                        if (BankLauncher && BankLauncher.openQRInBankApp) {
-                            // v118: Thử mở với VietQR scheme trực tiếp
-                            const fileName = `QR_${transferContent}_${Date.now()}.png`;
-                            
-                            const result = await BankLauncher.openQRInBankApp({
-                                imageUrl: qrImageUrl,
-                                packageName: packageName,
-                                fileName: fileName,
-                                accountNo: bank.account_number,
-                                bankBin: receiverBankBin,
-                                amount: String(amount),
-                                content: transferContent
-                            });
-                            
-                            console.log('openQRInBankApp result:', result);
-                            
-                            if (result.success) {
-                                if (result.method === 'vietqr_scheme' || result.method === 'qr_data_scheme') {
-                                    showToast('✅ Đã gửi thông tin CK!', 'success');
-                                } else {
-                                    showToast('✅ QR đã lưu! Vào Quét QR → Chọn ảnh gần nhất', 'success');
-                                }
+                        const result = await BankLauncher.openQRInBankApp({
+                            imageUrl: qrImageUrl,
+                            packageName: packageName,
+                            fileName: fileName,
+                            accountNo: bank.account_number,
+                            bankBin: receiverBankBin,
+                            amount: String(amount),
+                            content: transferContent
+                        });
+                        
+                        console.log('openQRInBankApp result:', result);
+                        
+                        if (result.success) {
+                            if (result.method === 'vietqr_scheme' || result.method === 'qr_data_scheme') {
+                                showToast('✅ Đã gửi thông tin CK!', 'success');
                             } else {
-                                await BankLauncher.openApp({ packageName: packageName });
-                                showToast('📋 Nội dung đã copy, hãy dán vào ô "Nội dung"', 'info');
+                                showToast('✅ QR đã lưu! Vào Quét QR → Chọn ảnh', 'success');
                             }
-                        } else if (BankLauncher && BankLauncher.saveQRAndOpenApp) {
-                            // Fallback v117
-                            const fileName = `QR_${transferContent}_${Date.now()}.png`;
-                            await BankLauncher.saveQRAndOpenApp({
-                                imageUrl: qrImageUrl,
-                                packageName: packageName,
-                                fileName: fileName
-                            });
-                            showToast('✅ QR đã lưu! Vào Quét QR → Chọn ảnh gần nhất', 'success');
                         } else {
                             await BankLauncher.openApp({ packageName: packageName });
-                            showToast('📋 Nội dung đã copy, hãy dán vào ô "Nội dung"', 'info');
+                            showToast('📋 Nội dung đã copy, dán vào "Nội dung"', 'info');
                         }
-                    } catch (e) {
-                        console.error('Open error:', e);
-                        showToast('Lỗi: ' + (e.message || e), 'error');
-                    }
-                    
-                    // Hiện popup hỏi sau 3 giây
-                    setTimeout(() => {
-                        Swal.fire({
-                            title: 'Đã chuyển khoản xong?',
-                            html: `
-                                <div style="font-size: 12px; color: #666;">
-                                    Đã xác nhận chuyển <strong>${formatCurrency(amount)}đ</strong>?
-                                </div>
-                            `,
-                            icon: 'question',
-                            showConfirmButton: true,
-                            confirmButtonText: '<i class="fas fa-check"></i> Đã chuyển xong',
-                            confirmButtonColor: '#10b981',
-                            showCancelButton: true,
-                            cancelButtonText: 'Chưa'
-                        }).then((confirmResult) => {
-                            if (confirmResult.isConfirmed) {
-                                submitDepositRequest('transfer');
-                                showToast('Đã ghi nhận yêu cầu nạp tiền!', 'success');
-                            }
+                    } else if (BankLauncher && BankLauncher.saveQRAndOpenApp) {
+                        // Fallback
+                        const fileName = `QR_${transferContent}_${Date.now()}.png`;
+                        await BankLauncher.saveQRAndOpenApp({
+                            imageUrl: qrImageUrl,
+                            packageName: packageName,
+                            fileName: fileName
                         });
-                    }, 3000);
-                } else if (result.isDenied) {
-                    // User nhấn "Đã chuyển xong"
-                    submitDepositRequest('transfer');
-                    showToast('Đã ghi nhận yêu cầu nạp tiền!', 'success');
+                        showToast('✅ QR đã lưu! Vào Quét QR → Chọn ảnh', 'success');
+                    } else if (BankLauncher && BankLauncher.openApp) {
+                        await BankLauncher.openApp({ packageName: packageName });
+                        showToast('📋 Nội dung đã copy, dán vào "Nội dung"', 'info');
+                    } else {
+                        // Fallback: dùng VietQR deeplink
+                        const vietQRDeeplink = `https://dl.vietqr.io/pay?app=${bankInfo.bankBin}&ba=${receiverBankBin}-${bank.account_number}&am=${amount}&tn=${encodeURIComponent(transferContent)}`;
+                        window.location.href = vietQRDeeplink;
+                        showToast('Đang mở app ngân hàng...', 'info');
+                    }
+                } catch (e) {
+                    console.error('Open bank app error:', e);
+                    // Fallback: mở scheme
+                    if (bankInfo.scheme) {
+                        window.location.href = `${bankInfo.scheme}://`;
+                    }
+                    showToast('📋 Nội dung đã copy, mở app để chuyển khoản', 'info');
                 }
                 
+                // v131: Không hiện popup hỏi "Đã chuyển khoản xong?"
+                // Khi hệ thống nhận được tiền từ webhook, sẽ tự động cộng số dư
+                // Lịch sử giao dịch chỉ hiển thị khi webhook xử lý thành công
+                
+                // Hiển thị thông báo nhỏ về quy trình
+                setTimeout(() => {
+                    showToast('💡 Số dư sẽ tự cộng khi nhận được tiền', 'info');
+                }, 2000);
+                
                 return true;
-            };
-            
-            await openBankAppUrl();
-            
+                
             } catch (error) {
-                alert('LỖI: ' + error.message);
                 console.error('Error in openSelectedBankApp:', error);
+                showToast('Lỗi: ' + error.message, 'error');
             }
         }
         

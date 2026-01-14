@@ -933,8 +933,21 @@ async def receive_bank_webhook(
         previous_balance = agent.balance
         new_balance = previous_balance + Decimal(str(amount))
         
+        # v2.131.0: Sử dụng mã GD từ ngân hàng làm transaction_code nếu có
+        # Lấy mã GD ngân hàng từ payload (được gửi từ notification reader)
+        bank_transaction_ref = payload.get('bank_transaction_ref', '')
+        bank_code = payload.get('bank_code', '')
+        
+        # Tạo transaction_code: dùng mã GD ngân hàng nếu có
+        if bank_transaction_ref:
+            # Format: BANKCODE_TRANSACTIONREF (VD: ACB_FT123456)
+            custom_transaction_code = f"{bank_code}_{bank_transaction_ref}".upper()
+            logger.info(f"Using bank transaction ref as code: {custom_transaction_code}")
+        else:
+            custom_transaction_code = generate_transaction_code()
+        
         transaction = Transaction(
-            transaction_code=generate_transaction_code(),
+            transaction_code=custom_transaction_code,
             agent_id=agent.id,
             user_id=None,  # Tự động, không có user
             transaction_type=TransactionType.DEPOSIT,
@@ -953,6 +966,8 @@ async def receive_bank_webhook(
                 "auto_deposit": True,
                 "bank_content": content,
                 "bank_ref": bank_ref,
+                "bank_transaction_ref": bank_transaction_ref,
+                "bank_code": bank_code,
                 "source": "bank_webhook"
             }
         )

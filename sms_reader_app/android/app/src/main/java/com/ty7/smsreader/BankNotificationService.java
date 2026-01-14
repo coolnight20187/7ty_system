@@ -508,6 +508,28 @@ public class BankNotificationService extends NotificationListenerService {
             }
         }
         
+        // Parse mã giao dịch (transaction reference) từ ACB và các ngân hàng khác
+        // ACB format: GD: 123456789 hoặc Ma GD: 123456789
+        // MB format: Mã GD: FT12345678
+        // VCB format: Ref: 123456789
+        Pattern[] transactionRefPatterns = {
+            // ACB: GD: 123456789 hoặc Ma GD: 123456789
+            Pattern.compile("(?:GD|Giao dịch|Ma GD|Mã GD|Ref)[:\\s]*([A-Z0-9]+)", Pattern.CASE_INSENSITIVE),
+            // Format: FT + số
+            Pattern.compile("(FT[0-9A-Z]+)", Pattern.CASE_INSENSITIVE),
+            // 9-15 digit transaction code after certain keywords
+            Pattern.compile("(?:TID|Trans ID|Ref No)[:\\s]*([0-9]{9,15})", Pattern.CASE_INSENSITIVE),
+        };
+        
+        for (Pattern pattern : transactionRefPatterns) {
+            Matcher matcher = pattern.matcher(content);
+            if (matcher.find()) {
+                info.transactionRef = matcher.group(1).trim();
+                Log.i(TAG, "Found transaction ref: " + info.transactionRef);
+                break;
+            }
+        }
+        
         return info;
     }
     
@@ -545,13 +567,25 @@ public class BankNotificationService extends NotificationListenerService {
                     
                     payload.put("content", sendContent);
                     payload.put("transfer_content", txInfo.transferContent != null ? txInfo.transferContent : "");
-                    payload.put("reference", "NOTIF_" + System.currentTimeMillis());
+                    
+                    // v2.131.0: Sử dụng mã GD từ ngân hàng làm reference nếu có
+                    // Mã GD ACB/MB/VCB sẽ được dùng làm mã giao dịch nạp tiền
+                    String reference;
+                    if (txInfo.transactionRef != null && !txInfo.transactionRef.isEmpty()) {
+                        reference = bankCode + "_" + txInfo.transactionRef;
+                        Log.i(TAG, "Using bank transaction ref: " + reference);
+                    } else {
+                        reference = "NOTIF_" + System.currentTimeMillis();
+                    }
+                    payload.put("reference", reference);
+                    payload.put("bank_transaction_ref", txInfo.transactionRef != null ? txInfo.transactionRef : "");
+                    
                     payload.put("bank_code", bankCode);
                     payload.put("account_number", txInfo.accountNumber);
                     payload.put("balance", txInfo.balance);
                     payload.put("raw_content", rawContent);
                     payload.put("source", "notification_reader");
-                    payload.put("app_version", "2.130.0");
+                    payload.put("app_version", "2.131.0");
                     payload.put("timestamp", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
                     
                     // Send to server
@@ -607,5 +641,6 @@ public class BankNotificationService extends NotificationListenerService {
         long balance;
         boolean isCredit;
         String rawContent;
+        String transactionRef; // Mã giao dịch từ ngân hàng (GD: xxx)
     }
 }
