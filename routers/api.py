@@ -791,6 +791,9 @@ async def receive_bank_webhook(
         content = transaction_data.get('content', '')
         bank_ref = transaction_data.get('reference', '')
         
+        # Lấy raw_content từ notification_reader nếu có
+        raw_content = payload.get('raw_content', '')
+        
         if amount <= 0:
             result = {
                 "success": False,
@@ -803,19 +806,27 @@ async def receive_bank_webhook(
         # Parse mã đại lý từ nội dung chuyển khoản
         agent_code = parse_agent_code_from_content(content)
         
+        # Nếu không tìm thấy từ content, thử từ raw_content
+        if not agent_code and raw_content:
+            agent_code = parse_agent_code_from_content(raw_content)
+            if agent_code:
+                logger.info(f"Found agent_code from raw_content: {agent_code}")
+                content = raw_content  # Dùng raw_content cho các bước tiếp theo
+        
         if not agent_code:
-            logger.warning(f"Could not parse agent code from: {content}")
+            logger.warning(f"Could not parse agent code from content: {content[:200]} | raw: {raw_content[:200] if raw_content else 'N/A'}")
             # Lưu lại giao dịch chưa xác định để admin review
             background_tasks.add_task(
                 save_unmatched_transaction,
-                db, amount, content, bank_ref, payload
+                db, amount, raw_content or content, bank_ref, payload
             )
             result = {
                 "success": True,
                 "message": "Giao dịch đã nhận nhưng không tìm thấy mã đại lý",
                 "received": True,
                 "matched": False,
-                "parsed_content": content[:200]
+                "parsed_content": content[:200],
+                "raw_content": raw_content[:200] if raw_content else None
             }
             log_webhook_to_file(payload, result)
             return result
