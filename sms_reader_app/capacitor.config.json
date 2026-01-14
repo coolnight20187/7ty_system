@@ -5,7 +5,7 @@
   "bundledWebRuntime": false,
   "server": {
     "androidScheme": "https",
-    "hostname": "sms.7ty.vn",
+    "hostname": "sevenapp.onrender.com",
     "cleartext": true
   },
   "android": {
