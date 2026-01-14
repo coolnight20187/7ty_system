@@ -822,10 +822,30 @@ async def receive_bank_webhook(
         
         # Tìm đại lý
         from models import AgentStatus
-        agent = db.query(Agent).filter(
-            Agent.agent_code == agent_code.upper(),
-            Agent.status == AgentStatus.ACTIVE
-        ).first()
+        agent = None
+        
+        # Nếu tìm theo số điện thoại
+        if agent_code.startswith("PHONE:"):
+            phone = agent_code[6:]  # Bỏ prefix "PHONE:"
+            agent = db.query(Agent).filter(
+                Agent.phone == phone,
+                Agent.status == AgentStatus.ACTIVE
+            ).first()
+            if not agent:
+                # Thử tìm theo phone trong user
+                from models import User
+                user = db.query(User).filter(User.phone == phone).first()
+                if user:
+                    agent = db.query(Agent).filter(
+                        Agent.user_id == user.id,
+                        Agent.status == AgentStatus.ACTIVE
+                    ).first()
+        else:
+            # Tìm theo agent_code
+            agent = db.query(Agent).filter(
+                Agent.agent_code == agent_code.upper(),
+                Agent.status == AgentStatus.ACTIVE
+            ).first()
         
         if not agent:
             logger.warning(f"Agent not found: {agent_code}")
@@ -1022,11 +1042,13 @@ def parse_agent_code_from_content(content: str) -> Optional[str]:
     - NAPTIEN 7TY001
     - DL 7TY001 (đại lý)
     - Hoặc chỉ mã đại lý: 7TY001, AG000001
+    - Hoặc số điện thoại: 0912345678
     """
     if not content:
         return None
     
     # Chuẩn hóa content
+    original_content = content
     content = content.upper().strip()
     # Loại bỏ ký tự đặc biệt nhưng giữ space
     content = re.sub(r'[^A-Z0-9\s]', ' ', content)
@@ -1062,6 +1084,11 @@ def parse_agent_code_from_content(content: str) -> Optional[str]:
         match = re.search(pattern, content)
         if match:
             return match.group(1)
+    
+    # Thử tìm số điện thoại (10 số bắt đầu bằng 0)
+    phone_match = re.search(r'\b(0\d{9})\b', original_content)
+    if phone_match:
+        return f"PHONE:{phone_match.group(1)}"
     
     return None
 
