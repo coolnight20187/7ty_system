@@ -821,47 +821,83 @@ async def receive_bank_webhook(
             return result
         
         # Tìm đại lý
-        from models import AgentStatus
+        from models import AgentStatus, User
         agent = None
+        search_method = "agent_code"
         
         # Nếu tìm theo số điện thoại
-        if agent_code.startswith("PHONE:"):
+        if agent_code and agent_code.startswith("PHONE:"):
             phone = agent_code[6:]  # Bỏ prefix "PHONE:"
+            search_method = "phone"
             agent = db.query(Agent).filter(
-                Agent.phone == phone,
                 Agent.status == AgentStatus.ACTIVE
-            ).first()
-            if not agent:
-                # Thử tìm theo phone trong user
-                from models import User
-                user = db.query(User).filter(User.phone == phone).first()
-                if user:
-                    agent = db.query(Agent).filter(
-                        Agent.user_id == user.id,
-                        Agent.status == AgentStatus.ACTIVE
-                    ).first()
-        else:
+            ).join(User).filter(User.phone == phone).first()
+            
+        elif agent_code:
             # Tìm theo agent_code
             agent = db.query(Agent).filter(
                 Agent.agent_code == agent_code.upper(),
                 Agent.status == AgentStatus.ACTIVE
             ).first()
         
+        # Nếu không tìm thấy theo agent_code, thử tìm theo tên người chuyển trong nội dung
+        if not agent and content:
+            search_method = "name_in_content"
+            # Tìm theo tên đại lý trong nội dung chuyển khoản
+            # VD: "PHAN MINH PHONG CHUYEN KHOAN..." -> tìm agent có tên "PHAN MINH PHONG"
+            content_upper = content.upper()
+            
+            # Lấy danh sách đại lý active
+            active_agents = db.query(Agent).filter(
+                Agent.status == AgentStatus.ACTIVE
+            ).join(User).all()
+            
+            for ag in active_agents:
+                # Tìm theo tên đại lý
+                if ag.agent_name:
+                    agent_name_normalized = ag.agent_name.upper().strip()
+                    # Loại bỏ dấu để so sánh
+                    import unicodedata
+                    agent_name_no_accent = ''.join(
+                        c for c in unicodedata.normalize('NFD', agent_name_normalized)
+                        if unicodedata.category(c) != 'Mn'
+                    )
+                    if agent_name_normalized in content_upper or agent_name_no_accent in content_upper:
+                        agent = ag
+                        logger.info(f"Matched by agent_name: {ag.agent_name}")
+                        break
+                
+                # Tìm theo tên user (full_name)
+                if ag.user and ag.user.full_name:
+                    user_name_normalized = ag.user.full_name.upper().strip()
+                    user_name_no_accent = ''.join(
+                        c for c in unicodedata.normalize('NFD', user_name_normalized)
+                        if unicodedata.category(c) != 'Mn'
+                    )
+                    if user_name_normalized in content_upper or user_name_no_accent in content_upper:
+                        agent = ag
+                        logger.info(f"Matched by user full_name: {ag.user.full_name}")
+                        break
+        
         if not agent:
-            logger.warning(f"Agent not found: {agent_code}")
+            logger.warning(f"Agent not found: {agent_code}, content: {content[:100]}")
             background_tasks.add_task(
                 save_unmatched_transaction,
                 db, amount, content, bank_ref, payload
             )
             result = {
                 "success": True,
-                "message": f"Không tìm thấy đại lý: {agent_code}",
+                "message": f"Không tìm thấy đại lý. Parsed: {agent_code}",
                 "received": True,
                 "matched": False,
-                "parsed_agent_code": agent_code
+                "parsed_agent_code": agent_code,
+                "search_method": search_method,
+                "hint": "Nội dung chuyển khoản cần có format: NAP [MÃ ĐẠI LÝ] [SỐ TIỀN]"
             }
             log_webhook_to_file(payload, result)
             return result
+        
+        logger.info(f"Agent matched via {search_method}: {agent.agent_code}")
         
         # Kiểm tra giao dịch trùng lặp (theo bank_ref)
         if bank_ref:
