@@ -676,12 +676,66 @@ async def health_check():
 # ===== BANK WEBHOOK - Nhận thông báo biến động số dư từ ngân hàng =====
 import re
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+# File lưu log webhook để debug
+WEBHOOK_LOG_FILE = Path("data/webhook_logs.json")
+
+def log_webhook_to_file(payload: Dict[str, Any], result: Dict[str, Any]):
+    """Lưu log webhook để debug"""
+    try:
+        import json
+        from datetime import datetime
+        
+        WEBHOOK_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Đọc log cũ
+        logs = []
+        if WEBHOOK_LOG_FILE.exists():
+            try:
+                with open(WEBHOOK_LOG_FILE, 'r', encoding='utf-8') as f:
+                    logs = json.load(f)
+            except:
+                logs = []
+        
+        # Thêm log mới
+        logs.append({
+            "timestamp": datetime.utcnow().isoformat(),
+            "payload": payload,
+            "result": result
+        })
+        
+        # Giữ 100 log gần nhất
+        logs = logs[-100:]
+        
+        with open(WEBHOOK_LOG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(logs, f, ensure_ascii=False, indent=2)
+            
+    except Exception as e:
+        logger.warning(f"Failed to log webhook: {e}")
 
 class BankWebhookPayload:
     """Schema cho webhook từ ngân hàng"""
     pass
+
+@router.get("/webhook-logs", response_model=Dict[str, Any])
+async def get_webhook_logs(limit: int = Query(20, le=100)):
+    """Xem log webhook để debug"""
+    try:
+        import json
+        if WEBHOOK_LOG_FILE.exists():
+            with open(WEBHOOK_LOG_FILE, 'r', encoding='utf-8') as f:
+                logs = json.load(f)
+            return {
+                "success": True,
+                "count": len(logs),
+                "logs": logs[-limit:][::-1]  # Mới nhất trước
+            }
+        return {"success": True, "count": 0, "logs": []}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 @router.post("/bank-webhook", response_model=Dict[str, Any])
 async def receive_bank_webhook(
@@ -706,6 +760,7 @@ async def receive_bank_webhook(
     
     Ví dụ: "NAP 7TY001" hoặc "7TY 7TY001" hoặc "7TY001 NAP"
     """
+    result = None
     try:
         logger.info(f"Received bank webhook: {json.dumps(payload, ensure_ascii=False)[:500]}")
         
@@ -713,31 +768,37 @@ async def receive_bank_webhook(
         transaction_data = parse_bank_webhook(payload)
         
         if not transaction_data:
-            return {
+            result = {
                 "success": False,
                 "message": "Không thể parse dữ liệu webhook",
                 "received": True
             }
+            log_webhook_to_file(payload, result)
+            return result
         
         # Chỉ xử lý giao dịch tiền vào (credit)
         if transaction_data.get('type') != 'credit':
             logger.info(f"Skipping non-credit transaction: {transaction_data.get('type')}")
-            return {
+            result = {
                 "success": True,
                 "message": "Bỏ qua giao dịch tiền ra",
                 "received": True
             }
+            log_webhook_to_file(payload, result)
+            return result
         
         amount = transaction_data.get('amount', 0)
         content = transaction_data.get('content', '')
         bank_ref = transaction_data.get('reference', '')
         
         if amount <= 0:
-            return {
+            result = {
                 "success": False,
                 "message": "Số tiền không hợp lệ",
                 "received": True
             }
+            log_webhook_to_file(payload, result)
+            return result
         
         # Parse mã đại lý từ nội dung chuyển khoản
         agent_code = parse_agent_code_from_content(content)
@@ -749,12 +810,15 @@ async def receive_bank_webhook(
                 save_unmatched_transaction,
                 db, amount, content, bank_ref, payload
             )
-            return {
+            result = {
                 "success": True,
                 "message": "Giao dịch đã nhận nhưng không tìm thấy mã đại lý",
                 "received": True,
-                "matched": False
+                "matched": False,
+                "parsed_content": content[:200]
             }
+            log_webhook_to_file(payload, result)
+            return result
         
         # Tìm đại lý
         from models import AgentStatus
@@ -769,12 +833,15 @@ async def receive_bank_webhook(
                 save_unmatched_transaction,
                 db, amount, content, bank_ref, payload
             )
-            return {
+            result = {
                 "success": True,
                 "message": f"Không tìm thấy đại lý: {agent_code}",
                 "received": True,
-                "matched": False
+                "matched": False,
+                "parsed_agent_code": agent_code
             }
+            log_webhook_to_file(payload, result)
+            return result
         
         # Kiểm tra giao dịch trùng lặp (theo bank_ref)
         if bank_ref:
@@ -783,13 +850,15 @@ async def receive_bank_webhook(
             ).first()
             if existing:
                 logger.info(f"Duplicate transaction: {bank_ref}")
-                return {
+                result = {
                     "success": True,
                     "message": "Giao dịch đã được xử lý trước đó",
                     "received": True,
                     "duplicate": True,
                     "transaction_code": existing.transaction_code
                 }
+                log_webhook_to_file(payload, result)
+                return result
         
         # Tạo giao dịch nạp tiền tự động
         from decimal import Decimal
@@ -850,7 +919,7 @@ async def receive_bank_webhook(
         except Exception as ws_error:
             logger.warning(f"Failed to send websocket notification: {ws_error}")
         
-        return {
+        result = {
             "success": True,
             "message": "Nạp tiền thành công",
             "received": True,
@@ -863,15 +932,19 @@ async def receive_bank_webhook(
                 "new_balance": float(new_balance)
             }
         }
+        log_webhook_to_file(payload, result)
+        return result
         
     except Exception as e:
         logger.error(f"Bank webhook error: {str(e)}", exc_info=True)
         db.rollback()
-        return {
+        result = {
             "success": False,
             "message": f"Lỗi xử lý: {str(e)}",
             "received": True
         }
+        log_webhook_to_file(payload, result)
+        return result
 
 
 def parse_bank_webhook(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
