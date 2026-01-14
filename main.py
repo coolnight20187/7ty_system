@@ -353,19 +353,45 @@ async def agent_app():
 
 # APK download route - serve with correct headers to prevent zip compression
 @app.get("/download/apk")
+@app.get("/download/agent-apk")
 @app.get("/static/uploads/7ty-agent-latest.apk")
 async def download_apk():
-    """Download APK file with correct headers"""
-    apk_path = "static/uploads/7ty-agent-latest.apk"
+    """Download Agent APK file with correct headers"""
+    # Ưu tiên file mới nhất trong static/apk
+    new_apk_path = "static/apk/agent-app-v2.131.0.apk"
+    old_apk_path = "static/uploads/7ty-agent-latest.apk"
+    
+    apk_path = new_apk_path if os.path.exists(new_apk_path) else old_apk_path
+    
     if not os.path.exists(apk_path):
         raise HTTPException(status_code=404, detail="APK file not found")
     
     return FileResponse(
         path=apk_path,
         media_type="application/vnd.android.package-archive",
-        filename="7ty-agent-v127.apk",
+        filename="agent-app-v2.131.0.apk",
         headers={
-            "Content-Disposition": "attachment; filename=7ty-agent-v127.apk",
+            "Content-Disposition": "attachment; filename=agent-app-v2.131.0.apk",
+            "Content-Type": "application/vnd.android.package-archive",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "X-Content-Type-Options": "nosniff"
+        }
+    )
+
+@app.get("/download/sms-reader-apk")
+async def download_sms_reader_apk():
+    """Download SMS Reader APK file"""
+    apk_path = "static/apk/sms-reader-v2.131.0.apk"
+    
+    if not os.path.exists(apk_path):
+        raise HTTPException(status_code=404, detail="SMS Reader APK not found")
+    
+    return FileResponse(
+        path=apk_path,
+        media_type="application/vnd.android.package-archive",
+        filename="sms-reader-v2.131.0.apk",
+        headers={
+            "Content-Disposition": "attachment; filename=sms-reader-v2.131.0.apk",
             "Content-Type": "application/vnd.android.package-archive",
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "X-Content-Type-Options": "nosniff"
