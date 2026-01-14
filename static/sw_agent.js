@@ -1,5 +1,5 @@
 // Service Worker for 7TY Agent PWA
-const CACHE_NAME = '7ty-agent-v3';
+const CACHE_NAME = '7ty-agent-v132';
 const urlsToCache = [
   '/static/agent_app.html',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
