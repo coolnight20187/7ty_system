@@ -358,7 +358,7 @@ async def agent_app():
 async def download_apk():
     """Download Agent APK file with correct headers"""
     # Ưu tiên file mới nhất trong static/apk
-    new_apk_path = "static/apk/agent-app-v2.131.0.apk"
+    new_apk_path = "static/apk/agent-app-v2.132.0.apk"
     old_apk_path = "static/uploads/7ty-agent-latest.apk"
     
     apk_path = new_apk_path if os.path.exists(new_apk_path) else old_apk_path
@@ -369,9 +369,9 @@ async def download_apk():
     return FileResponse(
         path=apk_path,
         media_type="application/vnd.android.package-archive",
-        filename="agent-app-v2.131.0.apk",
+        filename="agent-app-v2.132.0.apk",
         headers={
-            "Content-Disposition": "attachment; filename=agent-app-v2.131.0.apk",
+            "Content-Disposition": "attachment; filename=agent-app-v2.132.0.apk",
             "Content-Type": "application/vnd.android.package-archive",
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "X-Content-Type-Options": "nosniff"
@@ -381,7 +381,7 @@ async def download_apk():
 @app.get("/download/sms-reader-apk")
 async def download_sms_reader_apk():
     """Download SMS Reader APK file"""
-    apk_path = "static/apk/sms-reader-v2.131.0.apk"
+    apk_path = "static/apk/sms-reader-v2.132.0.apk"
     
     if not os.path.exists(apk_path):
         raise HTTPException(status_code=404, detail="SMS Reader APK not found")
@@ -389,9 +389,9 @@ async def download_sms_reader_apk():
     return FileResponse(
         path=apk_path,
         media_type="application/vnd.android.package-archive",
-        filename="sms-reader-v2.131.0.apk",
+        filename="sms-reader-v2.132.0.apk",
         headers={
-            "Content-Disposition": "attachment; filename=sms-reader-v2.131.0.apk",
+            "Content-Disposition": "attachment; filename=sms-reader-v2.132.0.apk",
             "Content-Type": "application/vnd.android.package-archive",
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "X-Content-Type-Options": "nosniff"

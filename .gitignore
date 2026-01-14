@@ -1,2 +1,9 @@
 .venv-1/
 sms_reader_app/node_modules/
+
+# Build outputs
+mobile_app/node_modules/@*/android/build/
+sms_reader_app/node_modules/@*/android/build/
+**/build/
+**/.gradle/
+
