@@ -286,20 +286,37 @@ public class BankNotificationService extends NotificationListenerService {
         String title = "";
         String text = "";
         String bigText = "";
+        String subText = "";
+        String infoText = "";
+        String summaryText = "";
+        String tickerText = "";
         
         if (extras != null) {
             CharSequence titleCs = extras.getCharSequence(Notification.EXTRA_TITLE);
             CharSequence textCs = extras.getCharSequence(Notification.EXTRA_TEXT);
             CharSequence bigTextCs = extras.getCharSequence(Notification.EXTRA_BIG_TEXT);
+            CharSequence subTextCs = extras.getCharSequence(Notification.EXTRA_SUB_TEXT);
+            CharSequence infoTextCs = extras.getCharSequence(Notification.EXTRA_INFO_TEXT);
+            CharSequence summaryTextCs = extras.getCharSequence(Notification.EXTRA_SUMMARY_TEXT);
             
             if (titleCs != null) title = titleCs.toString();
             if (textCs != null) text = textCs.toString();
             if (bigTextCs != null) bigText = bigTextCs.toString();
+            if (subTextCs != null) subText = subTextCs.toString();
+            if (infoTextCs != null) infoText = infoTextCs.toString();
+            if (summaryTextCs != null) summaryText = summaryTextCs.toString();
+        }
+        
+        // Lấy ticker text
+        if (notification.tickerText != null) {
+            tickerText = notification.tickerText.toString();
         }
         
         Log.i(TAG, "Title: " + title);
         Log.i(TAG, "Text: " + text);
         Log.i(TAG, "BigText: " + bigText);
+        Log.i(TAG, "SubText: " + subText);
+        Log.i(TAG, "TickerText: " + tickerText);
         
         // Kiểm tra có phải app ngân hàng không
         String bankCode = BANK_PACKAGES.get(packageName);
@@ -321,9 +338,26 @@ public class BankNotificationService extends NotificationListenerService {
             return;
         }
         
-        // Combine content
-        String content = title + " " + text + " " + bigText;
-        content = content.trim();
+        // Combine content - ưu tiên bigText vì thường chứa nội dung đầy đủ
+        // Sau đó là tickerText (thường có full content)
+        String content;
+        if (bigText != null && !bigText.trim().isEmpty()) {
+            content = bigText.trim();
+        } else if (tickerText != null && !tickerText.trim().isEmpty() && tickerText.length() > text.length()) {
+            content = tickerText.trim();
+        } else {
+            // Fallback: combine tất cả
+            content = (title + " " + text + " " + subText + " " + infoText).trim();
+        }
+        
+        // Nếu content quá ngắn, thử combine nhiều nguồn
+        if (content.length() < 50) {
+            String combined = (title + " " + text + " " + bigText + " " + tickerText + " " + subText).trim();
+            combined = combined.replaceAll("\\s+", " ");
+            if (combined.length() > content.length()) {
+                content = combined;
+            }
+        }
         
         if (content.isEmpty()) {
             return;
@@ -500,13 +534,24 @@ public class BankNotificationService extends NotificationListenerService {
                     JSONObject payload = new JSONObject();
                     payload.put("type", "credit");
                     payload.put("amount", txInfo.amount);
-                    payload.put("content", txInfo.transferContent != null ? txInfo.transferContent : rawContent);
+                    
+                    // Gửi cả raw_content để server có thể parse mã đại lý từ nhiều nguồn
+                    // Server sẽ tìm mã đại lý trong cả content và raw_content
+                    String sendContent = rawContent; // Luôn gửi full content
+                    if (txInfo.transferContent != null && !txInfo.transferContent.isEmpty()) {
+                        // Nếu đã parse được nội dung chuyển khoản, gửi kèm
+                        sendContent = rawContent; // Vẫn gửi raw để đảm bảo có đủ thông tin
+                    }
+                    
+                    payload.put("content", sendContent);
+                    payload.put("transfer_content", txInfo.transferContent != null ? txInfo.transferContent : "");
                     payload.put("reference", "NOTIF_" + System.currentTimeMillis());
                     payload.put("bank_code", bankCode);
                     payload.put("account_number", txInfo.accountNumber);
                     payload.put("balance", txInfo.balance);
                     payload.put("raw_content", rawContent);
                     payload.put("source", "notification_reader");
+                    payload.put("app_version", "2.130.0");
                     payload.put("timestamp", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
                     
                     // Send to server
