@@ -342,63 +342,151 @@ async def login_page():
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Login page not found")
 
-# Agent mobile app route
+# Agent mobile app route - now uses index.html as single file
 @app.get("/agent_app.html")
-async def agent_app():
+@app.get("/index.html")
+async def serve_agent_app():
     """Serve agent mobile app"""
     try:
-        return FileResponse("static/agent_app.html", media_type="text/html")
+        return FileResponse("static/index.html", media_type="text/html")
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Agent app not found")
 
 # APK download route - serve with correct headers to prevent zip compression
 @app.get("/download/apk")
 @app.get("/download/agent-apk")
+@app.get("/download/agent-apk-new")
 @app.get("/static/uploads/7ty-agent-latest.apk")
+@app.get("/static/downloads/7ty-agent-v2.52.0.apk")
+@app.get("/static/downloads/7ty-agent-v2.51.0.apk")
 async def download_apk():
     """Download Agent APK file with correct headers"""
-    # Ưu tiên file mới nhất trong static/apk
-    new_apk_path = "static/apk/agent-app-v2.132.0.apk"
-    old_apk_path = "static/uploads/7ty-agent-latest.apk"
+    # Ưu tiên file mới nhất trong static/downloads
+    apk_paths = [
+        "static/downloads/7ty-agent-v2.52.0.apk",
+        "static/downloads/7ty-agent-v2.51.0.apk",
+        "static/downloads/7ty-agent-v2.46.0.apk",
+        "static/downloads/7ty-agent-v2.45.0.apk",
+        "static/downloads/agent-app-v2.44.0.apk",
+        "static/apk/agent-app-v2.132.0.apk",
+        "static/uploads/7ty-agent-latest.apk"
+    ]
     
-    apk_path = new_apk_path if os.path.exists(new_apk_path) else old_apk_path
+    apk_path = None
+    for path in apk_paths:
+        if os.path.exists(path):
+            apk_path = path
+            break
     
-    if not os.path.exists(apk_path):
+    if not apk_path:
         raise HTTPException(status_code=404, detail="APK file not found")
     
     return FileResponse(
         path=apk_path,
         media_type="application/vnd.android.package-archive",
-        filename="agent-app-v2.132.0.apk",
+        filename="7ty-agent-v2.52.0.apk",
         headers={
-            "Content-Disposition": "attachment; filename=agent-app-v2.132.0.apk",
+            "Content-Disposition": "attachment; filename=7ty-agent-v2.52.0.apk",
             "Content-Type": "application/vnd.android.package-archive",
             "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
             "X-Content-Type-Options": "nosniff"
         }
     )
 
 @app.get("/download/sms-reader-apk")
+@app.get("/static/downloads/sms-reader-v2.52.0.apk")
+@app.get("/static/downloads/sms-reader-v2.51.0.apk")
 async def download_sms_reader_apk():
     """Download SMS Reader APK file"""
-    apk_path = "static/apk/sms-reader-v2.132.0.apk"
+    # Ưu tiên file mới nhất
+    apk_paths = [
+        "static/downloads/sms-reader-v2.52.0.apk",
+        "static/downloads/sms-reader-v2.51.0.apk",
+        "static/downloads/sms-reader-v2.43.0.apk",
+        "static/downloads/sms-reader-v2.42.0.apk",
+        "static/apk/sms-reader-v2.132.0.apk"
+    ]
     
-    if not os.path.exists(apk_path):
+    apk_path = None
+    for path in apk_paths:
+        if os.path.exists(path):
+            apk_path = path
+            break
+    
+    if not apk_path:
         raise HTTPException(status_code=404, detail="SMS Reader APK not found")
     
     return FileResponse(
         path=apk_path,
         media_type="application/vnd.android.package-archive",
-        filename="sms-reader-v2.132.0.apk",
+        filename="sms-reader-v2.52.0.apk",
         headers={
-            "Content-Disposition": "attachment; filename=sms-reader-v2.132.0.apk",
+            "Content-Disposition": "attachment; filename=sms-reader-v2.52.0.apk",
             "Content-Type": "application/vnd.android.package-archive",
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "X-Content-Type-Options": "nosniff"
         }
     )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Generic APK download - catch all .apk files in downloads
+@app.get("/static/downloads/{filename:path}")
+async def download_static_file(filename: str):
+    """Serve APK files with correct content-type"""
+    if filename.endswith('.apk'):
+        file_path = f"static/downloads/{filename}"
+        if os.path.exists(file_path):
+            return FileResponse(
+                path=file_path,
+                media_type="application/vnd.android.package-archive",
+                filename=filename,
+                headers={
+                    "Content-Disposition": f"attachment; filename={filename}",
+                    "Content-Type": "application/vnd.android.package-archive",
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "X-Content-Type-Options": "nosniff"
+                }
+            )
+        else:
+            raise HTTPException(status_code=404, detail=f"File {filename} not found")
+    # For non-APK files, serve normally
+    file_path = f"static/downloads/{filename}"
+    if os.path.exists(file_path):
+        return FileResponse(path=file_path)
+    raise HTTPException(status_code=404, detail=f"File {filename} not found")
+
+# Mount static files - Quan trọng: routes được định nghĩa trước sẽ có priority
+# Nhưng app.mount sử dụng catch-all, nên cần dùng custom middleware hoặc route riêng
+from starlette.routing import Mount
+from starlette.staticfiles import StaticFiles as StarletteStaticFiles
+
+# Thay vì dùng app.mount, dùng route riêng cho static
+@app.get("/static/{filepath:path}")
+async def serve_static(filepath: str):
+    """Serve static files with correct content-type for APK"""
+    full_path = f"static/{filepath}"
+    
+    if not os.path.exists(full_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # APK files - serve with correct headers
+    if filepath.endswith('.apk'):
+        filename = os.path.basename(filepath)
+        return FileResponse(
+            path=full_path,
+            media_type="application/vnd.android.package-archive",
+            filename=filename,
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Type": "application/vnd.android.package-archive",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "X-Content-Type-Options": "nosniff"
+            }
+        )
+    
+    # Other static files - serve normally
+    return FileResponse(path=full_path)
 
 # API Routes
 @app.get("/health")

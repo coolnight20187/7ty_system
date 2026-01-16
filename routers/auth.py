@@ -1160,6 +1160,9 @@ async def agent_login(
                 detail="Tên đăng nhập hoặc mật khẩu không chính xác"
             )
         
+        # Debug: log password length and first char (not full password for security)
+        logger.info(f"Password received: len={len(credentials.password)}, first_char={credentials.password[0] if credentials.password else 'empty'}")
+        
         pwd_verify = SecurityUtils.verify_password(credentials.password, user.password_hash)
         logger.info(f"Password verify result: {pwd_verify}")
         

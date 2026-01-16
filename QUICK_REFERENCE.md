@@ -153,7 +153,7 @@ clearTokenAndLogout() {
 - ✅ Save on successful login
 - ✅ Save in fallback try/catch too
 
-### agent_app.html (Mobile App)
+### index.html (Mobile App)
 - ✅ Save `agent_token_expires_at` on agent login
 - ✅ Check expiry on DOMContentLoaded
 - ✅ Check every 5 minutes in loadDashboard()
@@ -177,12 +177,12 @@ No server-side changes needed!
 ### To Verify Installation
 ```bash
 # Check files exist
-ls -la static/app.html static/login.html static/agent_app.html
+ls -la static/app.html static/login.html static/index.html
 
 # Search for new functions
 grep -n "isTokenExpired" static/app.html
 grep -n "tokenExpiresAt" static/login.html
-grep -n "agent_token_expires_at" static/agent_app.html
+grep -n "agent_token_expires_at" static/index.html
 ```
 
 ### Container Status

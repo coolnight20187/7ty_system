@@ -46,8 +46,9 @@ public class BankNotificationService extends NotificationListenerService {
     private static final String KEY_SERVER_URL = "server_url";
     
     // Mapping package name -> Bank code
+    // v2.52.0: CHỈ HỖ TRỢ ACB - Theo yêu cầu chỉ đọc notification từ ACB
     private static final Map<String, String> BANK_PACKAGES = new HashMap<String, String>() {{
-        // ACB - Asia Commercial Bank
+        // ACB - Asia Commercial Bank (CHỈ HỖ TRỢ DUY NHẤT ACB)
         put("com.acb.acbmobile", "ACB");
         put("vn.com.acb.acbmobile", "ACB");
         put("com.acb.one", "ACB");
@@ -55,73 +56,8 @@ public class BankNotificationService extends NotificationListenerService {
         put("vn.acb.acbmobile", "ACB");
         put("com.acb.acb", "ACB");
         put("mobile.acb.com.vn", "ACB");  // ACB Mobile app
-        
-        // MB Bank
-        put("com.mbmobile", "MB");
-        put("vn.com.mbbank.mb", "MB");
-        put("com.mbbank.mb", "MB");
-        put("vn.mbbank.mb", "MB");
-        
-        // Vietcombank
-        put("com.VCB", "VCB");
-        put("vn.com.vietcombank.vcbmobile", "VCB");
-        put("com.vietcombank", "VCB");
-        
-        // Techcombank
-        put("vn.com.techcombank.bb.app", "TCB");
-        put("com.techcombank.mobile", "TCB");
-        put("vn.techcombank.mobile", "TCB");
-        
-        // VPBank - VPBank NEO, VPBank Online
-        put("com.vnpay.vpbankonline", "VPB");
-        put("vn.com.vpbank.smartone", "VPB");
-        put("com.vpbank.neo", "VPB");
-        put("vn.vpbank.neo", "VPB");
-        put("com.vpbank", "VPB");
-        put("vn.com.vpbank.neo", "VPB");
-        put("com.vpb.vpbank", "VPB");
-        put("vn.vpbank", "VPB");
-        put("com.vpbank.vpbankonline", "VPB");
-        put("vn.com.vpbank", "VPB");
-        put("com.vp.vpbank", "VPB");
-        put("vn.vpbank.online", "VPB");
-        put("com.vpbank.mobile", "VPB");
-        put("vn.vpbank.mobile", "VPB");
-        
-        // TPBank
-        put("vn.tpb.mb.gprsandroid", "TPB");
-        put("com.tpb.mb.gprsandroid", "TPB");
-        
-        // BIDV
-        put("com.vnpay.bidv", "BIDV");
-        put("vn.com.bidv.smartbanking", "BIDV");
-        
-        // VietinBank
-        put("com.vietinbank.ipay", "CTG");
-        put("vn.com.vietinbank.ipay", "CTG");
-        
-        // Sacombank
-        put("vn.stb.mbanking", "STB");
-        put("com.sacombank.ewallet", "STB");
-        
-        // Agribank
-        put("com.vnpay.agribank", "AGR");
-        put("vn.com.agribank.emobile", "AGR");
-        
-        // HDBank
-        put("com.vnpay.hdbank", "HDB");
-        
-        // OCB
-        put("com.ocb.omni", "OCB");
-        
-        // VIB
-        put("vn.vib.mobilebanking", "VIB");
-        
-        // SHB
-        put("com.vnpay.shb", "SHB");
-        
-        // Momo
-        put("com.mservice.momotransfer", "MOMO");
+        put("vn.acb.app", "ACB");  // ACB app variant
+        put("com.acb.mobile", "ACB");  // ACB mobile variant
     }};
     
     private ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -133,6 +69,11 @@ public class BankNotificationService extends NotificationListenerService {
     private static int successCount = 0;
     private static long totalAmount = 0;
     
+    // v2.51.0: Deduplication cache để tránh xử lý notification trùng
+    // Key: hash của (bankCode + amount + content), Value: timestamp
+    private static final Map<String, Long> processedNotifications = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long DEDUP_WINDOW_MS = 60000; // 60 giây - không xử lý notification giống nhau trong 60s
+    
     @Override
     public void onCreate() {
         super.onCreate();
@@ -142,6 +83,9 @@ public class BankNotificationService extends NotificationListenerService {
         // Load saved server URL
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         staticServerUrl = prefs.getString(KEY_SERVER_URL, "");
+        
+        // v2.51.0: Cleanup cache cũ định kỳ
+        cleanupOldDedupCache();
     }
     
     @Override
@@ -208,6 +152,43 @@ public class BankNotificationService extends NotificationListenerService {
     }
     
     /**
+     * v2.51.0: Cleanup cache dedup cũ
+     */
+    private void cleanupOldDedupCache() {
+        long now = System.currentTimeMillis();
+        processedNotifications.entrySet().removeIf(entry -> 
+            now - entry.getValue() > DEDUP_WINDOW_MS * 5);
+    }
+    
+    /**
+     * v2.51.0: Kiểm tra notification đã xử lý chưa (deduplication)
+     * @return true nếu notification mới, false nếu đã xử lý
+     */
+    private boolean isNewNotification(String bankCode, long amount, String content) {
+        // Tạo hash key từ thông tin quan trọng
+        String key = bankCode + "|" + amount + "|" + content.hashCode();
+        long now = System.currentTimeMillis();
+        
+        Long lastProcessed = processedNotifications.get(key);
+        if (lastProcessed != null && (now - lastProcessed) < DEDUP_WINDOW_MS) {
+            Log.w(TAG, "⚠️ DUPLICATE NOTIFICATION DETECTED - Skipping!");
+            Log.w(TAG, "Key: " + key + ", Last processed: " + (now - lastProcessed) + "ms ago");
+            saveDebugLog("DUPLICATE SKIPPED: " + bankCode + " " + amount + "đ");
+            return false;
+        }
+        
+        // Đánh dấu đã xử lý
+        processedNotifications.put(key, now);
+        
+        // Cleanup cache định kỳ
+        if (processedNotifications.size() > 50) {
+            cleanupOldDedupCache();
+        }
+        
+        return true;
+    }
+    
+    /**
      * Static method to send transaction to server - can be called from Plugin for testing
      */
     public static String sendTransactionToServer(
@@ -224,7 +205,7 @@ public class BankNotificationService extends NotificationListenerService {
             String serverUrl = prefs.getString(KEY_SERVER_URL, staticServerUrl);
             
             if (serverUrl.isEmpty()) {
-                serverUrl = "https://sevenapp.onrender.com";
+                serverUrl = "https://cautious-space-fortnight-j7rwrvr6j9g3p5gw-8000.app.github.dev";
             }
             
             JSONObject payload = new JSONObject();
@@ -379,6 +360,12 @@ public class BankNotificationService extends NotificationListenerService {
             return;
         }
         
+        // v2.51.0: Kiểm tra duplicate notification
+        if (!isNewNotification(bankCode, txInfo.amount, content)) {
+            Log.w(TAG, "Skipping duplicate notification");
+            return;
+        }
+        
         // Gửi lên server
         sendToServer(txInfo, content, bankCode);
     }
@@ -470,8 +457,14 @@ public class BankNotificationService extends NotificationListenerService {
         // Parse nội dung chuyển khoản
         // Format chuẩn từ app Đại lý: NAP {agent_code} {amount}
         // Ví dụ: NAP AG000001 1000000, NAP 7TY001 5000000
+        // ACB format thực tế: GD: NAP AG000001 101000 GD 6016IBT1iJQTWDL8 160126-09:12:53
+        // - Nội dung nằm sau "GD:" và trước "GD " (space) hoặc trước timestamp
         Pattern[] contentPatterns = {
-            // ACB: ND: NAP AG000001 1000000
+            // ACB specific: GD: NAP AG000001 101000 GD 6016... (nội dung nằm giữa "GD:" và "GD ")
+            Pattern.compile("GD:\\s*(.+?)\\s+GD\\s+[A-Z0-9]", Pattern.CASE_INSENSITIVE),
+            // ACB fallback: GD: content (đến cuối hoặc đến timestamp)
+            Pattern.compile("GD:\\s*(.+?)(?:\\s+\\d{6}-|$)", Pattern.CASE_INSENSITIVE),
+            // Standard format: ND: NAP AG000001 1000000
             Pattern.compile("(?:ND|Nội dung|Noi dung|Content|Memo)[:\\s]*(.+?)(?:\\.|SD|Số dư|$)", Pattern.CASE_INSENSITIVE),
             // Format chuẩn app: NAP AG000001 1000000 (capture full content)
             Pattern.compile("((?:NAP|NAPTIEN|TOPUP)\\s+[A-Z0-9]+(?:\\s+\\d+)?)", Pattern.CASE_INSENSITIVE),
@@ -509,16 +502,19 @@ public class BankNotificationService extends NotificationListenerService {
         }
         
         // Parse mã giao dịch (transaction reference) từ ACB và các ngân hàng khác
-        // ACB format: GD: 123456789 hoặc Ma GD: 123456789
+        // ACB format thực tế: GD: NAP AG000001 101000 GD 6016IBT1iJQTWDL8 160126-09:12:53
+        // - Mã GD là chuỗi sau "GD " (có space, KHÔNG có dấu :) + dãy ký tự
         // MB format: Mã GD: FT12345678
         // VCB format: Ref: 123456789
         Pattern[] transactionRefPatterns = {
-            // ACB: GD: 123456789 hoặc Ma GD: 123456789
-            Pattern.compile("(?:GD|Giao dịch|Ma GD|Mã GD|Ref)[:\\s]*([A-Z0-9]+)", Pattern.CASE_INSENSITIVE),
-            // Format: FT + số
+            // ACB specific: "GD 6016IBT1iJQTWDL8" (sau GD + space, KHÔNG có dấu :)
+            Pattern.compile("\\sGD\\s+([A-Z0-9]{10,})", Pattern.CASE_INSENSITIVE),
+            // MB format: Mã GD: FT12345678
+            Pattern.compile("(?:Mã GD|Ma GD)[:\\s]*(FT[0-9A-Z]+)", Pattern.CASE_INSENSITIVE),
+            // Generic: FT + số
             Pattern.compile("(FT[0-9A-Z]+)", Pattern.CASE_INSENSITIVE),
             // 9-15 digit transaction code after certain keywords
-            Pattern.compile("(?:TID|Trans ID|Ref No)[:\\s]*([0-9]{9,15})", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("(?:TID|Trans ID|Ref No|Ref)[:\\s]*([0-9A-Z]{9,15})", Pattern.CASE_INSENSITIVE),
         };
         
         for (Pattern pattern : transactionRefPatterns) {
@@ -542,7 +538,7 @@ public class BankNotificationService extends NotificationListenerService {
         
         // Use default URL if not configured
         if (serverUrl.isEmpty()) {
-            serverUrl = "https://sevenapp.onrender.com";
+            serverUrl = "https://cautious-space-fortnight-j7rwrvr6j9g3p5gw-8000.app.github.dev";
             Log.i(TAG, "Using default server URL: " + serverUrl);
         }
         
@@ -557,15 +553,8 @@ public class BankNotificationService extends NotificationListenerService {
                     payload.put("type", "credit");
                     payload.put("amount", txInfo.amount);
                     
-                    // Gửi cả raw_content để server có thể parse mã đại lý từ nhiều nguồn
-                    // Server sẽ tìm mã đại lý trong cả content và raw_content
-                    String sendContent = rawContent; // Luôn gửi full content
-                    if (txInfo.transferContent != null && !txInfo.transferContent.isEmpty()) {
-                        // Nếu đã parse được nội dung chuyển khoản, gửi kèm
-                        sendContent = rawContent; // Vẫn gửi raw để đảm bảo có đủ thông tin
-                    }
-                    
-                    payload.put("content", sendContent);
+                    // Gửi raw content để server parse
+                    payload.put("content", rawContent);
                     payload.put("transfer_content", txInfo.transferContent != null ? txInfo.transferContent : "");
                     
                     // v2.131.0: Sử dụng mã GD từ ngân hàng làm reference nếu có
@@ -581,11 +570,11 @@ public class BankNotificationService extends NotificationListenerService {
                     payload.put("bank_transaction_ref", txInfo.transactionRef != null ? txInfo.transactionRef : "");
                     
                     payload.put("bank_code", bankCode);
-                    payload.put("account_number", txInfo.accountNumber);
+                    payload.put("account_number", txInfo.accountNumber != null ? txInfo.accountNumber : "");
                     payload.put("balance", txInfo.balance);
                     payload.put("raw_content", rawContent);
                     payload.put("source", "notification_reader");
-                    payload.put("app_version", "2.131.0");
+                    payload.put("app_version", "2.53.0");
                     payload.put("timestamp", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
                     
                     // Send to server

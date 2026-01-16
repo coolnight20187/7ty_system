@@ -37,7 +37,7 @@ Successfully implemented comprehensive 24-hour session persistence for the 7TY.V
 |------|---------|--------|
 | app.html | Added token expiry functions, 5-min checks, sliding window | ✅ Deployed |
 | login.html | Save tokenExpiresAt timestamp on login | ✅ Deployed |
-| agent_app.html | Agent token expiry tracking, page load validation | ✅ Deployed |
+| index.html | Agent token expiry tracking, page load validation | ✅ Deployed |
 
 ### New Features
 
@@ -173,7 +173,7 @@ Date.now() + (24 * 60 * 60 * 1000)
 ```
 ✓ static/app.html         (287 kB) - Copied to container
 ✓ static/login.html       (19.5 kB) - Copied to container
-✓ static/agent_app.html   (54.8 kB) - Copied to container
+✓ static/index.html   (54.8 kB) - Copied to container
 ```
 
 ### Container Status ✅
@@ -243,10 +243,10 @@ Date.now() + (24 * 60 * 60 * 1000)
 All settings are currently hardcoded:
 
 ```javascript
-// Session duration (in app.html, login.html, agent_app.html)
+// Session duration (in app.html, login.html, index.html)
 24 * 60 * 60 * 1000  // = 86,400,000 milliseconds
 
-// Check interval (in app.html and agent_app.html)  
+// Check interval (in app.html and index.html)  
 5 * 60 * 1000        // = 300,000 milliseconds
 ```
 

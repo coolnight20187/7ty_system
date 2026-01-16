@@ -67,7 +67,7 @@ setInterval(() => {
 }, 5 * 60 * 1000); // Every 5 minutes
 ```
 
-#### Agent Mobile App (agent_app.html)
+#### Agent Mobile App (index.html)
 ```javascript
 setInterval(() => {
     if (agent_token_expires_at > now) {
@@ -97,7 +97,7 @@ setInterval(() => {
   - Save again in fallback try/catch block
   - Added console log for 24h expiration confirmation
 
-### 3. static/agent_app.html
+### 3. static/index.html
 - Lines ~960-976: Save `agent_token_expires_at` on successful agent login
 - Lines ~926-944: Added DOMContentLoaded token expiry check
 - Lines ~1230-1248: Added 5-minute periodic check in loadDashboard()

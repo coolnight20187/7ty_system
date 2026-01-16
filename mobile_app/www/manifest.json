@@ -1,6 +1,6 @@
 {
-  "name": "Đại Lý 7TY",
-  "short_name": "Đại Lý 7TY",
+  "name": "7TY Agent",
+  "short_name": "7TY Agent",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f5f7fb",

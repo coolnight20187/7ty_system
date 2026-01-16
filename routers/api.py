@@ -815,18 +815,40 @@ async def receive_bank_webhook(
         
         if not agent_code:
             logger.warning(f"Could not parse agent code from content: {content[:200]} | raw: {raw_content[:200] if raw_content else 'N/A'}")
-            # Lưu lại giao dịch chưa xác định để admin review
-            background_tasks.add_task(
-                save_unmatched_transaction,
-                db, amount, raw_content or content, bank_ref, payload
+            
+            # v2.54.0: Tạo pending deposit cho admin đối soát (không có mã đại lý)
+            from models import DepositRequest, DepositStatus, DepositMethod
+            import secrets
+            
+            request_code = f"DEP{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{secrets.token_hex(4).upper()}"
+            
+            pending_deposit = DepositRequest(
+                request_code=request_code,
+                agent_id=None,  # Chưa xác định agent
+                agent_code="UNKNOWN",  # Không có agent code
+                amount=amount,
+                actual_amount=amount,
+                method=DepositMethod.BANK_WEBHOOK,
+                status=DepositStatus.PENDING,
+                bank_reference=bank_ref,
+                transfer_content=(raw_content or content)[:255] if (raw_content or content) else "",
+                is_verified=False,
+                webhook_verified=True,
+                webhook_source="notification_reader",
+                admin_notes=f"⚠️ KHÔNG CÓ MÃ ĐẠI LÝ - Cần admin đối soát thủ công.\nNội dung: {(raw_content or content)[:200]}\nSố tiền: {amount:,}đ\nMã GD: {bank_ref or 'N/A'}"
             )
+            db.add(pending_deposit)
+            db.commit()
+            
+            logger.info(f"Created PENDING deposit for no agent code: {request_code}, amount={amount:,}đ")
+            
             result = {
                 "success": True,
-                "message": "Giao dịch đã nhận nhưng không tìm thấy mã đại lý",
+                "message": "Không có mã đại lý - Đã tạo lệnh chờ đối soát",
                 "received": True,
-                "matched": False,
-                "parsed_content": content[:200],
-                "raw_content": raw_content[:200] if raw_content else None
+                "pending": True,
+                "request_code": request_code,
+                "hint": "Admin cần đối soát và gán agent thủ công"
             }
             log_webhook_to_file(payload, result)
             return result
@@ -842,7 +864,7 @@ async def receive_bank_webhook(
             search_method = "phone"
             agent = db.query(Agent).filter(
                 Agent.status == AgentStatus.ACTIVE
-            ).join(User).filter(User.phone == phone).first()
+            ).join(User, Agent.user_id == User.id).filter(User.phone == phone).first()
             
         elif agent_code:
             # Tìm theo agent_code
@@ -858,10 +880,10 @@ async def receive_bank_webhook(
             # VD: "PHAN MINH PHONG CHUYEN KHOAN..." -> tìm agent có tên "PHAN MINH PHONG"
             content_upper = content.upper()
             
-            # Lấy danh sách đại lý active
+            # Lấy danh sách đại lý active - chỉ định rõ join condition
             active_agents = db.query(Agent).filter(
                 Agent.status == AgentStatus.ACTIVE
-            ).join(User).all()
+            ).join(User, Agent.user_id == User.id).all()
             
             for ag in active_agents:
                 # Tìm theo tên đại lý
@@ -892,23 +914,97 @@ async def receive_bank_webhook(
         
         if not agent:
             logger.warning(f"Agent not found: {agent_code}, content: {content[:100]}")
-            background_tasks.add_task(
-                save_unmatched_transaction,
-                db, amount, content, bank_ref, payload
+            
+            # v2.54.0: Tạo pending deposit cho admin đối soát (không cần mã đại lý)
+            from models import DepositRequest, DepositStatus, DepositMethod
+            import secrets
+            
+            request_code = f"DEP{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{secrets.token_hex(4).upper()}"
+            
+            pending_deposit = DepositRequest(
+                request_code=request_code,
+                agent_id=None,  # Chưa xác định agent
+                agent_code=agent_code or "UNKNOWN",  # Có thể là parsed code hoặc UNKNOWN
+                amount=amount,
+                actual_amount=amount,
+                method=DepositMethod.BANK_WEBHOOK,
+                status=DepositStatus.PENDING,
+                bank_reference=bank_ref,
+                transfer_content=content[:255] if content else "",
+                is_verified=False,
+                webhook_verified=True,
+                webhook_source="notification_reader",
+                admin_notes=f"⚠️ KHÔNG TÌM THẤY ĐẠI LÝ - Cần admin đối soát thủ công.\nNội dung: {content[:200]}\nSố tiền: {amount:,}đ\nMã GD: {bank_ref or 'N/A'}"
             )
+            db.add(pending_deposit)
+            db.commit()
+            
+            logger.info(f"Created PENDING deposit for unmatched agent: {request_code}, amount={amount:,}đ")
+            
             result = {
                 "success": True,
-                "message": f"Không tìm thấy đại lý. Parsed: {agent_code}",
+                "message": f"Không tìm thấy đại lý - Đã tạo lệnh chờ duyệt",
                 "received": True,
-                "matched": False,
+                "pending": True,
+                "request_code": request_code,
                 "parsed_agent_code": agent_code,
                 "search_method": search_method,
-                "hint": "Nội dung chuyển khoản cần có format: NAP [MÃ ĐẠI LÝ] [SỐ TIỀN]"
+                "hint": "Admin cần đối soát và gán agent thủ công"
             }
             log_webhook_to_file(payload, result)
             return result
         
         logger.info(f"Agent matched via {search_method}: {agent.agent_code}")
+        
+        # v2.52.0: Validate số tiền chuyển khoản khớp với số tiền trong nội dung
+        # Format nội dung: NAP AG000001 102000 -> số tiền trong nội dung là 102000
+        content_amount = extract_amount_from_transfer_content(content)
+        
+        if content_amount is not None and amount != content_amount:
+            # Số tiền KHÔNG KHỚP -> Tạo pending request thay vì auto deposit
+            logger.warning(f"⚠️ AMOUNT MISMATCH: transfer={amount:,}đ, content={content_amount:,}đ for {agent.agent_code}")
+            
+            # Import để tạo pending deposit
+            from models import DepositRequest, DepositStatus, DepositMethod
+            
+            # Tạo mã request
+            import secrets
+            request_code = f"DEP{datetime.utcnow().strftime('%Y%m%d%H%M%S')}{secrets.token_hex(4).upper()}"
+            
+            # Tạo pending deposit request
+            pending_deposit = DepositRequest(
+                request_code=request_code,
+                agent_id=agent.id,
+                agent_code=agent.agent_code,
+                amount=amount,  # Số tiền thực tế chuyển khoản
+                actual_amount=amount,
+                method=DepositMethod.BANK_WEBHOOK,
+                status=DepositStatus.PENDING,  # Chờ duyệt
+                bank_reference=bank_ref,
+                transfer_content=content[:255] if content else "",
+                is_verified=False,  # Chưa verify vì amount mismatch
+                webhook_verified=True,
+                webhook_source="notification_reader",
+                admin_notes=f"⚠️ SỐ TIỀN KHÔNG KHỚP: Chuyển khoản {amount:,}đ, Nội dung ghi {content_amount:,}đ. Cần admin xác nhận."
+            )
+            db.add(pending_deposit)
+            db.commit()
+            
+            logger.info(f"Created PENDING deposit for amount mismatch: {request_code}")
+            
+            result = {
+                "success": True,
+                "message": "Số tiền không khớp - chờ admin duyệt",
+                "received": True,
+                "pending": True,
+                "request_code": request_code,
+                "agent_code": agent.agent_code,
+                "transfer_amount": amount,
+                "content_amount": content_amount,
+                "reason": f"Chuyển khoản {amount:,}đ nhưng nội dung ghi {content_amount:,}đ"
+            }
+            log_webhook_to_file(payload, result)
+            return result
         
         # Kiểm tra giao dịch trùng lặp (theo bank_ref)
         if bank_ref:
@@ -1087,6 +1183,48 @@ def parse_bank_webhook(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error parsing webhook: {e}")
         return None
+
+
+def extract_amount_from_transfer_content(content: str) -> Optional[int]:
+    """
+    v2.52.0: Extract số tiền từ nội dung chuyển khoản
+    Format chuẩn: NAP AG000001 102000 -> returns 102000
+    
+    QUAN TRỌNG: Hàm này parse số tiền từ nội dung để đối chiếu với số tiền thực tế.
+    Giúp phát hiện gian lận khi chuyển khoản 12,000đ nhưng ghi nội dung 102,000đ.
+    """
+    if not content:
+        return None
+    
+    import re
+    content_upper = content.upper()
+    
+    # Pattern: NAP/NAPTIEN + AGENT_CODE + AMOUNT
+    # Số tiền PHẢI là số sau agent code
+    patterns = [
+        # ACB format: GD: NAP AG000001 102000 GD 601...
+        r'(?:GD:\s*)?(?:NAP|NAPTIEN|TOPUP)\s+(?:\d?[A-Z]{2,5}\d{3,6})\s+(\d+)',
+        # Standard: NAP AG000001 102000
+        r'(?:NAP|NAPTIEN|TOPUP)\s+([A-Z]{2,5}\d{3,6})\s+(\d+)',
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, content_upper)
+        if match:
+            try:
+                # Lấy số tiền (group cuối cùng)
+                amount_str = match.groups()[-1]
+                amount = int(amount_str)
+                # Validate: số tiền phải hợp lý (>= 1000đ và <= 1 tỷ)
+                if 1000 <= amount <= 1000000000:
+                    logger.info(f"Extracted amount {amount} from content: {content[:100]}")
+                    return amount
+            except (ValueError, IndexError):
+                continue
+    
+    # KHÔNG dùng fallback - chỉ trả về None nếu không tìm thấy format chuẩn
+    logger.warning(f"Could not extract amount from content: {content[:100]}")
+    return None
 
 
 def parse_agent_code_from_content(content: str) -> Optional[str]:

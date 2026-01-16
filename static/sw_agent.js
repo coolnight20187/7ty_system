@@ -1,7 +1,7 @@
 // Service Worker for 7TY Agent PWA
 const CACHE_NAME = '7ty-agent-v132';
 const urlsToCache = [
-  '/static/agent_app.html',
+  '/static/index.html',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.min.css',
@@ -81,7 +81,7 @@ self.addEventListener('fetch', event => {
             
             // Return offline page for HTML requests
             if (event.request.headers.get('accept').includes('text/html')) {
-              return caches.match('/static/agent_app.html');
+              return caches.match('/static/index.html');
             }
           });
       })
@@ -107,6 +107,6 @@ self.addEventListener('push', event => {
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow('/static/agent_app.html')
+    clients.openWindow('/static/index.html')
   );
 });

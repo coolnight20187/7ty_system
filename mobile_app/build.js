@@ -5,7 +5,7 @@ const http = require('http');
 
 // Configuration
 const API_BASE_URL = process.env.API_URL || 'https://7ty.vn';
-const SOURCE_FILE = '../static/agent_app.html';
+const SOURCE_FILE = '../static/index.html';
 const OUTPUT_DIR = './www';
 
 console.log('🚀 Building 7TY Agent Mobile App...\n');

@@ -911,7 +911,7 @@
             </form>
 
             <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #999;">
-                <p>Phiên bản: <strong>v2.132.0</strong></p>
+                <p>Phiên bản: <strong>v2.52.0</strong></p>
                 <p>7ty.vn © 2026</p>
             </div>
         </div>
@@ -1795,13 +1795,13 @@
                     <!-- Version -->
                     <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
                         <span style="color: #666; font-size: 14px;">Phiên bản</span>
-                        <span style="font-weight: 600; font-size: 14px;">v2.132.0</span>
+                        <span style="font-weight: 600; font-size: 14px;">v2.52.0</span>
                     </div>
                     
                     <!-- Update Date -->
                     <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f5f5f5;">
                         <span style="color: #666; font-size: 14px;">Cập nhật</span>
-                        <span style="font-weight: 600; font-size: 14px;">14/01/2026</span>
+                        <span style="font-weight: 600; font-size: 14px;">16/01/2026</span>
                     </div>
                     
                     <!-- Developer -->
@@ -1835,13 +1835,13 @@
                         </div>
                     </div>
                     
-                    <!-- Download APK -->
+                    <!-- Download Agent APK -->
                     <div onclick="downloadAPK()" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; cursor: pointer; border-bottom: 1px solid #f5f5f5;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <i class="fab fa-android" style="color: #3ddc84; font-size: 18px;"></i>
                             <div>
-                                <span style="color: var(--primary); font-size: 14px; font-weight: 600; display: block;">Tải APK Mới Nhất</span>
-                                <span style="color: #999; font-size: 11px;">v2.132.0 • 4.5 MB • Đã ký</span>
+                                <span style="color: var(--primary); font-size: 14px; font-weight: 600; display: block;">📱 App Đại Lý (Agent)</span>
+                                <span style="color: #999; font-size: 11px;">v2.51.0 • 4.0 MB • Đã ký</span>
                             </div>
                         </div>
                         <div id="apkDownloadBtn" style="background: linear-gradient(135deg, #3ddc84, #00c853); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">
@@ -1849,43 +1849,39 @@
                         </div>
                     </div>
                     
-                    <!-- Download Links Section -->
+                    <!-- Download SMS Reader APK -->
+                    <div onclick="downloadSMSReader()" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; cursor: pointer; border-bottom: 1px solid #f5f5f5;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-sms" style="color: #8b5cf6; font-size: 18px;"></i>
+                            <div>
+                                <span style="color: #8b5cf6; font-size: 14px; font-weight: 600; display: block;">📲 SMS Reader (Tự động nạp)</span>
+                                <span style="color: #999; font-size: 11px;">v2.51.0 • 2.8 MB • Cho điện thoại nhận SMS</span>
+                            </div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">
+                            <i class="fas fa-download me-1"></i> Tải Về
+                        </div>
+                    </div>
+                    
+                    <!-- Direct Links -->
                     <div style="padding: 12px 0; border-bottom: 1px solid #f5f5f5;">
-                        <span style="color: #666; font-size: 13px; display: block; margin-bottom: 10px;">📥 Tải ứng dụng:</span>
-                        
-                        <!-- Agent App -->
-                        <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #86efac;">
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                <i class="fab fa-android" style="color: #22c55e; font-size: 16px;"></i>
-                                <span style="font-weight: 700; color: #166534; font-size: 13px;">App Đại Lý 7TY</span>
-                                <span style="background: #22c55e; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600;">v2.132.0</span>
-                            </div>
-                            <a href="https://github.com/coolnight20187/7ty_system/releases/download/v2.132.0/agent-app-v2.132.0.apk" 
+                        <span style="color: #666; font-size: 13px; display: block; margin-bottom: 8px;">Link tải trực tiếp:</span>
+                        <div style="background: #f0fdf4; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #bbf7d0;">
+                            <a href="/download/agent-apk" 
                                target="_blank" 
-                               style="display: flex; align-items: center; gap: 6px; color: #15803d; font-size: 11px; text-decoration: none; word-break: break-all;">
-                                <i class="fas fa-download"></i>Tải từ GitHub (4.0 MB)
+                               style="color: #15803d; font-size: 12px; text-decoration: none; font-weight: 600;">
+                                <i class="fab fa-android me-1"></i> App Đại Lý v2.51.0
                             </a>
                         </div>
-                        
-                        <!-- SMS Reader App -->
-                        <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 12px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #fbbf24;">
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                <i class="fas fa-bell" style="color: #d97706; font-size: 16px;"></i>
-                                <span style="font-weight: 700; color: #92400e; font-size: 13px;">SMS Reader (Nạp Tự Động)</span>
-                                <span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600;">v2.132.0</span>
-                            </div>
-                            <a href="https://github.com/coolnight20187/7ty_system/releases/download/v2.132.0/sms-reader-v2.132.0.apk" 
+                        <div style="background: #f5f3ff; padding: 10px; border-radius: 8px; border: 1px solid #ddd6fe;">
+                            <a href="/download/sms-reader-apk" 
                                target="_blank" 
-                               style="display: flex; align-items: center; gap: 6px; color: #b45309; font-size: 11px; text-decoration: none; word-break: break-all;">
-                                <i class="fas fa-download"></i>Tải từ GitHub (2.8 MB)
+                               style="color: #7c3aed; font-size: 12px; text-decoration: none; font-weight: 600;">
+                                <i class="fas fa-sms me-1"></i> SMS Reader v2.51.0
                             </a>
-                            <div style="margin-top: 6px; font-size: 10px; color: #92400e;">
-                                ⚠️ Cài trên máy nhận Notification ACB để nạp tiền tự động
-                            </div>
                         </div>
-                        
-                        <div style="margin-top: 8px; font-size: 11px; color: #999; background: #f8fafc; padding: 8px; border-radius: 6px;">
-                            <i class="fas fa-shield-alt me-1" style="color: #3b82f6;"></i>Nếu bị chặn Play Protect: Nhấn "More details" → "Install anyway"
+                        <div style="margin-top: 8px; font-size: 11px; color: #999;">
+                            <i class="fas fa-info-circle me-1"></i>Nếu bị chặn bởi Play Protect: Nhấn "More details" → "Install anyway"
                         </div>
                     </div>
                     
@@ -1968,14 +1964,14 @@
         function getServerUrl() {
             // Nếu đang chạy trong Capacitor (APK) - kết nối tới server thực
             if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
-                return 'https://sevenapp.onrender.com';
+                return 'https://cautious-space-fortnight-j7rwrvr6j9g3p5gw-8000.app.github.dev';
             }
             // Nếu đang chạy trên web nhưng không phải localhost
             if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
                 return window.location.origin;
             }
             // Mặc định localhost
-            return 'http://localhost:8000';
+            return 'https://cautious-space-fortnight-j7rwrvr6j9g3p5gw-8000.app.github.dev';
         }
         
         const SERVER_URL = getServerUrl();
@@ -2281,6 +2277,89 @@
             appState.agentName = null;
             appState.agentCode = null;
         }
+        
+        // v2.51.0: Hiển thị popup chi tiết giao dịch với nút Đóng
+        function showTransactionSummaryPopup(txDetails) {
+            Swal.fire({
+                icon: 'info',
+                title: '<i class="fas fa-receipt text-primary me-2"></i>Chi Tiết Giao Dịch',
+                html: `
+                    <div style="text-align: left; padding: 10px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                            <img src="${txDetails.bankLogo}" style="width: 48px; height: 48px; border-radius: 10px; margin-right: 12px;">
+                            <div>
+                                <div style="font-weight: 600; color: #333;">${txDetails.bankName}</div>
+                                <div style="font-size: 12px; color: #888;">${txDetails.time}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 12px; color: #888;">Số tiền</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #10b981;">${Number(txDetails.amount).toLocaleString('vi-VN')}đ</div>
+                        </div>
+                        
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 12px; color: #888;">Nội dung chuyển khoản</div>
+                            <div style="font-weight: 600; color: #333; background: #f5f5f5; padding: 8px 12px; border-radius: 8px; font-family: monospace;">${txDetails.transferContent}</div>
+                        </div>
+                        
+                        <div style="margin-bottom: 12px;">
+                            <div style="font-size: 12px; color: #888;">Chuyển đến</div>
+                            <div style="font-weight: 500; color: #333;">${txDetails.accountNo}</div>
+                            <div style="font-size: 13px; color: #666;">${txDetails.accountName}</div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 12px; border-radius: 10px; margin-top: 15px;">
+                            <div style="display: flex; align-items: center; color: #92400e;">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <span style="font-size: 13px;">Sau khi chuyển khoản thành công, hệ thống sẽ tự động cộng tiền vào tài khoản của bạn.</span>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                confirmButtonText: '<i class="fas fa-home me-1"></i> Đóng',
+                confirmButtonColor: 'var(--primary)',
+                allowOutsideClick: false
+            }).then(() => {
+                // Reset và quay về trang chủ - dùng switchPage giống cancelDeposit()
+                appState.selectedDepositAmount = null;
+                localStorage.removeItem('pendingTransactionDetails');
+                localStorage.removeItem('pendingReturnTime');
+                document.getElementById('transferDetails').style.display = 'none';
+                switchPage('dashboard');
+            });
+        }
+        
+        // v2.51.0: Xử lý khi app resume (user quay lại từ app ngân hàng)
+        function handleAppResume() {
+            const pendingTxDetails = localStorage.getItem('pendingTransactionDetails');
+            const pendingTime = localStorage.getItem('pendingReturnTime');
+            
+            if (pendingTxDetails && pendingTime) {
+                const elapsed = Date.now() - parseInt(pendingTime);
+                // Chỉ xử lý nếu trong vòng 5 phút (300000ms) và đã qua ít nhất 2 giây
+                if (elapsed < 300000 && elapsed > 2000) {
+                    console.log('🏠 App resumed after bank app - showing transaction summary');
+                    try {
+                        const txDetails = JSON.parse(pendingTxDetails);
+                        showTransactionSummaryPopup(txDetails);
+                    } catch (e) {
+                        console.error('Error parsing transaction details:', e);
+                        localStorage.removeItem('pendingTransactionDetails');
+                        localStorage.removeItem('pendingReturnTime');
+                        switchPage('dashboard');
+                    }
+                }
+            }
+        }
+        
+        // Listen for app resume events (Capacitor)
+        document.addEventListener('resume', handleAppResume);
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                handleAppResume();
+            }
+        });
         
         function showLoginPage() {
             document.getElementById('loginPage').style.display = 'flex';
@@ -2790,10 +2869,12 @@
             renderBankAppSelector();
         }
         
-        // Mở app ngân hàng được chọn - v131 - Mở thẳng app, bỏ popup xác nhận
+        // Mở app ngân hàng được chọn - v2.51.0 - Direct Open (No Popup)
+        // Yêu cầu: Nhấn XÁC NHẬN -> Mở thẳng app ngân hàng, không popup
+        // Không gọi submitDepositRequest() từ client - hệ thống tự xác nhận khi nhận tiền qua SMS
         async function openSelectedBankApp() {
             try {
-                console.log('🔵 openSelectedBankApp() v131 - Direct Open, No Confirmation');
+                console.log('🔵 openSelectedBankApp() v2.51.0 - Direct Open + Auto Return Home');
                 
                 const packageName = document.getElementById('selectedBankAppForTransfer').value;
                 
@@ -2836,20 +2917,27 @@
                 // Copy nội dung CK trước
                 copyToClipboard(transferContent);
                 
-                // v131: Mở thẳng app ngân hàng không popup
+                // v2.51.0: Tạo deeplink và mở thẳng app ngân hàng
                 const receiverBankBin = bank.bank_code || '970415';
                 
-                console.log('🚀 v131: Direct open bank app:', bankInfo.name);
-                showToast(`Đang mở ${bankInfo.name}...`, 'info');
+                // VietQR Deeplink chuẩn - dùng bankBin của USER (người gửi) làm app
+                const vietQRDeeplink = `https://dl.vietqr.io/pay?app=${bankInfo.bankBin}&ba=${receiverBankBin}-${bank.account_number}&am=${amount}&tn=${encodeURIComponent(transferContent)}`;
                 
-                // Tạo QR Image URL
+                // QR Image URL
                 const qrImageUrl = `https://img.vietqr.io/image/${receiverBankBin}-${bank.account_number}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(bank.account_name)}`;
+            
+                console.log('🚀 VietQR Deeplink:', vietQRDeeplink);
+                console.log('📱 Bank App:', bankInfo.name, 'BIN:', bankInfo.bankBin, 'Package:', packageName);
+                console.log('💵 Amount:', amount, 'Content:', transferContent);
+                
+                // v2.51.0: MỞ THẲNG APP NGÂN HÀNG - KHÔNG POPUP
+                showToast(`Đang mở ${bankInfo.name}...`, 'info');
                 
                 try {
                     const { BankLauncher } = window.Capacitor?.Plugins || {};
                     
                     if (BankLauncher && BankLauncher.openQRInBankApp) {
-                        // v131: Mở thẳng app với QR
+                        // v2.51.0: Mở app ngân hàng với VietQR scheme
                         const fileName = `QR_${transferContent}_${Date.now()}.png`;
                         
                         const result = await BankLauncher.openQRInBankApp({
@@ -2866,55 +2954,74 @@
                         
                         if (result.success) {
                             if (result.method === 'vietqr_scheme' || result.method === 'qr_data_scheme') {
-                                showToast('✅ Đã gửi thông tin CK!', 'success');
+                                showToast('✅ Đã gửi thông tin CK! Hoàn tất trên app ngân hàng', 'success');
                             } else {
-                                showToast('✅ QR đã lưu! Vào Quét QR → Chọn ảnh', 'success');
+                                showToast('✅ QR đã lưu! Vào Quét QR → Chọn ảnh gần nhất', 'success');
                             }
                         } else {
                             await BankLauncher.openApp({ packageName: packageName });
-                            showToast('📋 Nội dung đã copy, dán vào "Nội dung"', 'info');
+                            showToast('📋 Nội dung đã copy, hãy dán vào ô "Nội dung"', 'info');
                         }
                     } else if (BankLauncher && BankLauncher.saveQRAndOpenApp) {
-                        // Fallback
+                        // Fallback: Lưu QR và mở app
                         const fileName = `QR_${transferContent}_${Date.now()}.png`;
                         await BankLauncher.saveQRAndOpenApp({
                             imageUrl: qrImageUrl,
                             packageName: packageName,
                             fileName: fileName
                         });
-                        showToast('✅ QR đã lưu! Vào Quét QR → Chọn ảnh', 'success');
+                        showToast('✅ QR đã lưu! Vào Quét QR → Chọn ảnh gần nhất', 'success');
                     } else if (BankLauncher && BankLauncher.openApp) {
+                        // Fallback: Chỉ mở app
                         await BankLauncher.openApp({ packageName: packageName });
-                        showToast('📋 Nội dung đã copy, dán vào "Nội dung"', 'info');
+                        showToast('📋 Nội dung đã copy, hãy dán vào ô "Nội dung"', 'info');
                     } else {
-                        // Fallback: dùng VietQR deeplink
-                        const vietQRDeeplink = `https://dl.vietqr.io/pay?app=${bankInfo.bankBin}&ba=${receiverBankBin}-${bank.account_number}&am=${amount}&tn=${encodeURIComponent(transferContent)}`;
-                        window.location.href = vietQRDeeplink;
-                        showToast('Đang mở app ngân hàng...', 'info');
+                        // Web fallback: Mở VietQR deeplink
+                        window.open(vietQRDeeplink, '_blank');
+                        showToast('📋 Nội dung đã copy, hãy dán vào ô "Nội dung"', 'info');
                     }
+                    
+                    // v2.51.0: Lưu thông tin giao dịch để hiển thị popup
+                    const txDetails = {
+                        bankName: bankInfo.name,
+                        bankLogo: bankInfo.logo,
+                        amount: amount,
+                        transferContent: transferContent,
+                        accountNo: bank.account_number,
+                        accountName: bank.account_name,
+                        time: new Date().toLocaleString('vi-VN')
+                    };
+                    localStorage.setItem('pendingTransactionDetails', JSON.stringify(txDetails));
+                    localStorage.setItem('pendingReturnTime', Date.now().toString());
+                    
+                    // v2.51.0: Hiện popup chi tiết giao dịch sau 5 giây
+                    setTimeout(() => {
+                        showTransactionSummaryPopup(txDetails);
+                    }, 5000);
+                    
                 } catch (e) {
                     console.error('Open bank app error:', e);
-                    // Fallback: mở scheme
-                    if (bankInfo.scheme) {
-                        window.location.href = `${bankInfo.scheme}://`;
-                    }
-                    showToast('📋 Nội dung đã copy, mở app để chuyển khoản', 'info');
+                    // Web fallback
+                    window.open(vietQRDeeplink, '_blank');
+                    showToast('📋 Nội dung đã copy, hãy dán vào ô "Nội dung"', 'info');
+                    // Vẫn hiện popup sau 5s
+                    const txDetails = {
+                        bankName: bankInfo.name,
+                        bankLogo: bankInfo.logo,
+                        amount: amount,
+                        transferContent: transferContent,
+                        accountNo: bank.account_number,
+                        accountName: bank.account_name,
+                        time: new Date().toLocaleString('vi-VN')
+                    };
+                    setTimeout(() => {
+                        showTransactionSummaryPopup(txDetails);
+                    }, 5000);
                 }
                 
-                // v131: Không hiện popup hỏi "Đã chuyển khoản xong?"
-                // Khi hệ thống nhận được tiền từ webhook, sẽ tự động cộng số dư
-                // Lịch sử giao dịch chỉ hiển thị khi webhook xử lý thành công
-                
-                // Hiển thị thông báo nhỏ về quy trình
-                setTimeout(() => {
-                    showToast('💡 Số dư sẽ tự cộng khi nhận được tiền', 'info');
-                }, 2000);
-                
-                return true;
-                
             } catch (error) {
+                alert('LỖI: ' + error.message);
                 console.error('Error in openSelectedBankApp:', error);
-                showToast('Lỗi: ' + error.message, 'error');
             }
         }
         
@@ -8177,9 +8284,9 @@ ${qrImageUrl}`;
                     btn.style.pointerEvents = 'none';
                 }
                 
-                // Download từ GitHub Release (nhanh hơn)
-                const downloadUrl = 'https://github.com/coolnight20187/7ty_system/releases/download/v2.132.0/agent-app-v2.132.0.apk';
-                console.log('Downloading APK from GitHub:', downloadUrl);
+                // Download từ Server
+                const downloadUrl = getServerUrl() + '/download/agent-apk';
+                console.log('Downloading APK from server:', downloadUrl);
                 
                 // Mở URL trực tiếp để download
                 window.location.href = downloadUrl;
@@ -8197,7 +8304,7 @@ ${qrImageUrl}`;
                     }, 3000);
                 }
                 
-                showToast('Đang tải APK v2.132.0...', 'success');
+                showToast('Đang tải App Đại Lý v2.51.0...', 'success');
             } catch (error) {
                 console.error('Download error:', error);
                 if (btn) {
@@ -8205,6 +8312,22 @@ ${qrImageUrl}`;
                     btn.style.pointerEvents = 'auto';
                 }
                 showToast('Lỗi tải APK: ' + error.message, 'error');
+            }
+        }
+
+        // Download SMS Reader APK
+        async function downloadSMSReader() {
+            try {
+                const downloadUrl = getServerUrl() + '/download/sms-reader-apk';
+                console.log('Downloading SMS Reader from server:', downloadUrl);
+                
+                // Mở URL trực tiếp để download
+                window.location.href = downloadUrl;
+                
+                showToast('Đang tải SMS Reader v2.51.0...', 'success');
+            } catch (error) {
+                console.error('Download error:', error);
+                showToast('Lỗi tải SMS Reader: ' + error.message, 'error');
             }
         }
 

@@ -1,6 +1,6 @@
 {
   "name": "7ty-agent-app",
-  "version": "2.41.0",
+  "version": "2.42.0",
   "description": "Ứng dụng Đại Lý 7TY.VN - Thu hộ hóa đơn điện, nạp tiền, thanh toán",
   "main": "index.js",
   "scripts": {

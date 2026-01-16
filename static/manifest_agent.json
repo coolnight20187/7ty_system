@@ -2,7 +2,7 @@
   "name": "7TY Agent - Ứng Dụng Đại Lý",
   "short_name": "7TY Agent",
   "description": "Ứng dụng quản lý dành cho Đại Lý 7TY.VN - Thu hộ hóa đơn điện, nạp tiền, thanh toán - Nắm giữ tài mạch",
-  "start_url": "/static/agent_app.html",
+  "start_url": "/static/index.html",
   "scope": "/static/",
   "display": "standalone",
   "orientation": "portrait",
@@ -38,7 +38,7 @@
       "name": "Tra cứu điện",
       "short_name": "Tra điện",
       "description": "Tra cứu hóa đơn tiền điện",
-      "url": "/static/agent_app.html#electricity",
+      "url": "/static/index.html#electricity",
       "icons": [
         {
           "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><circle fill='%23f59e0b' cx='48' cy='48' r='48'/><text y='68' x='28' font-size='50' fill='white'>⚡</text></svg>",
@@ -51,7 +51,7 @@
       "name": "Lịch sử giao dịch",
       "short_name": "Lịch sử",
       "description": "Xem lịch sử các giao dịch",
-      "url": "/static/agent_app.html#history",
+      "url": "/static/index.html#history",
       "icons": [
         {
           "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><circle fill='%2310b981' cx='48' cy='48' r='48'/><text y='68' x='28' font-size='50' fill='white'>📋</text></svg>",

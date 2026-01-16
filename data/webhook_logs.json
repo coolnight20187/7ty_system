@@ -1,0 +1,918 @@
+[
+  {
+    "timestamp": "2026-01-16T02:18:00.702656",
+    "payload": {
+      "type": "credit",
+      "amount": 374204,
+      "content": "Tài khoản: 25****66\nSố dư: 374,204 ₫\nNHAN TU 17246947 TRACE 887259 ND PHAN MINH PHONG CHUYEN KHOAN-160126-09:11:38 6016ASCBJ2CTYUYC",
+      "transfer_content": "PHAN MINH PHONG CHUYEN KHOAN-160126-09:11:38 6016ASCBJ2CTYUYC",
+      "reference": "NOTIF_1768529879477",
+      "bank_transaction_ref": "",
+      "bank_code": "VPB",
+      "account_number": "25",
+      "balance": 374204,
+      "raw_content": "Tài khoản: 25****66\nSố dư: 374,204 ₫\nNHAN TU 17246947 TRACE 887259 ND PHAN MINH PHONG CHUYEN KHOAN-160126-09:11:38 6016ASCBJ2CTYUYC",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 09:17:59"
+    },
+    "result": {
+      "success": true,
+      "message": "Giao dịch đã nhận nhưng không tìm thấy mã đại lý",
+      "received": true,
+      "matched": false,
+      "parsed_content": "Tài khoản: 25****66\nSố dư: 374,204 ₫\nNHAN TU 17246947 TRACE 887259 ND PHAN MINH PHONG CHUYEN KHOAN-160126-09:11:38 6016ASCBJ2CTYUYC",
+      "raw_content": "Tài khoản: 25****66\nSố dư: 374,204 ₫\nNHAN TU 17246947 TRACE 887259 ND PHAN MINH PHONG CHUYEN KHOAN-160126-09:11:38 6016ASCBJ2CTYUYC"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T02:18:01.282066",
+    "payload": {
+      "type": "credit",
+      "amount": 273204,
+      "content": "Tài khoản: 25****66\nSố dư: 273,204 ₫\nNAP AG000001 101000",
+      "transfer_content": "NAP AG000001 101000",
+      "reference": "NOTIF_1768529880677",
+      "bank_transaction_ref": "",
+      "bank_code": "VPB",
+      "account_number": "25",
+      "balance": 273204,
+      "raw_content": "Tài khoản: 25****66\nSố dư: 273,204 ₫\nNAP AG000001 101000",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 09:18:00"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "TXN1768529881273493021",
+        "agent_code": "AG000001",
+        "amount": 273204,
+        "previous_balance": 1960000.0,
+        "new_balance": 2233204.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T02:18:01.720712",
+    "payload": {
+      "type": "credit",
+      "amount": 101000,
+      "content": "ACB: TK 17246947(VND) + 101,000 luc 09:12 16/01/2026. So du 154,923. GD: NAP AG000001 101000 GD 6016IBT1iJQTWDL8 160126-09:12:53",
+      "transfer_content": ") + 101,000 luc 09:12 16/01/2026",
+      "reference": "ACB_NAP",
+      "bank_transaction_ref": "NAP",
+      "bank_code": "ACB",
+      "account_number": "17246947",
+      "balance": 154923,
+      "raw_content": "ACB: TK 17246947(VND) + 101,000 luc 09:12 16/01/2026. So du 154,923. GD: NAP AG000001 101000 GD 6016IBT1iJQTWDL8 160126-09:12:53",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 09:18:01"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "ACB_NAP",
+        "agent_code": "AG000001",
+        "amount": 101000,
+        "previous_balance": 2233204.0,
+        "new_balance": 2334204.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T02:56:47.905155",
+    "payload": {
+      "type": "credit",
+      "amount": 1000000,
+      "content": "NAP 7TY001 1000000",
+      "reference": "TEST_1768532206609",
+      "bank_code": "ACB",
+      "source": "notification_test"
+    },
+    "result": {
+      "success": false,
+      "message": "Lỗi xử lý: Can't determine join between 'agents' and 'users'; tables have more than one foreign key constraint relationship between them. Please specify the 'onclause' of this join explicitly.",
+      "received": true
+    }
+  },
+  {
+    "timestamp": "2026-01-16T02:58:54.163395",
+    "payload": {
+      "source": "test",
+      "type": "credit",
+      "amount": 100000,
+      "content": "NAP 7TY001",
+      "bank_code": "ACB"
+    },
+    "result": {
+      "success": true,
+      "message": "Không tìm thấy đại lý. Parsed: 7TY001",
+      "received": true,
+      "matched": false,
+      "parsed_agent_code": "7TY001",
+      "search_method": "name_in_content",
+      "hint": "Nội dung chuyển khoản cần có format: NAP [MÃ ĐẠI LÝ] [SỐ TIỀN]"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T02:59:10.475326",
+    "payload": {
+      "source": "test",
+      "type": "credit",
+      "amount": 50000,
+      "content": "NAP AG000001",
+      "bank_code": "ACB",
+      "bank_transaction_ref": "TEST123456"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "ACB_TEST123456",
+        "agent_code": "AG000001",
+        "amount": 50000,
+        "previous_balance": 2334204.0,
+        "new_balance": 2384204.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T03:00:53.090139",
+    "payload": {
+      "type": "credit",
+      "amount": 1000000,
+      "content": "NAP 7TY001 1000000",
+      "reference": "TEST_1768532452072",
+      "bank_code": "ACB",
+      "source": "notification_test"
+    },
+    "result": {
+      "success": true,
+      "message": "Không tìm thấy đại lý. Parsed: 7TY001",
+      "received": true,
+      "matched": false,
+      "parsed_agent_code": "7TY001",
+      "search_method": "name_in_content",
+      "hint": "Nội dung chuyển khoản cần có format: NAP [MÃ ĐẠI LÝ] [SỐ TIỀN]"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T03:03:49.132380",
+    "payload": {
+      "type": "credit",
+      "amount": 273204,
+      "content": "Tài khoản: 25****66\nSố dư: 273,204 ₫\nNAP AG000001 101000",
+      "transfer_content": "NAP AG000001 101000",
+      "reference": "NOTIF_1768532628567",
+      "bank_transaction_ref": "",
+      "bank_code": "VPB",
+      "account_number": "25",
+      "balance": 273204,
+      "raw_content": "Tài khoản: 25****66\nSố dư: 273,204 ₫\nNAP AG000001 101000",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 10:03:48"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "TXN1768532629127353192",
+        "agent_code": "AG000001",
+        "amount": 273204,
+        "previous_balance": 2384204.0,
+        "new_balance": 2657408.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T03:03:49.523411",
+    "payload": {
+      "type": "credit",
+      "amount": 101000,
+      "content": "ACB: TK 17246947(VND) + 101,000 luc 10:03 16/01/2026. So du 154,923. GD: NAP AG000001 101000 GD 6016IBT1iJQTICIY 160126-10:03:04",
+      "transfer_content": ") + 101,000 luc 10:03 16/01/2026",
+      "reference": "ACB_NAP",
+      "bank_transaction_ref": "NAP",
+      "bank_code": "ACB",
+      "account_number": "17246947",
+      "balance": 154923,
+      "raw_content": "ACB: TK 17246947(VND) + 101,000 luc 10:03 16/01/2026. So du 154,923. GD: NAP AG000001 101000 GD 6016IBT1iJQTICIY 160126-10:03:04",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 10:03:49"
+    },
+    "result": {
+      "success": true,
+      "message": "Giao dịch đã được xử lý trước đó",
+      "received": true,
+      "duplicate": true,
+      "transaction_code": "ACB_NAP"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T03:33:50.368468",
+    "payload": {
+      "type": "credit",
+      "amount": 1000000,
+      "content": "NAP 7TY001 1000000",
+      "reference": "TEST_1768534429432",
+      "bank_code": "ACB",
+      "source": "notification_test"
+    },
+    "result": {
+      "success": true,
+      "message": "Không tìm thấy đại lý. Parsed: 7TY001",
+      "received": true,
+      "matched": false,
+      "parsed_agent_code": "7TY001",
+      "search_method": "name_in_content",
+      "hint": "Nội dung chuyển khoản cần có format: NAP [MÃ ĐẠI LÝ] [SỐ TIỀN]"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T03:40:01.270126",
+    "payload": {
+      "type": "credit",
+      "amount": 263204,
+      "content": "Tài khoản: 25****66\nSố dư: 263,204 ₫\nNAP AG000001 101000",
+      "transfer_content": "NAP AG000001 101000",
+      "reference": "NOTIF_1768534800640",
+      "bank_transaction_ref": "",
+      "bank_code": "VPB",
+      "account_number": "25",
+      "balance": 263204,
+      "raw_content": "Tài khoản: 25****66\nSố dư: 263,204 ₫\nNAP AG000001 101000",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 10:40:00"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "TXN1768534801252133019",
+        "agent_code": "AG000001",
+        "amount": 263204,
+        "previous_balance": 2657408.0,
+        "new_balance": 2920612.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T03:40:01.674151",
+    "payload": {
+      "type": "credit",
+      "amount": 10000,
+      "content": "ACB: TK 17246947(VND) + 10,000 luc 10:38 16/01/2026. So du 164,923. GD: NAP AG000001 101000 GD 6016IBT1iJQT4UMC 160126-10:38:43",
+      "transfer_content": "NAP AG000001 101000",
+      "reference": "ACB_6016IBT1iJQT4UMC",
+      "bank_transaction_ref": "6016IBT1iJQT4UMC",
+      "bank_code": "ACB",
+      "account_number": "17246947",
+      "balance": 164923,
+      "raw_content": "ACB: TK 17246947(VND) + 10,000 luc 10:38 16/01/2026. So du 164,923. GD: NAP AG000001 101000 GD 6016IBT1iJQT4UMC 160126-10:38:43",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 10:40:01"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "ACB_6016IBT1IJQT4UMC",
+        "agent_code": "AG000001",
+        "amount": 10000,
+        "previous_balance": 2920612.0,
+        "new_balance": 2930612.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T04:45:27.547650",
+    "payload": {
+      "type": "credit",
+      "amount": 374204,
+      "content": "Tài khoản: 25****66\nSố dư: 374,204 ₫\nNHAN TU 17246947 TRACE 144684 ND PHAN MINH PHONG CHUYEN KHOAN-160126-11:41:10 6016ASCBJ2CTRXEX",
+      "transfer_content": "PHAN MINH PHONG CHUYEN KHOAN-160126-11:41:10 6016ASCBJ2CTRXEX",
+      "reference": "NOTIF_1768538726782",
+      "bank_transaction_ref": "",
+      "bank_code": "VPB",
+      "account_number": "25",
+      "balance": 374204,
+      "raw_content": "Tài khoản: 25****66\nSố dư: 374,204 ₫\nNHAN TU 17246947 TRACE 144684 ND PHAN MINH PHONG CHUYEN KHOAN-160126-11:41:10 6016ASCBJ2CTRXEX",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 11:45:26"
+    },
+    "result": {
+      "success": true,
+      "message": "Giao dịch đã nhận nhưng không tìm thấy mã đại lý",
+      "received": true,
+      "matched": false,
+      "parsed_content": "Tài khoản: 25****66\nSố dư: 374,204 ₫\nNHAN TU 17246947 TRACE 144684 ND PHAN MINH PHONG CHUYEN KHOAN-160126-11:41:10 6016ASCBJ2CTRXEX",
+      "raw_content": "Tài khoản: 25****66\nSố dư: 374,204 ₫\nNHAN TU 17246947 TRACE 144684 ND PHAN MINH PHONG CHUYEN KHOAN-160126-11:41:10 6016ASCBJ2CTRXEX"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T04:45:27.925855",
+    "payload": {
+      "type": "credit",
+      "amount": 363204,
+      "content": "Tài khoản: 25****66\nSố dư: 363,204 ₫\nNAP AG000001 100000",
+      "transfer_content": "NAP AG000001 100000",
+      "reference": "NOTIF_1768538727411",
+      "bank_transaction_ref": "",
+      "bank_code": "VPB",
+      "account_number": "25",
+      "balance": 363204,
+      "raw_content": "Tài khoản: 25****66\nSố dư: 363,204 ₫\nNAP AG000001 100000",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 11:45:27"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "TXN1768538727918865816",
+        "agent_code": "AG000001",
+        "amount": 363204,
+        "previous_balance": 2930612.0,
+        "new_balance": 3293816.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T04:45:28.296740",
+    "payload": {
+      "type": "credit",
+      "amount": 11000,
+      "content": "ACB: TK 17246947(VND) + 11,000 luc 11:41 16/01/2026. So du 64,923. GD: NAP AG000001 100000 GD 6016IBT1iJQTR6W1 160126-11:41:59",
+      "transfer_content": "NAP AG000001 100000",
+      "reference": "ACB_6016IBT1iJQTR6W1",
+      "bank_transaction_ref": "6016IBT1iJQTR6W1",
+      "bank_code": "ACB",
+      "account_number": "17246947",
+      "balance": 64923,
+      "raw_content": "ACB: TK 17246947(VND) + 11,000 luc 11:41 16/01/2026. So du 64,923. GD: NAP AG000001 100000 GD 6016IBT1iJQTR6W1 160126-11:41:59",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 11:45:27"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "ACB_6016IBT1IJQTR6W1",
+        "agent_code": "AG000001",
+        "amount": 11000,
+        "previous_balance": 3293816.0,
+        "new_balance": 3304816.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T05:15:45.214313",
+    "payload": {
+      "type": "credit",
+      "amount": 343204,
+      "content": "Tài khoản: 25****66\nSố dư: 343,204 ₫\nNAP AG000001 100000",
+      "transfer_content": "NAP AG000001 100000",
+      "reference": "NOTIF_1768540544502",
+      "bank_transaction_ref": "",
+      "bank_code": "VPB",
+      "account_number": "25",
+      "balance": 343204,
+      "raw_content": "Tài khoản: 25****66\nSố dư: 343,204 ₫\nNAP AG000001 100000",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 12:15:44"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "TXN1768540545205391058",
+        "agent_code": "AG000001",
+        "amount": 343204,
+        "previous_balance": 3304816.0,
+        "new_balance": 3648020.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T05:15:51.783157",
+    "payload": {
+      "type": "credit",
+      "amount": 20000,
+      "content": "ACB: TK 17246947(VND) + 20,000 luc 12:15 16/01/2026. So du 84,923. GD: NAP AG000001 100000 GD 6016IBT1iJQFS9J1 160126-12:15:44",
+      "transfer_content": "NAP AG000001 100000",
+      "reference": "ACB_6016IBT1iJQFS9J1",
+      "bank_transaction_ref": "6016IBT1iJQFS9J1",
+      "bank_code": "ACB",
+      "account_number": "17246947",
+      "balance": 84923,
+      "raw_content": "ACB: TK 17246947(VND) + 20,000 luc 12:15 16/01/2026. So du 84,923. GD: NAP AG000001 100000 GD 6016IBT1iJQFS9J1 160126-12:15:44",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 12:15:51"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "ACB_6016IBT1IJQFS9J1",
+        "agent_code": "AG000001",
+        "amount": 20000,
+        "previous_balance": 3648020.0,
+        "new_balance": 3668020.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T05:45:41.485079",
+    "payload": {
+      "type": "credit",
+      "amount": 24576000,
+      "content": "ACB: TK 17246947(VND) + 24,576,000 luc 12:45 16/01/2026. So du 24,660,923. GD: Dat chuyen khoan nhanh qua Zalo FT26016925444744 GD 6016IBT1k12QKWNP 160126-12:",
+      "transfer_content": "Dat chuyen khoan nhanh qua Zalo FT26016925444744",
+      "reference": "ACB_6016IBT1k12QKWNP",
+      "bank_transaction_ref": "6016IBT1k12QKWNP",
+      "bank_code": "ACB",
+      "account_number": "17246947",
+      "balance": 24660923,
+      "raw_content": "ACB: TK 17246947(VND) + 24,576,000 luc 12:45 16/01/2026. So du 24,660,923. GD: Dat chuyen khoan nhanh qua Zalo FT26016925444744 GD 6016IBT1k12QKWNP 160126-12:",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 12:45:40"
+    },
+    "result": {
+      "success": true,
+      "message": "Giao dịch đã nhận nhưng không tìm thấy mã đại lý",
+      "received": true,
+      "matched": false,
+      "parsed_content": "ACB: TK 17246947(VND) + 24,576,000 luc 12:45 16/01/2026. So du 24,660,923. GD: Dat chuyen khoan nhanh qua Zalo FT26016925444744 GD 6016IBT1k12QKWNP 160126-12:",
+      "raw_content": "ACB: TK 17246947(VND) + 24,576,000 luc 12:45 16/01/2026. So du 24,660,923. GD: Dat chuyen khoan nhanh qua Zalo FT26016925444744 GD 6016IBT1k12QKWNP 160126-12:"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T10:10:09.672370",
+    "payload": {
+      "type": "credit",
+      "amount": 332204,
+      "content": "Tài khoản: 25****66\nSố dư: 332,204 ₫\nNAP AG000001 1000000",
+      "transfer_content": "NAP AG000001 1000000",
+      "reference": "NOTIF_1768558208978",
+      "bank_transaction_ref": "",
+      "bank_code": "VPB",
+      "account_number": "25",
+      "balance": 332204,
+      "raw_content": "Tài khoản: 25****66\nSố dư: 332,204 ₫\nNAP AG000001 1000000",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 17:10:08"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "TXN1768558209662491306",
+        "agent_code": "AG000001",
+        "amount": 332204,
+        "previous_balance": 3668020.0,
+        "new_balance": 4000224.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T10:10:11.842039",
+    "payload": {
+      "type": "credit",
+      "amount": 11000,
+      "content": "ACB: TK 17246947(VND) + 11,000 luc 17:10 16/01/2026. So du 10,012,673. GD: NAP AG000001 1000000 GD 6016IBT1iJQXWM8T 160126-17:10:08",
+      "transfer_content": "NAP AG000001 1000000",
+      "reference": "ACB_6016IBT1iJQXWM8T",
+      "bank_transaction_ref": "6016IBT1iJQXWM8T",
+      "bank_code": "ACB",
+      "account_number": "17246947",
+      "balance": 10012673,
+      "raw_content": "ACB: TK 17246947(VND) + 11,000 luc 17:10 16/01/2026. So du 10,012,673. GD: NAP AG000001 1000000 GD 6016IBT1iJQXWM8T 160126-17:10:08",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 17:10:11"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "ACB_6016IBT1IJQXWM8T",
+        "agent_code": "AG000001",
+        "amount": 11000,
+        "previous_balance": 4000224.0,
+        "new_balance": 4011224.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T10:43:31.767529",
+    "payload": {
+      "type": "credit",
+      "amount": 12000,
+      "content": "ACB: TK 17246947(VND) + 12,000 luc 17:43 16/01/2026. So du 8,086,673. GD: NAP AG000001 102000 GD 6016IBT1iJQXMUXN 160126-17:43:27",
+      "transfer_content": "NAP AG000001 102000",
+      "reference": "ACB_6016IBT1iJQXMUXN",
+      "bank_transaction_ref": "6016IBT1iJQXMUXN",
+      "bank_code": "ACB",
+      "account_number": "17246947",
+      "balance": 8086673,
+      "raw_content": "ACB: TK 17246947(VND) + 12,000 luc 17:43 16/01/2026. So du 8,086,673. GD: NAP AG000001 102000 GD 6016IBT1iJQXMUXN 160126-17:43:27",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 17:43:31"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "ACB_6016IBT1IJQXMUXN",
+        "agent_code": "AG000001",
+        "amount": 12000,
+        "previous_balance": 4011224.0,
+        "new_balance": 4023224.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T10:43:51.525085",
+    "payload": {
+      "type": "credit",
+      "amount": 2164000,
+      "content": "ACB: TK 17246947(VND) + 2,164,000 luc 17:43 16/01/2026. So du 10,250,673. GD: MBVCB.12614396781.6016BFTVG2U5HYDM.Loan chuyen khoan nhanh qua Zalo.CT tu 021100",
+      "transfer_content": "MBVCB.12614396781.6016BFTVG2U5HYDM.Loan chuyen khoan nhanh qua Zalo.CT tu 021100",
+      "reference": "ACB_FTVG2U5HYDM",
+      "bank_transaction_ref": "FTVG2U5HYDM",
+      "bank_code": "ACB",
+      "account_number": "17246947",
+      "balance": 10250673,
+      "raw_content": "ACB: TK 17246947(VND) + 2,164,000 luc 17:43 16/01/2026. So du 10,250,673. GD: MBVCB.12614396781.6016BFTVG2U5HYDM.Loan chuyen khoan nhanh qua Zalo.CT tu 021100",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 17:43:50"
+    },
+    "result": {
+      "success": true,
+      "message": "Giao dịch đã nhận nhưng không tìm thấy mã đại lý",
+      "received": true,
+      "matched": false,
+      "parsed_content": "ACB: TK 17246947(VND) + 2,164,000 luc 17:43 16/01/2026. So du 10,250,673. GD: MBVCB.12614396781.6016BFTVG2U5HYDM.Loan chuyen khoan nhanh qua Zalo.CT tu 021100",
+      "raw_content": "ACB: TK 17246947(VND) + 2,164,000 luc 17:43 16/01/2026. So du 10,250,673. GD: MBVCB.12614396781.6016BFTVG2U5HYDM.Loan chuyen khoan nhanh qua Zalo.CT tu 021100"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T10:54:51.417310",
+    "payload": {
+      "type": "credit",
+      "amount": 12000,
+      "content": "ACB: TK 17246947(VND) + 12,000 luc 17:43 16/01/2026. So du 8,086,673. GD: NAP AG000001 102000 GD 601TEST123",
+      "reference": "ACB_TEST_MISMATCH_001",
+      "bank_code": "ACB",
+      "raw_content": "ACB: TK 17246947(VND) + 12,000 luc 17:43 16/01/2026. So du 8,086,673. GD: NAP AG000001 102000 GD 601TEST123"
+    },
+    "result": {
+      "success": false,
+      "message": "Lỗi xử lý: 'notes' is an invalid keyword argument for DepositRequest",
+      "received": true
+    }
+  },
+  {
+    "timestamp": "2026-01-16T10:54:51.885031",
+    "payload": {
+      "type": "credit",
+      "amount": 12000,
+      "content": "ACB: TK 17246947(VND) + 12,000 luc 17:43 16/01/2026. So du 8,086,673. GD: NAP AG000001 102000 GD 601TEST123",
+      "reference": "ACB_TEST_MISMATCH_001",
+      "bank_code": "ACB",
+      "raw_content": "ACB: TK 17246947(VND) + 12,000 luc 17:43 16/01/2026. So du 8,086,673. GD: NAP AG000001 102000 GD 601TEST123"
+    },
+    "result": {
+      "success": false,
+      "message": "Lỗi xử lý: 'notes' is an invalid keyword argument for DepositRequest",
+      "received": true
+    }
+  },
+  {
+    "timestamp": "2026-01-16T10:56:00.726823",
+    "payload": {
+      "type": "credit",
+      "amount": 12000,
+      "content": "ACB: TK 17246947(VND) + 12,000 luc 17:43 16/01/2026. So du 8,086,673. GD: NAP AG000001 102000 GD 601TEST456",
+      "reference": "ACB_TEST_MISMATCH_002",
+      "bank_code": "ACB",
+      "raw_content": "ACB: TK 17246947(VND) + 12,000 luc 17:43 16/01/2026. So du 8,086,673. GD: NAP AG000001 102000 GD 601TEST456"
+    },
+    "result": {
+      "success": true,
+      "message": "Số tiền không khớp - chờ admin duyệt",
+      "received": true,
+      "pending": true,
+      "request_code": "DEP202601161056006DBDB58B",
+      "agent_code": "AG000001",
+      "transfer_amount": 12000,
+      "content_amount": 102000,
+      "reason": "Chuyển khoản 12,000đ nhưng nội dung ghi 102,000đ"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T10:56:09.233734",
+    "payload": {
+      "type": "credit",
+      "amount": 102000,
+      "content": "ACB: TK 17246947(VND) + 102,000 luc 17:43 16/01/2026. So du 8,086,673. GD: NAP AG000001 102000 GD 601TEST789",
+      "reference": "ACB_TEST_MATCH_001",
+      "bank_code": "ACB",
+      "raw_content": "ACB: TK 17246947(VND) + 102,000 luc 17:43 16/01/2026. So du 8,086,673. GD: NAP AG000001 102000 GD 601TEST789"
+    },
+    "result": {
+      "success": true,
+      "message": "Nạp tiền thành công",
+      "received": true,
+      "matched": true,
+      "data": {
+        "transaction_code": "TXN1768560969222526057",
+        "agent_code": "AG000001",
+        "amount": 102000,
+        "previous_balance": 4023224.0,
+        "new_balance": 4125224.0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-01-16T10:59:02.752608",
+    "payload": {
+      "type": "credit",
+      "amount": 10300,
+      "content": "ACB: TK 17246947(VND) + 10,300 luc 17:58 16/01/2026. So du 10,260,973. GD: NAP AG000001 103000 GD 6016IBT1iJQXP6SD 160126-17:58:56",
+      "transfer_content": "NAP AG000001 103000",
+      "reference": "ACB_6016IBT1iJQXP6SD",
+      "bank_transaction_ref": "6016IBT1iJQXP6SD",
+      "bank_code": "ACB",
+      "account_number": "17246947",
+      "balance": 10260973,
+      "raw_content": "ACB: TK 17246947(VND) + 10,300 luc 17:58 16/01/2026. So du 10,260,973. GD: NAP AG000001 103000 GD 6016IBT1iJQXP6SD 160126-17:58:56",
+      "source": "notification_reader",
+      "app_version": "2.131.0",
+      "timestamp": "2026-01-16 17:59:02"
+    },
+    "result": {
+      "success": true,
+      "message": "Số tiền không khớp - chờ admin duyệt",
+      "received": true,
+      "pending": true,
+      "request_code": "DEP2026011610590286935B56",
+      "agent_code": "AG000001",
+      "transfer_amount": 10300,
+      "content_amount": 103000,
+      "reason": "Chuyển khoản 10,300đ nhưng nội dung ghi 103,000đ"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T11:10:51.286027",
+    "payload": {
+      "type": "credit",
+      "amount": 15000,
+      "content": "ACB: TK 17246947(VND) + 15,000 luc 18:10 16/01/2026. So du 9,123,456. GD: NAP AG000001 150000 GD NEWTEST001",
+      "reference": "ACB_NEWTEST_001",
+      "bank_code": "ACB"
+    },
+    "result": {
+      "success": true,
+      "message": "Số tiền không khớp - chờ admin duyệt",
+      "received": true,
+      "pending": true,
+      "request_code": "DEP2026011611105166EA3CEC",
+      "agent_code": "AG000001",
+      "transfer_amount": 15000,
+      "content_amount": 150000,
+      "reason": "Chuyển khoản 15,000đ nhưng nội dung ghi 150,000đ"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T11:19:12.635065",
+    "payload": {
+      "type": "credit",
+      "amount": 10500,
+      "content": "ACB: TK 17246947(VND) + 10,500 luc 18:19 16/01/2026. So du *** GD: PHAN MINH PHONG chuyen tien GD 6016IBT1iJQXGJ3W 160126-18:19:00",
+      "transfer_content": "PHAN MINH PHONG chuyen tien",
+      "reference": "ACB_6016IBT1iJQXGJ3W",
+      "bank_transaction_ref": "6016IBT1iJQXGJ3W",
+      "bank_code": "ACB",
+      "account_number": "172***47",
+      "balance": 0,
+      "raw_content": "ACB: TK 17246947(VND) + 10,500 luc 18:19 16/01/2026. So du *** GD: PHAN MINH PHONG chuyen tien GD 6016IBT1iJQXGJ3W 160126-18:19:00",
+      "source": "notification_reader",
+      "app_version": "2.52.0",
+      "timestamp": "2026-01-16 18:19:12"
+    },
+    "result": {
+      "success": true,
+      "message": "Giao dịch đã nhận nhưng không tìm thấy mã đại lý",
+      "received": true,
+      "matched": false,
+      "parsed_content": "ACB: TK 17246947(VND) + 10,500 luc 18:19 16/01/2026. So du *** GD: PHAN MINH PHONG chuyen tien GD 6016IBT1iJQXGJ3W 160126-18:19:00",
+      "raw_content": "ACB: TK 17246947(VND) + 10,500 luc 18:19 16/01/2026. So du *** GD: PHAN MINH PHONG chuyen tien GD 6016IBT1iJQXGJ3W 160126-18:19:00"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T11:51:32.905836",
+    "payload": {
+      "type": "credit",
+      "amount": 10700,
+      "content": "ACB: TK 17246947(VND) + 10,700 luc 18:51 16/01/2026. So du *** GD: PHAN MINH PHONG chuyen tien GD 6016IBT1iJQXT77A 160126-18:51:23",
+      "transfer_content": "PHAN MINH PHONG chuyen tien",
+      "reference": "ACB_6016IBT1iJQXT77A",
+      "bank_transaction_ref": "6016IBT1iJQXT77A",
+      "bank_code": "ACB",
+      "account_number": "172***47",
+      "balance": 0,
+      "raw_content": "ACB: TK 17246947(VND) + 10,700 luc 18:51 16/01/2026. So du *** GD: PHAN MINH PHONG chuyen tien GD 6016IBT1iJQXT77A 160126-18:51:23",
+      "source": "notification_reader",
+      "app_version": "2.52.0",
+      "timestamp": "2026-01-16 18:51:32"
+    },
+    "result": {
+      "success": true,
+      "message": "Giao dịch đã nhận nhưng không tìm thấy mã đại lý",
+      "received": true,
+      "matched": false,
+      "parsed_content": "ACB: TK 17246947(VND) + 10,700 luc 18:51 16/01/2026. So du *** GD: PHAN MINH PHONG chuyen tien GD 6016IBT1iJQXT77A 160126-18:51:23",
+      "raw_content": "ACB: TK 17246947(VND) + 10,700 luc 18:51 16/01/2026. So du *** GD: PHAN MINH PHONG chuyen tien GD 6016IBT1iJQXT77A 160126-18:51:23"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T11:57:31.395974",
+    "payload": {
+      "type": "credit",
+      "amount": 25000,
+      "content": "ACB: TK 17246947(VND) + 25,000 luc 18:55 16/01/2026. So du *** GD: NAP AG000001 250000 GD 6016IBT1test123",
+      "transfer_content": "NAP AG000001 250000",
+      "reference": "ACB_TEST_250000",
+      "bank_transaction_ref": "6016IBT1test250k",
+      "bank_code": "ACB",
+      "account_number": "17246947",
+      "balance": 0,
+      "raw_content": "ACB: TK 17246947(VND) + 25,000 luc 18:55 16/01/2026. So du *** GD: NAP AG000001 250000"
+    },
+    "result": {
+      "success": true,
+      "message": "Số tiền không khớp - chờ admin duyệt",
+      "received": true,
+      "pending": true,
+      "request_code": "DEP2026011611573158C616D5",
+      "agent_code": "AG000001",
+      "transfer_amount": 25000,
+      "content_amount": 250000,
+      "reason": "Chuyển khoản 25,000đ nhưng nội dung ghi 250,000đ"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T14:08:53.338845",
+    "payload": {
+      "type": "credit",
+      "amount": 10800,
+      "content": "ACB: TK 17246947(VND) + 10,800 luc 21:08 16/01/2026. So du *** GD: PHAN MINH PHONG chuyen tien GD 6016IBT1iJQRHT5H 160126-21:08:44",
+      "transfer_content": "PHAN MINH PHONG chuyen tien",
+      "reference": "ACB_6016IBT1iJQRHT5H",
+      "bank_transaction_ref": "6016IBT1iJQRHT5H",
+      "bank_code": "ACB",
+      "account_number": "172***47",
+      "balance": 0,
+      "raw_content": "ACB: TK 17246947(VND) + 10,800 luc 21:08 16/01/2026. So du *** GD: PHAN MINH PHONG chuyen tien GD 6016IBT1iJQRHT5H 160126-21:08:44",
+      "source": "notification_reader",
+      "app_version": "2.52.0",
+      "timestamp": "2026-01-16 21:08:51"
+    },
+    "result": {
+      "success": true,
+      "message": "Giao dịch đã nhận nhưng không tìm thấy mã đại lý",
+      "received": true,
+      "matched": false,
+      "parsed_content": "ACB: TK 17246947(VND) + 10,800 luc 21:08 16/01/2026. So du *** GD: PHAN MINH PHONG chuyen tien GD 6016IBT1iJQRHT5H 160126-21:08:44",
+      "raw_content": "ACB: TK 17246947(VND) + 10,800 luc 21:08 16/01/2026. So du *** GD: PHAN MINH PHONG chuyen tien GD 6016IBT1iJQRHT5H 160126-21:08:44"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T14:24:38.524507",
+    "payload": {
+      "type": "credit",
+      "amount": 10800,
+      "content": "ACB: TK 17246947(VND) + 10,800 luc 21:08 16/01/2026. So du *** GD: NAP AG000001 108000 GD TEST108K",
+      "transfer_content": "NAP AG000001 108000",
+      "reference": "ACB_TEST_108K",
+      "bank_transaction_ref": "TEST108K",
+      "bank_code": "ACB",
+      "account_number": "17246947"
+    },
+    "result": {
+      "success": true,
+      "message": "Số tiền không khớp - chờ admin duyệt",
+      "received": true,
+      "pending": true,
+      "request_code": "DEP20260116142438F930284D",
+      "agent_code": "AG000001",
+      "transfer_amount": 10800,
+      "content_amount": 108000,
+      "reason": "Chuyển khoản 10,800đ nhưng nội dung ghi 108,000đ"
+    }
+  },
+  {
+    "timestamp": "2026-01-16T14:51:57.487225",
+    "payload": {
+      "type": "credit",
+      "amount": 50000,
+      "content": "ACB: TK 17246947(VND) + 50,000 luc 21:50 16/01/2026. So du *** GD: NGUYEN VAN A chuyen tien GD TEST50K",
+      "transfer_content": "NGUYEN VAN A chuyen tien",
+      "reference": "ACB_TEST_NO_AGENT_50K",
+      "bank_transaction_ref": "TEST_NO_AGENT_50K",
+      "bank_code": "ACB",
+      "account_number": "17246947"
+    },
+    "result": {
+      "success": true,
+      "message": "Giao dịch đã nhận nhưng không tìm thấy mã đại lý",
+      "received": true,
+      "matched": false,
+      "parsed_content": "ACB: TK 17246947(VND) + 50,000 luc 21:50 16/01/2026. So du *** GD: NGUYEN VAN A chuyen tien GD TEST50K",
+      "raw_content": null
+    }
+  },
+  {
+    "timestamp": "2026-01-16T14:53:09.239594",
+    "payload": {
+      "type": "credit",
+      "amount": 75000,
+      "content": "ACB: TK 17246947(VND) + 75,000 luc 21:55 16/01/2026. So du *** GD: TRAN VAN B chuyen tien GD TEST75K",
+      "transfer_content": "TRAN VAN B chuyen tien",
+      "reference": "ACB_TEST_NO_AGENT_75K",
+      "bank_transaction_ref": "TEST_NO_AGENT_75K",
+      "bank_code": "ACB",
+      "account_number": "17246947"
+    },
+    "result": {
+      "success": false,
+      "message": "Lỗi xử lý: (psycopg2.errors.NotNullViolation) null value in column \"agent_id\" of relation \"deposit_requests\" violates not-null constraint\nDETAIL:  Failing row contains (6, DEP202601161453082B2701EE, null, UNKNOWN, 75000, 75000, 0, BANK_WEBHOOK, PENDING, null, ACB_TEST_NO_AGENT_75K, ACB: TK 17246947(VND) + 75,000 luc 21:55 16/01/2026. So du *** G..., null, null, null, f, null, 0, 3, null, null, null, null, t, notification_reader, null, null, null, null, null, null, null, null, 0, 0, ⚠️ KHÔNG CÓ MÃ ĐẠI LÝ - Cần admin đối soát th..., null, null, null, null, 2026-01-16 14:53:08.992487, 2026-01-16 14:53:08.99249).\n\n[SQL: INSERT INTO deposit_requests (request_code, agent_id, agent_code, amount, actual_amount, fee, method, status, bank_account_id, bank_reference, transfer_content, transfer_time, verification_code, verification_expires_at, is_verified, verified_at, verification_attempts, max_verification_attempts, request_ip, request_user_agent, request_device_id, webhook_signature, webhook_verified, webhook_source, processed_at, processed_by_id, approved_at, approved_by_id, rejection_reason, transaction_id, previous_balance, new_balance, daily_deposit_count, daily_deposit_total, admin_notes, agent_notes, expires_at, created_at, updated_at) VALUES (%(request_code)s, %(agent_id)s, %(agent_code)s, %(amount)s, %(actual_amount)s, %(fee)s, %(method)s, %(status)s, %(bank_account_id)s, %(bank_reference)s, %(transfer_content)s, %(transfer_time)s, %(verification_code)s, %(verification_expires_at)s, %(is_verified)s, %(verified_at)s, %(verification_attempts)s, %(max_verification_attempts)s, %(request_ip)s, %(request_user_agent)s, %(request_device_id)s, %(webhook_signature)s, %(webhook_verified)s, %(webhook_source)s, %(processed_at)s, %(processed_by_id)s, %(approved_at)s, %(approved_by_id)s, %(rejection_reason)s, %(transaction_id)s, %(previous_balance)s, %(new_balance)s, %(daily_deposit_count)s, %(daily_deposit_total)s, %(admin_notes)s, %(agent_notes)s, %(expires_at)s, %(created_at)s, %(updated_at)s) RETURNING deposit_requests.id]\n[parameters: {'request_code': 'DEP202601161453082B2701EE', 'agent_id': None, 'agent_code': 'UNKNOWN', 'amount': 75000, 'actual_amount': 75000, 'fee': 0, 'method': 'BANK_WEBHOOK', 'status': 'PENDING', 'bank_account_id': None, 'bank_reference': 'ACB_TEST_NO_AGENT_75K', 'transfer_content': 'ACB: TK 17246947(VND) + 75,000 luc 21:55 16/01/2026. So du *** GD: TRAN VAN B chuyen tien GD TEST75K', 'transfer_time': None, 'verification_code': None, 'verification_expires_at': None, 'is_verified': False, 'verified_at': None, 'verification_attempts': 0, 'max_verification_attempts': 3, 'request_ip': None, 'request_user_agent': None, 'request_device_id': None, 'webhook_signature': None, 'webhook_verified': True, 'webhook_source': 'notification_reader', 'processed_at': None, 'processed_by_id': None, 'approved_at': None, 'approved_by_id': None, 'rejection_reason': None, 'transaction_id': None, 'previous_balance': None, 'new_balance': None, 'daily_deposit_count': 0, 'daily_deposit_total': 0, 'admin_notes': '⚠️ KHÔNG CÓ MÃ ĐẠI LÝ - Cần admin đối soát thủ công.\\nNội dung: ACB: TK 17246947(VND) + 75,000 luc 21:55 16/01/2026. So du *** GD: TRAN VAN B chuyen tien GD TEST75K\\nSố tiền: 75,000đ\\nMã GD: ACB_TEST_NO_AGENT_75K', 'agent_notes': None, 'expires_at': None, 'created_at': datetime.datetime(2026, 1, 16, 14, 53, 8, 992487), 'updated_at': datetime.datetime(2026, 1, 16, 14, 53, 8, 992490)}]\n(Background on this error at: https://sqlalche.me/e/20/gkpj)",
+      "received": true
+    }
+  },
+  {
+    "timestamp": "2026-01-16T14:53:31.797075",
+    "payload": {
+      "type": "credit",
+      "amount": 75000,
+      "content": "ACB: TK 17246947(VND) + 75,000 luc 21:55 16/01/2026. So du *** GD: TRAN VAN B chuyen tien GD TEST75K2",
+      "transfer_content": "TRAN VAN B chuyen tien",
+      "reference": "ACB_TEST_NO_AGENT_75K2",
+      "bank_transaction_ref": "TEST_NO_AGENT_75K2",
+      "bank_code": "ACB",
+      "account_number": "17246947"
+    },
+    "result": {
+      "success": true,
+      "message": "Không có mã đại lý - Đã tạo lệnh chờ đối soát",
+      "received": true,
+      "pending": true,
+      "request_code": "DEP202601161453310864DD5B",
+      "hint": "Admin cần đối soát và gán agent thủ công"
+    }
+  }
+]

@@ -93,7 +93,7 @@ localStorage.setItem('user_id', data.user_id || '');
 
 ---
 
-### 3. **static/agent_app.html** (Mobile App) - 3 Major Updates
+### 3. **static/index.html** (Mobile App) - 3 Major Updates
 
 #### A. Token Expiration on Login (Lines 960-976)
 ```javascript
@@ -269,7 +269,7 @@ const isExpired = Date.now() > expiresAt;
 ### Files Modified
 - `/static/app.html` (287 kB) ✅ Deployed
 - `/static/login.html` (19.5 kB) ✅ Deployed  
-- `/static/agent_app.html` (54.8 kB) ✅ Deployed
+- `/static/index.html` (54.8 kB) ✅ Deployed
 
 ### Container Restart
 ```bash

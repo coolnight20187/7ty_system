@@ -5,7 +5,7 @@
 ### Bước 1: Deploy ứng dụng lên server có HTTPS
 ```bash
 # Đảm bảo app chạy trên domain có SSL
-https://your-domain.com/static/agent_app.html
+https://your-domain.com/static/index.html
 ```
 
 ### Bước 2: Sử dụng PWA Builder
@@ -82,7 +82,7 @@ Chỉnh sửa file `capacitor.config.json`:
 ```json
 {
   "server": {
-    "url": "https://your-domain.com/static/agent_app.html"
+    "url": "https://your-domain.com/static/index.html"
   }
 }
 ```

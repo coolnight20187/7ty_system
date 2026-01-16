@@ -3191,6 +3191,10 @@
                                 <i class="fas fa-plus"></i>
                                 Thêm đại lý
                             </button>
+                            <button class="btn btn-warning" onclick="viewAllPendingDeposits()" title="Xem tất cả lệnh nạp tiền chờ duyệt">
+                                <i class="fas fa-clock me-1"></i>
+                                Đối soát Nạp Tiền
+                            </button>
                             <button class="btn btn-info" onclick="openBankAccountConfigModal()">
                                 <i class="fas fa-university me-1"></i>
                                 Tài khoản Ngân hàng
@@ -7711,7 +7715,7 @@ PA12345678903"></textarea>
                 if (role) params.append('role', role);
                 if (isActive !== '') params.append('is_active', isActive);
                 
-                const response = await fetch(`${API_BASE_URL}/users?${params}`, {
+                const response = await fetch(`${API_BASE_URL}/users/?${params}`, {
                     headers: { 'Authorization': `Bearer ${appState.token}` }
                 });
                 if (!response.ok) throw new Error('Không thể tải danh sách tài khoản');
@@ -11038,18 +11042,16 @@ PA12345678903"></textarea>
                 });
                 const agent = await agentRes.json();
                 
-                // Get pending transactions
-                const txRes = await fetch(`${API_BASE_URL}/agents/${agentId}/transactions?limit=50`, {
+                // v2.53.0: Get pending deposit requests from DepositRequest table
+                const txRes = await fetch(`${API_BASE_URL}/agents/${agentId}/deposit-requests?status_filter=pending`, {
                     headers: { 'Authorization': `Bearer ${appState.token}` }
                 });
                 const txData = await txRes.json();
                 
                 hideLoading();
                 
-                // Filter pending deposits
-                const pendingDeposits = (txData.items || txData.data || []).filter(
-                    t => t.transaction_type === 'deposit' && t.status === 'pending'
-                );
+                // Get pending deposits from response
+                const pendingDeposits = txData.data || [];
                 
                 if (pendingDeposits.length === 0) {
                     showToast('Không có lệnh nạp tiền chờ duyệt', 'info');
@@ -11063,9 +11065,12 @@ PA12345678903"></textarea>
                     <div class="border rounded p-3 mb-2" style="background: #fffbeb;">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <div class="fw-bold text-primary">${d.transaction_code}</div>
+                                <div class="fw-bold text-primary">${d.request_code}</div>
                                 <div class="small text-muted">${new Date(d.created_at).toLocaleString('vi-VN')}</div>
-                                <div class="small">${d.description || 'Nạp tiền từ ứng dụng'}</div>
+                                <div class="small">${d.transfer_content || d.admin_notes || 'Nạp tiền từ webhook'}</div>
+                                ${d.admin_notes && d.admin_notes.includes('KHÔNG KHỚP') 
+                                    ? `<div class="small text-danger fw-bold"><i class="fas fa-exclamation-triangle me-1"></i>${d.admin_notes}</div>` 
+                                    : ''}
                             </div>
                             <div class="text-end">
                                 <div class="fs-5 fw-bold text-success">${formatCurrency(d.amount)}</div>
@@ -11073,10 +11078,10 @@ PA12345678903"></textarea>
                             </div>
                         </div>
                         <div class="mt-2 d-flex gap-2 justify-content-end">
-                            <button class="btn btn-sm btn-danger" onclick="rejectDeposit(${d.id}, '${d.transaction_code}')">
+                            <button class="btn btn-sm btn-danger" onclick="rejectDepositRequest(${d.id}, '${d.request_code}')">
                                 <i class="fas fa-times me-1"></i>Từ chối
                             </button>
-                            <button class="btn btn-sm btn-success" onclick="approveDeposit(${d.id}, '${d.transaction_code}', ${d.amount}, ${agentId})">
+                            <button class="btn btn-sm btn-success" onclick="approveDepositRequest(${d.id}, '${d.request_code}', ${d.amount}, ${agentId}, '${(d.admin_notes || '').replace(/'/g, "\\'")}')">
                                 <i class="fas fa-check me-1"></i>Duyệt
                             </button>
                         </div>
@@ -11109,19 +11114,42 @@ PA12345678903"></textarea>
             }
         };
 
-        // Approve a deposit request
-        window.approveDeposit = async function(transactionId, txCode, amount, agentId) {
+        // v2.51.0: Approve deposit with option to edit amount
+        window.approveDepositWithEdit = async function(transactionId, txCode, amount, agentId, notes) {
+            const hasWarning = notes && notes.includes('SỐ TIỀN KHÔNG KHỚP');
+            
             const result = await Swal.fire({
                 title: 'Xác nhận duyệt nạp tiền',
-                html: `Duyệt nạp <strong>${formatCurrency(amount)}</strong> cho đại lý?<br><small class="text-muted">Mã GD: ${txCode}</small>`,
-                icon: 'question',
+                html: `
+                    <div class="text-start">
+                        ${hasWarning ? `<div class="alert alert-warning py-2"><i class="fas fa-exclamation-triangle me-1"></i>${notes}</div>` : ''}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Số tiền nạp</label>
+                            <input type="number" id="approveAmount" class="form-control form-control-lg text-center" 
+                                value="${amount}" min="1000" step="1000" style="font-size: 1.5rem; font-weight: bold;">
+                            <div class="form-text">Có thể sửa số tiền trước khi duyệt</div>
+                        </div>
+                        <small class="text-muted">Mã GD: ${txCode}</small>
+                    </div>
+                `,
+                icon: hasWarning ? 'warning' : 'question',
                 showCancelButton: true,
                 confirmButtonText: '<i class="fas fa-check me-1"></i>Duyệt',
                 cancelButtonText: 'Hủy',
-                confirmButtonColor: '#28a745'
+                confirmButtonColor: '#28a745',
+                preConfirm: () => {
+                    const newAmount = document.getElementById('approveAmount').value;
+                    if (!newAmount || newAmount < 1000) {
+                        Swal.showValidationMessage('Số tiền phải >= 1,000đ');
+                        return false;
+                    }
+                    return parseInt(newAmount);
+                }
             });
             
             if (!result.isConfirmed) return;
+            
+            const newAmount = result.value;
             
             try {
                 showLoading();
@@ -11130,7 +11158,8 @@ PA12345678903"></textarea>
                     headers: {
                         'Authorization': `Bearer ${appState.token}`,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({ amount: newAmount })
                 });
                 
                 hideLoading();
@@ -11140,7 +11169,8 @@ PA12345678903"></textarea>
                     throw new Error(error.detail || 'Không thể duyệt');
                 }
                 
-                showToast('Đã duyệt nạp tiền thành công!', 'success');
+                const amountChanged = newAmount !== amount;
+                showToast(`Đã duyệt nạp ${formatCurrency(newAmount)}${amountChanged ? ' (đã sửa số tiền)' : ''}!`, 'success');
                 Swal.close();
                 loadAgents();
                 
@@ -11190,6 +11220,264 @@ PA12345678903"></textarea>
                 showToast('Đã từ chối lệnh nạp tiền', 'success');
                 Swal.close();
                 loadAgents();
+                
+            } catch (error) {
+                hideLoading();
+                showToast(error.message, 'error');
+            }
+        };
+        
+        // v2.53.0: Approve deposit request from DepositRequest table
+        window.approveDepositRequest = async function(requestId, requestCode, amount, agentId, notes) {
+            const hasWarning = notes && notes.includes('KHÔNG KHỚP');
+            
+            const result = await Swal.fire({
+                title: 'Xác nhận duyệt nạp tiền',
+                html: `
+                    <div class="text-start">
+                        ${hasWarning ? `<div class="alert alert-warning py-2"><i class="fas fa-exclamation-triangle me-1"></i>${notes}</div>` : ''}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Số tiền nạp</label>
+                            <input type="number" id="approveAmount" class="form-control form-control-lg text-center" 
+                                value="${amount}" min="1000" step="1000" style="font-size: 1.5rem; font-weight: bold;">
+                            <div class="form-text">Có thể sửa số tiền trước khi duyệt</div>
+                        </div>
+                        <small class="text-muted">Mã yêu cầu: ${requestCode}</small>
+                    </div>
+                `,
+                icon: hasWarning ? 'warning' : 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-check me-1"></i>Duyệt',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#28a745',
+                preConfirm: () => {
+                    const newAmount = document.getElementById('approveAmount').value;
+                    if (!newAmount || newAmount < 1000) {
+                        Swal.showValidationMessage('Số tiền phải >= 1,000đ');
+                        return false;
+                    }
+                    return parseInt(newAmount);
+                }
+            });
+            
+            if (!result.isConfirmed) return;
+            
+            const newAmount = result.value;
+            
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE_URL}/v1/deposit/approve/${requestId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${appState.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        amount: newAmount,
+                        notes: 'Duyệt bởi Admin'
+                    })
+                });
+                
+                hideLoading();
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Không thể duyệt');
+                }
+                
+                const amountChanged = newAmount !== amount;
+                showToast(`Đã duyệt nạp ${formatCurrency(newAmount)}${amountChanged ? ' (đã sửa số tiền)' : ''}!`, 'success');
+                Swal.close();
+                loadAgents();
+                
+            } catch (error) {
+                hideLoading();
+                showToast(error.message, 'error');
+            }
+        };
+        
+        // v2.53.0: Reject deposit request from DepositRequest table
+        window.rejectDepositRequest = async function(requestId, requestCode) {
+            const result = await Swal.fire({
+                title: 'Từ chối nạp tiền',
+                html: `Từ chối yêu cầu nạp tiền <strong>${requestCode}</strong>?`,
+                input: 'text',
+                inputPlaceholder: 'Lý do từ chối (tùy chọn)',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-times me-1"></i>Từ chối',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#dc3545'
+            });
+            
+            if (!result.isConfirmed) return;
+            
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE_URL}/v1/deposit/reject/${requestId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${appState.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reason: result.value || 'Bị từ chối bởi Admin'
+                    })
+                });
+                
+                hideLoading();
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Không thể từ chối');
+                }
+                
+                showToast('Đã từ chối yêu cầu nạp tiền', 'success');
+                Swal.close();
+                loadAgents();
+                
+            } catch (error) {
+                hideLoading();
+                showToast(error.message, 'error');
+            }
+        };
+        
+        // v2.54.0: View ALL pending deposits (including unassigned)
+        window.viewAllPendingDeposits = async function() {
+            try {
+                showLoading();
+                
+                // Get all pending deposits
+                const response = await fetch(`${API_BASE_URL}/agents/all/pending-deposits`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                const data = await response.json();
+                
+                // Get all agents for assignment dropdown
+                const agentsRes = await fetch(`${API_BASE_URL}/agents?limit=100`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                const agentsData = await agentsRes.json();
+                const agents = agentsData.data || agentsData.items || [];
+                
+                hideLoading();
+                
+                const pendingDeposits = data.data || [];
+                
+                if (pendingDeposits.length === 0) {
+                    showToast('Không có lệnh nạp tiền chờ duyệt', 'info');
+                    return;
+                }
+                
+                // Build agent options for dropdown
+                const agentOptions = agents.map(a => 
+                    `<option value="${a.id}">${a.agent_code} - ${a.agent_name || a.user?.full_name || 'N/A'}</option>`
+                ).join('');
+                
+                const depositsHtml = pendingDeposits.map(d => `
+                    <div class="border rounded p-3 mb-2" style="background: ${d.has_agent ? '#fffbeb' : '#ffebeb'};">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div style="flex: 1;">
+                                <div class="fw-bold text-primary">${d.request_code}</div>
+                                <div class="small text-muted">${new Date(d.created_at).toLocaleString('vi-VN')}</div>
+                                ${d.has_agent 
+                                    ? `<div class="small"><i class="fas fa-user text-success me-1"></i><strong>${d.agent_code}</strong> - ${d.agent_name || ''}</div>`
+                                    : `<div class="small text-danger"><i class="fas fa-question-circle me-1"></i>Chưa xác định đại lý</div>`
+                                }
+                                <div class="small mt-1" style="word-break: break-all; max-width: 350px; background: #f5f5f5; padding: 5px; border-radius: 4px;">
+                                    <i class="fas fa-comment-alt me-1"></i>${d.transfer_content || d.admin_notes || 'N/A'}
+                                </div>
+                                ${d.bank_reference ? `<div class="small text-muted">Ref: ${d.bank_reference}</div>` : ''}
+                            </div>
+                            <div class="text-end" style="min-width: 120px;">
+                                <div class="fs-5 fw-bold text-success">${formatCurrency(d.amount)}</div>
+                                <span class="badge ${d.has_agent ? 'bg-warning' : 'bg-danger'}">
+                                    ${d.has_agent ? 'Chờ duyệt' : 'Cần đối soát'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            ${!d.has_agent ? `
+                                <div class="input-group input-group-sm mb-2">
+                                    <select id="assignAgent_${d.id}" class="form-select form-select-sm">
+                                        <option value="">-- Chọn đại lý --</option>
+                                        ${agentOptions}
+                                    </select>
+                                    <button class="btn btn-sm btn-info" onclick="assignAgentToDeposit(${d.id})">
+                                        <i class="fas fa-link me-1"></i>Gán
+                                    </button>
+                                </div>
+                            ` : ''}
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button class="btn btn-sm btn-danger" onclick="rejectDepositRequest(${d.id}, '${d.request_code}')">
+                                    <i class="fas fa-times me-1"></i>Từ chối
+                                </button>
+                                ${d.has_agent ? `
+                                    <button class="btn btn-sm btn-success" onclick="approveDepositRequest(${d.id}, '${d.request_code}', ${d.amount}, ${d.agent_id}, '${(d.admin_notes || '').replace(/'/g, "\\'")}')">
+                                        <i class="fas fa-check me-1"></i>Duyệt
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                Swal.fire({
+                    title: `<i class="fas fa-tasks text-warning me-2"></i>Đối soát Nạp Tiền`,
+                    html: `
+                        <div class="text-start">
+                            <div class="alert ${data.unassigned_count > 0 ? 'alert-danger' : 'alert-info'} py-2">
+                                <strong>${pendingDeposits.length}</strong> lệnh chờ xử lý
+                                ${data.unassigned_count > 0 ? ` | <strong class="text-danger">${data.unassigned_count}</strong> cần đối soát` : ''}
+                            </div>
+                            <div style="max-height: 500px; overflow-y: auto;">
+                                ${depositsHtml}
+                            </div>
+                        </div>
+                    `,
+                    width: 650,
+                    showConfirmButton: false,
+                    showCloseButton: true
+                });
+                
+            } catch (error) {
+                hideLoading();
+                console.error('Error loading pending deposits:', error);
+                showToast('Không thể tải danh sách', 'error');
+            }
+        };
+        
+        // v2.54.0: Assign agent to unassigned deposit
+        window.assignAgentToDeposit = async function(requestId) {
+            const agentId = document.getElementById(`assignAgent_${requestId}`)?.value;
+            if (!agentId) {
+                showToast('Vui lòng chọn đại lý', 'warning');
+                return;
+            }
+            
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE_URL}/v1/deposit/assign-agent/${requestId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${appState.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ agent_id: parseInt(agentId) })
+                });
+                
+                hideLoading();
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Không thể gán đại lý');
+                }
+                
+                const result = await response.json();
+                showToast(`Đã gán cho ${result.agent_code}`, 'success');
+                
+                // Refresh the pending deposits view
+                viewAllPendingDeposits();
                 
             } catch (error) {
                 hideLoading();
@@ -16108,7 +16396,7 @@ PA12345678903"></textarea>
             }
             
             tbody.innerHTML = pendingDeposits.map((d, index) => `
-                <tr class="align-middle">
+                <tr class="align-middle ${d.notes && d.notes.includes('KHÔNG KHỚP') ? 'table-warning' : ''}">
                     <td>${index + 1}</td>
                     <td><code class="small">${d.transaction_code}</code></td>
                     <td>
@@ -16120,12 +16408,13 @@ PA12345678903"></textarea>
                             <i class="fas fa-${d.deposit_type === 'transfer' ? 'bank' : 'hand-holding-usd'} me-1"></i>
                             ${d.deposit_type === 'transfer' ? 'Chuyển khoản' : 'Nhân viên thu'}
                         </span>
+                        ${d.notes && d.notes.includes('KHÔNG KHỚP') ? '<br><span class="badge bg-danger mt-1"><i class="fas fa-exclamation-triangle"></i> Cần kiểm tra</span>' : ''}
                     </td>
                     <td class="text-end fw-bold text-success">${formatCurrency(d.amount)}</td>
                     <td class="small">${formatDateTime(d.created_at)}</td>
                     <td>
                         <div class="btn-group btn-group-sm">
-                            <button class="btn btn-success" onclick="approveDeposit(${d.agent_id}, ${d.id})" title="Duyệt">
+                            <button class="btn btn-success" onclick="approveDepositWithAmount(${d.agent_id}, ${d.id}, ${d.amount}, '${d.notes || ''}')" title="Duyệt">
                                 <i class="fas fa-check"></i> Duyệt
                             </button>
                             <button class="btn btn-danger" onclick="rejectDeposit(${d.agent_id}, ${d.id})" title="Từ chối">
@@ -16135,6 +16424,64 @@ PA12345678903"></textarea>
                     </td>
                 </tr>
             `).join('');
+        }
+        
+        // v2.51.0: Approve deposit with option to edit amount
+        async function approveDepositWithAmount(agentId, transactionId, amount, notes) {
+            const hasWarning = notes && notes.includes('KHÔNG KHỚP');
+            
+            const result = await Swal.fire({
+                title: 'Xác nhận duyệt nạp tiền',
+                html: `
+                    <div class="text-start">
+                        ${hasWarning ? `<div class="alert alert-warning py-2"><i class="fas fa-exclamation-triangle me-1"></i>${notes}</div>` : ''}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Số tiền nạp</label>
+                            <input type="number" id="approveAmountInput" class="form-control form-control-lg text-center" 
+                                value="${amount}" min="1000" step="1000" style="font-size: 1.5rem; font-weight: bold;">
+                            <div class="form-text">Có thể sửa số tiền trước khi duyệt</div>
+                        </div>
+                    </div>
+                `,
+                icon: hasWarning ? 'warning' : 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                confirmButtonText: '<i class="fas fa-check me-1"></i>Duyệt',
+                cancelButtonText: 'Hủy',
+                preConfirm: () => {
+                    const newAmount = document.getElementById('approveAmountInput').value;
+                    if (!newAmount || newAmount < 1000) {
+                        Swal.showValidationMessage('Số tiền phải >= 1,000đ');
+                        return false;
+                    }
+                    return parseInt(newAmount);
+                }
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const newAmount = result.value;
+                    const response = await fetch(`${API_BASE_URL}/agents/${agentId}/approve-deposit/${transactionId}`, {
+                        method: 'POST',
+                        headers: { 
+                            'Authorization': `Bearer ${appState.token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ amount: newAmount })
+                    });
+                    
+                    if (response.ok) {
+                        const amountChanged = newAmount !== amount;
+                        showToast(`Đã duyệt nạp ${formatCurrency(newAmount)}${amountChanged ? ' (đã sửa)' : ''}`, 'success');
+                        loadPendingDeposits();
+                    } else {
+                        const error = await response.json();
+                        showToast(error.detail || 'Không thể duyệt', 'error');
+                    }
+                } catch (error) {
+                    showToast(error.message || 'Lỗi kết nối', 'error');
+                }
+            }
         }
         
         async function approveDeposit(agentId, transactionId) {

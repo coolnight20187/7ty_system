@@ -31,7 +31,8 @@ from models import (
     DepositRequest, DepositStatus, DepositMethod, DepositLimit, DepositSecurityLog,
     SystemBankAccount
 )
-from dependencies import get_current_agent
+from dependencies import get_current_agent, get_current_active_admin
+from utils import generate_transaction_code
 from pydantic import BaseModel, Field, validator
 
 logger = logging.getLogger(__name__)
@@ -686,11 +687,51 @@ async def bank_transfer_webhook(
             logger.info(f"No agent code in transfer: {content[:100]}")
             return {"success": True, "message": "No agent code found"}
         
-        # Find agent
+        # Find agent first (trước khi validate amount)
         agent = db.query(Agent).filter(Agent.agent_code == agent_code).first()
         if not agent:
             logger.warning(f"Agent not found: {agent_code}")
             return {"success": True, "message": "Agent not found"}
+        
+        # v2.51.0: Validate amount in transfer content matches actual transfer amount
+        content_amount = extract_amount_from_content(content)
+        is_valid, validation_reason = validate_deposit_amounts(amount, content_amount)
+        
+        if not is_valid:
+            # v2.51.0: Không reject - tạo pending request để admin duyệt thủ công
+            logger.warning(f"Amount mismatch for {agent_code}: {validation_reason} - Creating pending request")
+            
+            # Tạo pending request thay vì reject
+            request_code = generate_request_code()
+            pending_deposit = DepositRequest(
+                request_code=request_code,
+                agent_id=agent.id,
+                agent_code=agent.agent_code,
+                amount=amount,  # Số tiền thực tế chuyển khoản
+                actual_amount=amount,
+                method=DepositMethod.BANK_WEBHOOK,
+                status=DepositStatus.PENDING,  # Chờ duyệt
+                bank_reference=bank_ref,
+                transfer_content=content[:255],
+                is_verified=False,  # Chưa verify vì amount mismatch
+                webhook_verified=True,
+                webhook_source=webhook_source,
+                notes=f"⚠️ SỐ TIỀN KHÔNG KHỚP: Chuyển khoản {amount:,}đ, Nội dung ghi {content_amount:,}đ. Cần admin xác nhận."
+            )
+            db.add(pending_deposit)
+            db.commit()
+            
+            logger.info(f"Created pending deposit for amount mismatch: {request_code}")
+            return {
+                "success": True, 
+                "message": "Amount mismatch - pending review",
+                "pending": True,
+                "request_code": request_code,
+                "agent_code": agent_code,
+                "transfer_amount": amount,
+                "content_amount": content_amount,
+                "reason": validation_reason
+            }
         
         # Find matching deposit request
         matching_deposit = db.query(DepositRequest).filter(
@@ -869,3 +910,264 @@ def extract_agent_code(content: str) -> Optional[str]:
             return match.group(1)
     
     return None
+
+
+def extract_amount_from_content(content: str) -> Optional[int]:
+    """Extract amount from transfer content
+    Format chuẩn: NAP AG000001 101000 -> returns 101000
+    
+    QUAN TRỌNG: Hàm này phải parse chính xác số tiền từ nội dung chuyển khoản
+    để đối chiếu với số tiền thực tế chuyển khoản.
+    
+    Format được hỗ trợ:
+    - NAP AG000001 101000
+    - NAPTIEN 7TY001 500000
+    - GD: NAP AG000001 101000
+    """
+    if not content:
+        return None
+    
+    content_upper = content.upper()
+    
+    # Pattern ưu tiên: NAP/NAPTIEN + AGENT_CODE + AMOUNT
+    # Số tiền PHẢI là số cuối cùng trong chuỗi (sau agent code)
+    patterns = [
+        # Pattern chính: NAP AG000001 101000 (có thể có GD: ở đầu)
+        r'(?:GD:\s*)?(?:NAP|NAPTIEN|TOPUP)\s+([A-Z]{2,5}\d{3,6})\s+(\d+)',
+        # Pattern với số agent bắt đầu bằng số: NAP 7TY001 101000
+        r'(?:GD:\s*)?(?:NAP|NAPTIEN|TOPUP)\s+(\d?[A-Z]{2,5}\d{3,6})\s+(\d+)',
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, content_upper)
+        if match:
+            try:
+                # Group 2 là số tiền
+                amount = int(match.group(2))
+                # Validate: số tiền phải hợp lý (>= 1000đ và <= 1 tỷ)
+                if 1000 <= amount <= 1000000000:
+                    logger.info(f"Extracted amount {amount} from content: {content[:100]}")
+                    return amount
+            except (ValueError, IndexError):
+                continue
+    
+    # KHÔNG dùng fallback pattern vì có thể parse sai
+    # Chỉ trả về None nếu không tìm được format chuẩn
+    logger.warning(f"Could not extract amount from content: {content[:100]}")
+    return None
+
+
+def validate_deposit_amounts(transfer_amount: int, content_amount: Optional[int]) -> tuple[bool, str]:
+    """
+    Validate số tiền chuyển khoản khớp với số tiền trong nội dung.
+    
+    Returns: (is_valid, reason)
+    
+    QUAN TRỌNG: Đây là bước bảo mật quan trọng để tránh gian lận.
+    - Nếu không parse được content_amount -> CHO PHÉP (để không block giao dịch hợp lệ)
+    - Nếu parse được và KHÔNG khớp -> TỪ CHỐI
+    - Nếu parse được và KHỚP -> CHO PHÉP
+    """
+    if content_amount is None:
+        # Không parse được số tiền từ nội dung - cho phép nhưng log warning
+        return True, "Content amount not found - allowed"
+    
+    if transfer_amount != content_amount:
+        reason = f"Amount mismatch: transfer={transfer_amount:,}đ, content={content_amount:,}đ"
+        logger.warning(f"DEPOSIT REJECTED: {reason}")
+        return False, reason
+    
+    logger.info(f"Amount validated: {transfer_amount:,}đ matches content")
+    return True, "Amount matched"
+
+
+# =========================================
+# ADMIN APPROVE/REJECT ENDPOINTS v2.53.0
+# =========================================
+
+class ApproveDepositRequest(BaseModel):
+    """Request để duyệt nạp tiền"""
+    amount: int = Field(..., ge=1000, description="Số tiền duyệt")
+    notes: Optional[str] = None
+
+class RejectDepositRequest(BaseModel):
+    """Request để từ chối nạp tiền"""
+    reason: Optional[str] = None
+
+
+@router.post("/approve/{request_id}")
+async def approve_deposit_request(
+    request_id: int,
+    data: ApproveDepositRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_admin)
+):
+    """
+    Admin duyệt yêu cầu nạp tiền PENDING.
+    Cho phép sửa số tiền trước khi duyệt.
+    """
+    # Find deposit request
+    deposit_req = db.query(DepositRequest).filter(DepositRequest.id == request_id).first()
+    if not deposit_req:
+        raise HTTPException(status_code=404, detail="Không tìm thấy yêu cầu nạp tiền")
+    
+    if deposit_req.status != DepositStatus.PENDING:
+        raise HTTPException(status_code=400, detail=f"Yêu cầu đã được xử lý: {deposit_req.status.value}")
+    
+    # Get agent
+    agent = db.query(Agent).filter(Agent.id == deposit_req.agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đại lý")
+    
+    # Use provided amount (admin can adjust)
+    final_amount = data.amount
+    
+    try:
+        # Update agent balance
+        old_balance = agent.balance or 0
+        agent.balance = old_balance + final_amount
+        
+        # Create transaction record
+        transaction = Transaction(
+            transaction_code=generate_transaction_code(),
+            agent_id=agent.id,
+            transaction_type=TransactionType.DEPOSIT,
+            amount=final_amount,
+            fee=0,
+            total_amount=final_amount,
+            previous_balance=old_balance,
+            new_balance=agent.balance,
+            status=TransactionStatus.COMPLETED,
+            description=f"Admin duyệt nạp tiền - Mã: {deposit_req.request_code}",
+            notes=data.notes or "Duyệt bởi Admin",
+            completed_at=datetime.utcnow()
+        )
+        db.add(transaction)
+        db.flush()
+        
+        # Update deposit request
+        deposit_req.status = DepositStatus.COMPLETED
+        deposit_req.actual_amount = final_amount
+        deposit_req.approved_at = datetime.utcnow()
+        deposit_req.approved_by_id = current_user.id
+        deposit_req.processed_at = datetime.utcnow()
+        deposit_req.processed_by_id = current_user.id
+        deposit_req.transaction_id = transaction.id
+        deposit_req.previous_balance = old_balance
+        deposit_req.new_balance = agent.balance
+        if data.notes:
+            deposit_req.admin_notes = (deposit_req.admin_notes or "") + f"\n[APPROVED] {data.notes}"
+        
+        db.commit()
+        
+        logger.info(f"Admin {current_user.username} approved deposit {deposit_req.request_code}: {final_amount:,}đ for agent {agent.agent_code}")
+        
+        return {
+            "success": True,
+            "message": f"Đã duyệt nạp {final_amount:,}đ cho {agent.agent_code}",
+            "request_code": deposit_req.request_code,
+            "amount": final_amount,
+            "new_balance": int(agent.balance)
+        }
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error approving deposit {request_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/reject/{request_id}")
+async def reject_deposit_request(
+    request_id: int,
+    data: RejectDepositRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_admin)
+):
+    """
+    Admin từ chối yêu cầu nạp tiền PENDING.
+    """
+    # Find deposit request
+    deposit_req = db.query(DepositRequest).filter(DepositRequest.id == request_id).first()
+    if not deposit_req:
+        raise HTTPException(status_code=404, detail="Không tìm thấy yêu cầu nạp tiền")
+    
+    if deposit_req.status != DepositStatus.PENDING:
+        raise HTTPException(status_code=400, detail=f"Yêu cầu đã được xử lý: {deposit_req.status.value}")
+    
+    try:
+        # Update deposit request
+        deposit_req.status = DepositStatus.REJECTED
+        deposit_req.rejection_reason = data.reason or "Bị từ chối bởi Admin"
+        deposit_req.processed_at = datetime.utcnow()
+        deposit_req.processed_by_id = current_user.id
+        deposit_req.admin_notes = (deposit_req.admin_notes or "") + f"\n[REJECTED] {data.reason or 'No reason'}"
+        
+        db.commit()
+        
+        logger.info(f"Admin {current_user.username} rejected deposit {deposit_req.request_code}: {data.reason}")
+        
+        return {
+            "success": True,
+            "message": "Đã từ chối yêu cầu nạp tiền",
+            "request_code": deposit_req.request_code
+        }
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error rejecting deposit {request_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# v2.54.0: Assign agent to unassigned deposit request
+class AssignAgentRequest(BaseModel):
+    """Gán agent cho deposit chưa xác định"""
+    agent_id: int = Field(..., description="ID của agent")
+
+
+@router.post("/assign-agent/{request_id}")
+async def assign_agent_to_deposit(
+    request_id: int,
+    data: AssignAgentRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_admin)
+):
+    """
+    v2.54.0: Admin gán agent cho deposit request chưa xác định đại lý.
+    """
+    # Find deposit request
+    deposit_req = db.query(DepositRequest).filter(DepositRequest.id == request_id).first()
+    if not deposit_req:
+        raise HTTPException(status_code=404, detail="Không tìm thấy yêu cầu nạp tiền")
+    
+    if deposit_req.status != DepositStatus.PENDING:
+        raise HTTPException(status_code=400, detail=f"Yêu cầu đã được xử lý: {deposit_req.status.value}")
+    
+    # Find agent
+    agent = db.query(Agent).filter(Agent.id == data.agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Không tìm thấy đại lý")
+    
+    try:
+        # Update deposit request with agent info
+        old_notes = deposit_req.admin_notes or ""
+        deposit_req.agent_id = agent.id
+        deposit_req.agent_code = agent.agent_code
+        deposit_req.admin_notes = old_notes + f"\n[ASSIGNED] Gán cho {agent.agent_code} bởi Admin {current_user.username}"
+        
+        db.commit()
+        
+        logger.info(f"Admin {current_user.username} assigned deposit {deposit_req.request_code} to agent {agent.agent_code}")
+        
+        return {
+            "success": True,
+            "message": f"Đã gán cho đại lý {agent.agent_code}",
+            "request_code": deposit_req.request_code,
+            "agent_code": agent.agent_code,
+            "agent_name": agent.agent_name
+        }
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error assigning agent to deposit {request_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+

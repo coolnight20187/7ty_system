@@ -8,6 +8,7 @@ import asyncio
 from decimal import Decimal
 from pathlib import Path
 import pandas as pd
+from pydantic import BaseModel
 
 from config import settings
 from database import get_db, paginate_query
@@ -415,11 +416,11 @@ async def get_agents(
         # Prepare response data with pending deposits count
         agent_responses = []
         for agent in agents:
-            # Count pending deposit requests for this agent
-            pending_deposits = db.query(func.count(Transaction.id)).filter(
-                Transaction.agent_id == agent.id,
-                Transaction.transaction_type == TransactionType.DEPOSIT,
-                Transaction.status == TransactionStatus.PENDING
+            # v2.52.0: Count pending deposit requests (DepositRequest) for this agent
+            from models import DepositRequest, DepositStatus
+            pending_deposits = db.query(func.count(DepositRequest.id)).filter(
+                DepositRequest.agent_id == agent.id,
+                DepositRequest.status == DepositStatus.PENDING
             ).scalar() or 0
             
             user_response = {
@@ -2969,13 +2970,15 @@ def get_agent_wallet(
 @router.get("/{agent_id}/deposit-requests", response_model=Dict[str, Any])
 def get_agent_deposit_requests(
     agent_id: int,
+    status_filter: Optional[str] = Query(None, description="Filter by status: pending, approved, completed, rejected"),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """
-    Lấy danh sách yêu cầu nạp tiền từ Đại Lý
-    Trả về dữ liệu giả để demo giao diện
+    Lấy danh sách yêu cầu nạp tiền từ Đại Lý (từ bảng DepositRequest)
     """
+    from models import DepositRequest, DepositStatus
+    
     # Get agent
     agent = db.query(Agent).filter(Agent.id == agent_id).first()
     if not agent:
@@ -2991,43 +2994,106 @@ def get_agent_deposit_requests(
             detail="Không được phép xem yêu cầu nạp tiền của Đại Lý khác"
         )
     
-    # Demo data - replace with real data from database later
-    demo_requests = [
-        {
-            "id": 1,
-            "agent_id": agent_id,
-            "amount": 5000000,
-            "payment_method": "bank_transfer",
-            "status": "pending",
-            "notes": "Yêu cầu nạp tiền cho hoạt động kinh doanh",
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat()
-        },
-        {
-            "id": 2,
-            "agent_id": agent_id,
-            "amount": 10000000,
-            "payment_method": "cash",
-            "status": "approved",
-            "notes": "Nạp tiền mặt",
-            "created_at": (datetime.now() - timedelta(days=1)).isoformat(),
-            "updated_at": (datetime.now() - timedelta(days=1)).isoformat()
-        },
-        {
-            "id": 3,
-            "agent_id": agent_id,
-            "amount": 7500000,
-            "payment_method": "bank_transfer",
-            "status": "reconciled",
-            "notes": "Đã đối soát",
-            "created_at": (datetime.now() - timedelta(days=2)).isoformat(),
-            "updated_at": (datetime.now() - timedelta(days=2)).isoformat()
+    # Query real deposit requests from database
+    query = db.query(DepositRequest).filter(DepositRequest.agent_id == agent_id)
+    
+    # Filter by status if provided
+    if status_filter:
+        status_mapping = {
+            'pending': DepositStatus.PENDING,
+            'approved': DepositStatus.APPROVED,
+            'completed': DepositStatus.COMPLETED,
+            'rejected': DepositStatus.REJECTED,
+            'verified': DepositStatus.VERIFIED,
+            'processing': DepositStatus.PROCESSING,
+            'cancelled': DepositStatus.CANCELLED
         }
-    ]
+        if status_filter.lower() in status_mapping:
+            query = query.filter(DepositRequest.status == status_mapping[status_filter.lower()])
+    
+    # Order by created_at desc
+    deposit_requests = query.order_by(DepositRequest.created_at.desc()).limit(100).all()
+    
+    # Format response
+    requests_data = []
+    for dr in deposit_requests:
+        requests_data.append({
+            "id": dr.id,
+            "request_code": dr.request_code,
+            "agent_id": dr.agent_id,
+            "agent_code": dr.agent_code,
+            "amount": float(dr.amount) if dr.amount else 0,
+            "actual_amount": float(dr.actual_amount) if dr.actual_amount else None,
+            "method": dr.method.value if dr.method else "bank_transfer",
+            "status": dr.status.value if dr.status else "pending",
+            "transfer_content": dr.transfer_content,
+            "bank_reference": dr.bank_reference,
+            "admin_notes": dr.admin_notes,
+            "agent_notes": dr.agent_notes,
+            "is_verified": dr.is_verified,
+            "webhook_verified": dr.webhook_verified,
+            "created_at": dr.created_at.isoformat() if dr.created_at else None,
+            "updated_at": dr.updated_at.isoformat() if dr.updated_at else None,
+            "processed_at": dr.processed_at.isoformat() if dr.processed_at else None
+        })
     
     return {
-        "data": demo_requests,
-        "total": len(demo_requests)
+        "success": True,
+        "data": requests_data,
+        "total": len(requests_data),
+        "agent": {
+            "id": agent.id,
+            "agent_code": agent.agent_code,
+            "agent_name": agent.agent_name,
+            "balance": float(agent.balance) if agent.balance else 0
+        }
+    }
+
+
+@router.get("/all/pending-deposits", response_model=Dict[str, Any])
+def get_all_pending_deposits(
+    current_user: User = Depends(get_current_active_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    v2.54.0: Lấy TẤT CẢ deposit requests đang PENDING (bao gồm cả chưa xác định agent)
+    Dành cho Admin đối soát
+    """
+    from models import DepositRequest, DepositStatus
+    
+    # Query all pending deposits
+    deposit_requests = db.query(DepositRequest).filter(
+        DepositRequest.status == DepositStatus.PENDING
+    ).order_by(DepositRequest.created_at.desc()).limit(100).all()
+    
+    # Get all agents for lookup
+    agents_map = {a.id: a for a in db.query(Agent).all()}
+    
+    # Format response
+    requests_data = []
+    for dr in deposit_requests:
+        agent = agents_map.get(dr.agent_id) if dr.agent_id else None
+        requests_data.append({
+            "id": dr.id,
+            "request_code": dr.request_code,
+            "agent_id": dr.agent_id,
+            "agent_code": dr.agent_code or (agent.agent_code if agent else "UNKNOWN"),
+            "agent_name": agent.agent_name if agent else None,
+            "amount": float(dr.amount) if dr.amount else 0,
+            "method": dr.method.value if dr.method else "bank_transfer",
+            "status": dr.status.value if dr.status else "pending",
+            "transfer_content": dr.transfer_content,
+            "bank_reference": dr.bank_reference,
+            "admin_notes": dr.admin_notes,
+            "has_agent": dr.agent_id is not None,
+            "created_at": dr.created_at.isoformat() if dr.created_at else None
+        })
+    
+    return {
+        "success": True,
+        "data": requests_data,
+        "total": len(requests_data),
+        "unassigned_count": len([r for r in requests_data if not r["has_agent"]])
     }
 
 
@@ -3219,16 +3285,22 @@ async def create_deposit_request(
 
 # ===== APPROVE DEPOSIT REQUEST =====
 
+class ApproveDepositRequest(BaseModel):
+    """Request body for approving deposit with optional amount override"""
+    amount: Optional[Decimal] = None  # v2.51.0: Cho phép sửa số tiền khi duyệt
+
 @router.post("/{agent_id}/approve-deposit/{transaction_id}", response_model=Dict[str, Any])
 @manager_or_admin()
 async def approve_deposit_request(
     agent_id: int,
     transaction_id: int,
+    request: Optional[ApproveDepositRequest] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Approve a pending deposit request and add balance to agent
+    v2.51.0: Cho phép sửa số tiền khi duyệt thông qua request body
     """
     try:
         # Get agent
@@ -3253,10 +3325,18 @@ async def approve_deposit_request(
                 detail="Không tìm thấy lệnh nạp tiền hoặc đã được xử lý"
             )
         
+        # v2.51.0: Cho phép sửa số tiền khi duyệt
+        original_amount = transaction.amount
+        if request and request.amount and request.amount > 0:
+            transaction.amount = request.amount
+            logger.info(f"Amount modified during approval: {original_amount} -> {request.amount}")
+        
         # Update transaction status
         transaction.status = TransactionStatus.COMPLETED
         transaction.new_balance = agent.balance + transaction.amount
         transaction.notes = f"Approved by {current_user.username} at {datetime.utcnow().isoformat()}"
+        if request and request.amount and request.amount != original_amount:
+            transaction.notes += f" (Amount adjusted: {original_amount} -> {request.amount})"
         
         # Update agent balance
         previous_balance = agent.balance

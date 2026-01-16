@@ -163,7 +163,7 @@ Expires At: NO
 
 ---
 
-## Test 7: Agent App Session (agent_app.html) ✅
+## Test 7: Agent App Session (index.html) ✅
 
 **Steps:**
 1. Open agent app
