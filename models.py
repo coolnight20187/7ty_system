@@ -24,6 +24,21 @@ class UserRole(str, enum.Enum):
     VIEWER = "VIEWER"
     CUSTOMER = "CUSTOMER"
 
+# AccountType - Loại tài khoản trong hệ thống tập trung
+class AccountType(str, enum.Enum):
+    SYSTEM = "SYSTEM"          # Tài khoản hệ thống (Admin/Manager)
+    AGENT = "AGENT"            # Tài khoản Đại lý
+    STAFF = "STAFF"            # Tài khoản Nhân viên
+    CUSTOMER = "CUSTOMER"      # Tài khoản Khách hàng THẺ
+
+# AccountStatus - Trạng thái tài khoản
+class AccountStatus(str, enum.Enum):
+    ACTIVE = "ACTIVE"          # Đang hoạt động
+    PENDING = "PENDING"        # Chờ duyệt
+    INACTIVE = "INACTIVE"      # Không hoạt động
+    SUSPENDED = "SUSPENDED"    # Tạm khóa
+    BLOCKED = "BLOCKED"        # Khóa vĩnh viễn
+
 class AgentType(str, enum.Enum):
     INDIVIDUAL = "individual"
     COMPANY = "company"
@@ -121,8 +136,15 @@ class SoftDeleteMixin:
     is_deleted = Column(Boolean, default=False, nullable=False)
     deleted_at = Column(DateTime, nullable=True)
 
-# User Model
+# User Model - Tài khoản tập trung
 class User(Base, TimestampMixin, SoftDeleteMixin):
+    """
+    Tài khoản tập trung - 1 tài khoản có thể được phân bổ cho nhiều vai trò:
+    - Quản trị viên (Admin/Manager)
+    - Đại lý (Agent)
+    - Nhân viên (Staff)
+    - Khách hàng THẺ (Customer)
+    """
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
@@ -131,7 +153,24 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     phone = Column(String(20), index=True, nullable=True)
     full_name = Column(String(100), nullable=False)
     password_hash = Column(String(255), nullable=False)
+    
+    # === TÀI KHOẢN TẬP TRUNG ===
+    # Loại tài khoản chính (xác định vai trò chính khi đăng nhập)
+    account_type = Column(Enum(AccountType), default=AccountType.CUSTOMER, nullable=False)
+    account_status = Column(Enum(AccountStatus), default=AccountStatus.PENDING, nullable=False)
+    
+    # Legacy role (giữ tương thích ngược)
     role = Column(Enum(UserRole), default=UserRole.AGENT, nullable=False)
+    
+    # === ĐA VAI TRÒ (1 tài khoản có thể có nhiều vai trò) ===
+    is_admin = Column(Boolean, default=False, nullable=False)      # Có quyền Admin
+    is_manager = Column(Boolean, default=False, nullable=False)    # Có quyền Manager
+    is_agent = Column(Boolean, default=False, nullable=False)      # Là Đại lý
+    is_staff = Column(Boolean, default=False, nullable=False)      # Là Nhân viên
+    is_customer = Column(Boolean, default=False, nullable=False)   # Là Khách hàng THẺ
+    
+    # Vai trò đang hoạt động (khi user chuyển đổi vai trò)
+    active_role = Column(Enum(UserRole), nullable=True)  # Vai trò đang dùng
     
     # Profile fields
     avatar_url = Column(String(500), nullable=True)
@@ -149,9 +188,6 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     
     # Notes
     notes = Column(Text, nullable=True)
-    
-    # Multi-role flags (1 user can have multiple roles)
-    is_staff = Column(Boolean, default=False, nullable=False)  # Nhân viên
     
     # Security
     is_active = Column(Boolean, default=True, nullable=False)
@@ -224,6 +260,86 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
             return self.full_name[:2].upper()
         else:
             return "U"
+    
+    # === HELPER METHODS CHO HỆ THỐNG TÀI KHOẢN TẬP TRUNG ===
+    
+    def get_available_roles(self) -> List[str]:
+        """Lấy danh sách các vai trò mà tài khoản này có thể sử dụng"""
+        roles = []
+        if self.is_admin:
+            roles.append("ADMIN")
+        if self.is_manager:
+            roles.append("MANAGER")
+        if self.is_agent:
+            roles.append("AGENT")
+        if self.is_staff:
+            roles.append("STAFF")
+        if self.is_customer:
+            roles.append("CUSTOMER")
+        return roles
+    
+    def has_role(self, role: str) -> bool:
+        """Kiểm tra tài khoản có vai trò cụ thể không"""
+        role = role.upper()
+        if role == "ADMIN":
+            return self.is_admin
+        elif role == "MANAGER":
+            return self.is_manager
+        elif role == "AGENT":
+            return self.is_agent
+        elif role == "STAFF":
+            return self.is_staff
+        elif role == "CUSTOMER":
+            return self.is_customer
+        return False
+    
+    def can_switch_to_role(self, role: str) -> bool:
+        """Kiểm tra có thể chuyển sang vai trò cụ thể không"""
+        return self.has_role(role) and self.is_active
+    
+    def get_primary_role(self) -> str:
+        """Lấy vai trò chính (ưu tiên cao nhất)"""
+        if self.is_admin:
+            return "ADMIN"
+        if self.is_manager:
+            return "MANAGER"
+        if self.is_agent:
+            return "AGENT"
+        if self.is_staff:
+            return "STAFF"
+        if self.is_customer:
+            return "CUSTOMER"
+        return str(self.role.value) if self.role else "VIEWER"
+    
+    def set_roles_from_account_type(self):
+        """Đặt các flags vai trò dựa trên account_type"""
+        if self.account_type == AccountType.SYSTEM:
+            if self.role == UserRole.ADMIN:
+                self.is_admin = True
+            elif self.role == UserRole.MANAGER:
+                self.is_manager = True
+        elif self.account_type == AccountType.AGENT:
+            self.is_agent = True
+        elif self.account_type == AccountType.STAFF:
+            self.is_staff = True
+        elif self.account_type == AccountType.CUSTOMER:
+            self.is_customer = True
+    
+    @hybrid_property
+    def role_badges(self) -> List[Dict[str, str]]:
+        """Lấy danh sách badges cho các vai trò"""
+        badges = []
+        if self.is_admin:
+            badges.append({"role": "ADMIN", "color": "danger", "icon": "crown"})
+        if self.is_manager:
+            badges.append({"role": "MANAGER", "color": "warning", "icon": "user-shield"})
+        if self.is_agent:
+            badges.append({"role": "AGENT", "color": "primary", "icon": "store"})
+        if self.is_staff:
+            badges.append({"role": "STAFF", "color": "info", "icon": "user-tie"})
+        if self.is_customer:
+            badges.append({"role": "CUSTOMER", "color": "success", "icon": "id-card"})
+        return badges
 
 # Agent Model
 class Agent(Base, TimestampMixin):
@@ -1301,6 +1417,89 @@ class SystemBankAccount(Base):
     
     def __repr__(self):
         return f"<SystemBankAccount {self.bank_name} - {self.account_number}>"
+
+
+# =========================================
+# STAFF MODEL - NHÂN VIÊN
+# =========================================
+
+class StaffStatus(str, enum.Enum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    SUSPENDED = "SUSPENDED"
+    PENDING = "PENDING"
+
+class StaffRole(str, enum.Enum):
+    STAFF = "STAFF"              # Nhân viên thường
+    SUPERVISOR = "SUPERVISOR"     # Giám sát viên
+    MANAGER = "MANAGER"           # Quản lý
+
+class Staff(Base, TimestampMixin):
+    """
+    Nhân viên - có thể thuộc về Admin (nhân viên hệ thống) hoặc thuộc về Đại lý
+    """
+    __tablename__ = "staffs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    staff_code = Column(String(20), unique=True, index=True, nullable=False)  # Mã nhân viên: NV000001
+    
+    # Thuộc về Đại lý nào (NULL = nhân viên hệ thống/Admin)
+    agent_id = Column(Integer, ForeignKey("agents.id"), nullable=True, index=True)
+    
+    # Thông tin cơ bản
+    department = Column(String(100), nullable=True)         # Phòng ban
+    position = Column(String(100), nullable=True)           # Chức vụ
+    staff_role = Column(Enum(StaffRole), default=StaffRole.STAFF, nullable=False)
+    
+    # Trạng thái
+    status = Column(Enum(StaffStatus), default=StaffStatus.PENDING, nullable=False)
+    
+    # Ngày tham gia và nghỉ việc
+    joined_date = Column(Date, nullable=True)               # Ngày vào làm
+    left_date = Column(Date, nullable=True)                 # Ngày nghỉ việc
+    
+    # Thống kê công việc
+    total_bills_processed = Column(Integer, default=0)      # Tổng hóa đơn đã xử lý
+    total_customers_served = Column(Integer, default=0)     # Tổng khách hàng đã phục vụ
+    total_transactions = Column(Integer, default=0)         # Tổng giao dịch đã thực hiện
+    
+    # Lương và hoa hồng
+    base_salary = Column(Numeric(15, 0), default=0)         # Lương cơ bản
+    commission_rate = Column(Numeric(5, 2), default=0)      # Tỷ lệ hoa hồng (%)
+    total_commission = Column(Numeric(15, 0), default=0)    # Tổng hoa hồng đã nhận
+    
+    # Duyệt
+    approved_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    approved_at = Column(DateTime, nullable=True)
+    
+    # Ghi chú
+    notes = Column(Text, nullable=True)
+    
+    # Relationships
+    user = relationship("User", foreign_keys=[user_id], backref="staff_profile")
+    agent = relationship("Agent", backref="staff_members")
+    approved_by = relationship("User", foreign_keys=[approved_by_id])
+    
+    # Indexes
+    __table_args__ = (
+        Index('idx_staff_code', 'staff_code'),
+        Index('idx_staff_agent', 'agent_id'),
+        Index('idx_staff_status', 'status'),
+        Index('idx_staff_role', 'staff_role'),
+    )
+    
+    @hybrid_property
+    def is_system_staff(self):
+        """Nhân viên hệ thống (không thuộc đại lý nào)"""
+        return self.agent_id is None
+    
+    @hybrid_property
+    def is_active(self):
+        return self.status == StaffStatus.ACTIVE
+    
+    def __repr__(self):
+        return f"<Staff {self.staff_code} agent={self.agent_id}>"
 
 
 # Add reward fields to Agent model - will be handled via migration or direct add

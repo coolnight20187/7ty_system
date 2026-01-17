@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#0d4a4a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="7TY Staff">
+    <link rel="apple-touch-icon" href="images/logo.png">
+    <title>7TY.VN - Ứng dụng Nhân Viên</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.min.css" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Dark Teal - Xanh Ngọc đậm (từ logo 7TY) */
+            --primary: #0d4a4a;
+            --primary-dark: #0a3d3d;
+            --primary-light: #14605f;
+            /* Metallic Gold - Vàng kim loại (từ logo 7TY) */
+            --gold: #c9a227;
+            --gold-light: #d4af37;
+            --gold-dark: #b8960f;
+            /* Staff specific - Blue accent */
+            --staff-accent: #4f46e5;
+            --staff-light: #818cf8;
+            /* Status colors */
+            --secondary: #3b82f6;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+            --info: #3b82f6;
+            --light: #f5f7fb;
+            --dark: #1a1a2e;
+            --border-radius: 16px;
+            --border-radius-lg: 24px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.18);
+        }
+
+        html, body {
+            height: 100%;
+            background: linear-gradient(135deg, #f5f7fb 0%, #e8f4f4 50%, #f0f5f5 100%);
+            background-attachment: fixed;
+            font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            overflow-x: hidden;
+        }
+
+        body {
+            padding-bottom: 70px;
+        }
+
+        /* Login Page */
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(-45deg, #0a3d3d, #0d4a4a, #4f46e5, #0a3d3d);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            padding: 20px;
+            position: relative;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 40px 30px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(79, 70, 229, 0.1);
+        }
+        
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--staff-accent), var(--staff-light), var(--gold), var(--staff-light), var(--staff-accent));
+            border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .login-logo h1 {
+            font-size: 48px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--staff-accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            font-weight: 800;
+        }
+
+        .login-logo p {
+            color: var(--staff-accent);
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid rgba(79, 70, 229, 0.12);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: var(--transition);
+            background: rgba(248, 250, 252, 0.8);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--staff-accent);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+            background: white;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--staff-accent) 0%, var(--primary) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+
+        /* App Container */
+        .app-container {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .app-container.active {
+            display: flex;
+        }
+
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, var(--staff-accent) 0%, var(--primary) 100%);
+            color: white;
+            padding: 16px 14px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 30px rgba(79, 70, 229, 0.3);
+        }
+        
+        .app-header h1 {
+            font-size: 22px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .app-header h1 span:first-child {
+            color: var(--gold);
+            font-weight: 800;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 6px;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* Content */
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Dashboard Cards */
+        .info-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 16px;
+            box-shadow: 0 8px 32px rgba(79, 70, 229, 0.1);
+            border: 1px solid var(--glass-border);
+        }
+
+        .info-card.primary {
+            background: linear-gradient(135deg, var(--staff-accent) 0%, var(--primary) 100%);
+            color: white;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            padding: 18px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .stat-card i {
+            font-size: 28px;
+            background: linear-gradient(135deg, var(--staff-accent) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .stat-card h3 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+
+        .stat-card p {
+            font-size: 12px;
+            color: #6b7280;
+            margin: 5px 0 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Action Buttons */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            padding: 28px 16px;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(79, 70, 229, 0.15);
+        }
+
+        .action-btn i {
+            font-size: 28px;
+            color: var(--staff-accent);
+        }
+
+        /* Transaction List */
+        .list-item {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .list-item-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .list-item-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .list-item-icon i {
+            font-size: 20px;
+            color: var(--staff-accent);
+        }
+
+        .list-item-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0 0 4px;
+        }
+
+        .list-item-info p {
+            font-size: 12px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .list-item-right {
+            text-align: right;
+        }
+
+        .list-item-amount {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .list-item-amount.positive { color: var(--success); }
+        .list-item-amount.negative { color: var(--danger); }
+
+        .list-item-status {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .status-completed { background: #d1fae5; color: #047857; }
+        .status-pending { background: #fef3c7; color: #b45309; }
+        .status-failed { background: #fee2e2; color: #b91c1c; }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -4px 30px rgba(0,0,0,0.1);
+            border-top: 1px solid rgba(79, 70, 229, 0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #6b7280;
+            font-size: 11px;
+            text-decoration: none;
+            transition: var(--transition);
+            padding: 6px 16px;
+            border-radius: 12px;
+        }
+
+        .nav-item.active {
+            color: var(--staff-accent);
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .nav-item i {
+            font-size: 22px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(79, 70, 229, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            color: #6b7280;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-dark);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            z-index: 2000;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .toast.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: #d1d5db;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-staff { background: #e0e7ff; color: var(--staff-accent); }
+        .badge-supervisor { background: #dbeafe; color: #1d4ed8; }
+        .badge-manager { background: #fef3c7; color: #b45309; }
+        
+        /* Pending badge */
+        .pending-badge, .nav-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        .nav-badge {
+            top: 0;
+            right: 5px;
+        }
+        
+        /* Deposit Item */
+        .deposit-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .deposit-item .deposit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .deposit-item .deposit-agent {
+            font-weight: 700;
+            color: var(--primary-dark);
+            font-size: 15px;
+        }
+        
+        .deposit-item .deposit-amount {
+            font-weight: 800;
+            color: #10b981;
+            font-size: 18px;
+        }
+        
+        .deposit-item .deposit-meta {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+        
+        .deposit-item .deposit-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .deposit-item .btn-approve {
+            flex: 1;
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .deposit-item .btn-reject {
+            background: #fee2e2;
+            color: #ef4444;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* History Item */
+        .history-item {
+            background: white;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .history-item .history-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .history-item .history-icon.deposit { background: #fef3c7; color: #f59e0b; }
+        .history-item .history-icon.agent { background: #d1fae5; color: #10b981; }
+        .history-item .history-icon.task { background: #e0e7ff; color: #8b5cf6; }
+        
+        .history-item .history-content { flex: 1; }
+        .history-item .history-title { font-weight: 600; font-size: 14px; color: var(--dark); }
+        .history-item .history-desc { font-size: 12px; color: #6b7280; margin-top: 2px; }
+        .history-item .history-time { font-size: 11px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Login Page -->
+    <div class="login-container" id="loginPage">
+        <div class="login-box">
+            <div class="login-logo">
+                <h1>7TY</h1>
+                <p><i class="fas fa-user-tie me-2"></i>Nhân Viên</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="tel" class="form-control" id="loginPhone" placeholder="Nhập số điện thoại" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Mật khẩu</label>
+                    <input type="password" class="form-control" id="loginPassword" placeholder="Nhập mật khẩu" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt me-2"></i>Đăng Nhập
+                </button>
+            </form>
+            
+            <div class="text-center mt-4">
+                <small class="text-muted">Phiên bản v1.0.0</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div class="app-container" id="appContainer">
+        <!-- Header -->
+        <div class="app-header">
+            <h1><span>7TY</span> Nhân Viên</h1>
+            <div class="header-subtitle" id="staffInfo">Đang tải...</div>
+        </div>
+
+        <!-- Content -->
+        <div class="app-content">
+            <!-- Dashboard Page -->
+            <div class="page active" id="dashboardPage">
+                <!-- Staff Info Card -->
+                <div class="info-card primary">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div style="font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px;">Mã Nhân Viên</div>
+                            <div style="font-size: 28px; font-weight: 800;" id="staffCode">NV000000</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge badge-staff" id="staffRoleBadge">Nhân viên</span>
+                            <div style="font-size: 12px; margin-top: 8px; opacity: 0.9;" id="staffAgent">Hệ thống</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <h3 id="statBills">0</h3>
+                        <p>Hóa đơn đã xử lý</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <h3 id="statCustomers">0</h3>
+                        <p>Khách hàng</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-exchange-alt"></i>
+                        <h3 id="statTransactions">0</h3>
+                        <p>Giao dịch</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-coins"></i>
+                        <h3 id="statCommission">0₫</h3>
+                        <p>Hoa hồng</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <h6 class="mb-3 text-muted text-uppercase" style="font-size: 12px; letter-spacing: 1px;">Thao tác nhanh</h6>
+                <div class="action-grid">
+                    <div class="action-btn" onclick="showPage('depositsPage')" style="position: relative;">
+                        <i class="fas fa-hand-holding-usd" style="color: #f59e0b;"></i>
+                        <span>Duyệt Nạp Tiền</span>
+                        <span class="pending-badge" id="pendingDepositsBadge" style="display: none;">0</span>
+                    </div>
+                    <div class="action-btn" onclick="showPage('createAgentPage')">
+                        <i class="fas fa-user-plus" style="color: #10b981;"></i>
+                        <span>Tạo Đại Lý</span>
+                    </div>
+                    <div class="action-btn" onclick="showPage('historyPage')">
+                        <i class="fas fa-history" style="color: #3b82f6;"></i>
+                        <span>Lịch Sử</span>
+                    </div>
+                    <div class="action-btn" onclick="showPage('tasksPage')">
+                        <i class="fas fa-tasks" style="color: #8b5cf6;"></i>
+                        <span>Công Việc</span>
+                    </div>
+                </div>
+                
+                <!-- Pending Deposits Preview -->
+                <h6 class="mb-3 mt-4 text-muted text-uppercase" style="font-size: 12px; letter-spacing: 1px;">
+                    <i class="fas fa-clock me-1"></i>Lệnh nạp tiền chờ duyệt
+                </h6>
+                <div id="pendingDepositsPreview">
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bills Page -->
+            <div class="page" id="billsPage">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Danh sách Hóa đơn</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadBills()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                
+                <div id="billsList">
+                    <div class="empty-state">
+                        <i class="fas fa-file-invoice"></i>
+                        <h3>Chưa có hóa đơn</h3>
+                        <p>Hóa đơn sẽ hiển thị ở đây</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ========== DEPOSITS PAGE - Duyệt Nạp Tiền ========== -->
+            <div class="page" id="depositsPage">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-hand-holding-usd me-2" style="color: #f59e0b;"></i>Duyệt Nạp Tiền</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadPendingDeposits()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                
+                <div id="depositsList">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Đang tải...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ========== CREATE AGENT PAGE - Tạo Đại Lý ========== -->
+            <div class="page" id="createAgentPage">
+                <h5 class="mb-3"><i class="fas fa-user-plus me-2" style="color: #10b981;"></i>Tạo Tài Khoản Đại Lý</h5>
+                
+                <form id="createAgentForm">
+                    <!-- Account Info -->
+                    <div class="info-card">
+                        <h6 class="text-muted mb-3"><i class="fas fa-user-circle me-2"></i>Thông Tin Tài Khoản</h6>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="agentUsername" required minlength="3" placeholder="vd: dailyabc">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" id="agentPassword" required minlength="8">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label class="form-label">Xác nhận <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" id="agentPasswordConfirm" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="agentFullName" required placeholder="Nguyễn Văn A">
+                        </div>
+                        
+                        <div class="form-group mb-0">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="tel" class="form-control" id="agentPhone" placeholder="0912345678">
+                        </div>
+                    </div>
+                    
+                    <!-- Agent Info -->
+                    <div class="info-card">
+                        <h6 class="text-muted mb-3"><i class="fas fa-store me-2"></i>Thông Tin Đại Lý</h6>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Tên Đại Lý <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="agentName" required placeholder="Đại Lý ABC">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Mã Đại Lý</label>
+                            <input type="text" class="form-control" id="agentCode" readonly style="background: #f8f9fa;">
+                            <small class="text-muted">Mã tự động tạo</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Loại Đại Lý</label>
+                            <select class="form-control" id="agentType">
+                                <option value="individual">Cá nhân</option>
+                                <option value="business">Doanh nghiệp</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" id="companyNameGroup" style="display: none;">
+                            <label class="form-label">Tên Công Ty</label>
+                            <input type="text" class="form-control" id="agentCompanyName" placeholder="Công ty TNHH ABC">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Địa chỉ</label>
+                            <input type="text" class="form-control" id="agentAddress" placeholder="123 Đường ABC">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label class="form-label">Tỉnh/Thành</label>
+                                    <input type="text" class="form-control" id="agentCity" placeholder="TP.HCM">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Quận/Huyện</label>
+                                    <input type="text" class="form-control" id="agentDistrict" placeholder="Quận 1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary mt-2">
+                        <i class="fas fa-check me-2"></i>Tạo Đại Lý
+                    </button>
+                </form>
+            </div>
+            
+            <!-- ========== HISTORY PAGE - Lịch Sử ========== -->
+            <div class="page" id="historyPage">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-history me-2" style="color: #3b82f6;"></i>Lịch Sử Công Việc</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadHistory()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                
+                <!-- Filter -->
+                <div class="mb-3">
+                    <select class="form-control" id="historyFilter" onchange="loadHistory()">
+                        <option value="all">Tất cả</option>
+                        <option value="deposit">Duyệt nạp tiền</option>
+                        <option value="agent">Tạo đại lý</option>
+                        <option value="task">Công việc</option>
+                    </select>
+                </div>
+                
+                <div id="historyList">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Đang tải...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ========== TASKS PAGE - Công Việc Được Giao ========== -->
+            <div class="page" id="tasksPage">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-tasks me-2" style="color: #8b5cf6;"></i>Công Việc Được Giao</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadTasks()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                
+                <div id="tasksList">
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-check"></i>
+                        <h3>Không có công việc</h3>
+                        <p>Bạn chưa được giao công việc nào</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers Page -->
+            <div class="page" id="customersPage">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Danh sách Khách hàng</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadCustomers()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                
+                <div id="customersList">
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>Chưa có khách hàng</h3>
+                        <p>Khách hàng sẽ hiển thị ở đây</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions Page -->
+            <div class="page" id="transactionsPage">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">Lịch sử Giao dịch</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadTransactions()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                
+                <div id="transactionsList">
+                    <div class="empty-state">
+                        <i class="fas fa-exchange-alt"></i>
+                        <h3>Chưa có giao dịch</h3>
+                        <p>Giao dịch sẽ hiển thị ở đây</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Page -->
+            <div class="page" id="reportPage">
+                <h5 class="mb-3">Báo cáo công việc</h5>
+                
+                <div class="info-card">
+                    <h6 class="text-muted mb-3">Hôm nay</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Hóa đơn xử lý:</span>
+                        <strong id="reportTodayBills">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Giao dịch:</span>
+                        <strong id="reportTodayTxn">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Hoa hồng:</span>
+                        <strong id="reportTodayCommission">0₫</strong>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <h6 class="text-muted mb-3">Tháng này</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tổng hóa đơn:</span>
+                        <strong id="reportMonthBills">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tổng giao dịch:</span>
+                        <strong id="reportMonthTxn">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Tổng hoa hồng:</span>
+                        <strong id="reportMonthCommission">0₫</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Page -->
+            <div class="page" id="profilePage">
+                <div class="info-card primary mb-4">
+                    <div class="text-center">
+                        <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user-tie" style="font-size: 40px;"></i>
+                        </div>
+                        <h4 id="profileName">Họ và Tên</h4>
+                        <p style="opacity: 0.9;" id="profileCode">NV000000</p>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <h6 class="text-muted mb-3">Thông tin cá nhân</h6>
+                    <div class="mb-2">
+                        <small class="text-muted">Số điện thoại</small>
+                        <div id="profilePhone">-</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Email</small>
+                        <div id="profileEmail">-</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Phòng ban</small>
+                        <div id="profileDepartment">-</div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Chức vụ</small>
+                        <div id="profilePosition">-</div>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <h6 class="text-muted mb-3">Thuộc đơn vị</h6>
+                    <div id="profileAgentInfo">Hệ thống (Admin)</div>
+                </div>
+                
+                <button class="btn btn-danger mt-3" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                </button>
+                
+                <div class="text-center mt-4 text-muted">
+                    <small>7TY Staff App v1.0.0</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a class="nav-item active" data-page="dashboardPage" onclick="showPage('dashboardPage')">
+                <i class="fas fa-home"></i>
+                <span>Trang chủ</span>
+            </a>
+            <a class="nav-item" data-page="depositsPage" onclick="showPage('depositsPage')" style="position: relative;">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>Nạp tiền</span>
+                <span class="nav-badge" id="navDepositsBadge" style="display: none;">0</span>
+            </a>
+            <a class="nav-item" data-page="createAgentPage" onclick="showPage('createAgentPage')">
+                <i class="fas fa-user-plus"></i>
+                <span>Tạo Đại Lý</span>
+            </a>
+            <a class="nav-item" data-page="historyPage" onclick="showPage('historyPage')">
+                <i class="fas fa-history"></i>
+                <span>Lịch sử</span>
+            </a>
+            <a class="nav-item" data-page="profilePage" onclick="showPage('profilePage')">
+                <i class="fas fa-user"></i>
+                <span>Cá nhân</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.3/dist/sweetalert2.all.min.js"></script>
+    <script>
+        // =========================================
+        // CONFIGURATION
+        // =========================================
+        const API_BASE_URL = window.location.origin.includes('localhost') 
+            ? 'http://localhost:8000/api'
+            : window.location.origin + '/api';
+        
+        // App State
+        let appState = {
+            token: localStorage.getItem('staff_token'),
+            user: JSON.parse(localStorage.getItem('staff_user') || 'null'),
+            staff: JSON.parse(localStorage.getItem('staff_data') || 'null')
+        };
+
+        // =========================================
+        // TOAST NOTIFICATIONS
+        // =========================================
+        function showToast(message, type = 'info') {
+            Swal.fire({
+                toast: true,
+                position: 'top',
+                icon: type,
+                title: message,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
+
+        // =========================================
+        // AUTHENTICATION
+        // =========================================
+        async function login(phone, password) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: phone, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.access_token) {
+                    // Save token first
+                    appState.token = data.access_token;
+                    
+                    // Fetch user info from /auth/me
+                    const meResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+                        headers: { 'Authorization': `Bearer ${data.access_token}` }
+                    });
+                    
+                    if (meResponse.ok) {
+                        const user = await meResponse.json();
+                        
+                        // Check if user is staff
+                        if (user.role === 'STAFF' || user.is_staff === true) {
+                            appState.user = user;
+                            
+                            localStorage.setItem('staff_token', data.access_token);
+                            localStorage.setItem('staff_user', JSON.stringify(user));
+                            
+                            // Load staff profile
+                            await loadStaffProfile();
+                            
+                            showApp();
+                            showToast('Đăng nhập thành công!', 'success');
+                        } else {
+                            appState.token = null;
+                            showToast('Tài khoản không phải nhân viên! Vui lòng liên hệ Admin để được cấp quyền.', 'error');
+                        }
+                    } else {
+                        showToast('Không thể lấy thông tin tài khoản', 'error');
+                    }
+                } else {
+                    showToast(data.detail || 'Đăng nhập thất bại', 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showToast('Lỗi kết nối server', 'error');
+            }
+        }
+
+        function logout() {
+            Swal.fire({
+                title: 'Đăng xuất?',
+                text: 'Bạn có chắc muốn đăng xuất?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Đăng xuất',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('staff_token');
+                    localStorage.removeItem('staff_user');
+                    localStorage.removeItem('staff_data');
+                    appState = { token: null, user: null, staff: null };
+                    showLogin();
+                }
+            });
+        }
+
+        // =========================================
+        // LOAD STAFF PROFILE
+        // =========================================
+        async function loadStaffProfile() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/staff/me/profile`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    appState.staff = data.data;
+                    localStorage.setItem('staff_data', JSON.stringify(data.data));
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/staff/me/dashboard`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const stats = data.data || {};
+                    
+                    document.getElementById('statBills').textContent = stats.total_bills_processed || 0;
+                    document.getElementById('statCustomers').textContent = stats.total_customers_served || 0;
+                    document.getElementById('statTransactions').textContent = stats.total_transactions || 0;
+                    document.getElementById('statCommission').textContent = formatMoney(stats.total_commission || 0);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        // =========================================
+        // UPDATE UI
+        // =========================================
+        function updateUI() {
+            if (!appState.staff) return;
+
+            const staff = appState.staff;
+            
+            // Header
+            document.getElementById('staffInfo').textContent = `${staff.full_name || 'N/A'} - ${staff.staff_code || 'N/A'}`;
+            
+            // Dashboard
+            document.getElementById('staffCode').textContent = staff.staff_code || 'N/A';
+            
+            // Role badge
+            const roleBadge = document.getElementById('staffRoleBadge');
+            const roleClass = {
+                'STAFF': 'badge-staff',
+                'SUPERVISOR': 'badge-supervisor',
+                'MANAGER': 'badge-manager'
+            };
+            const roleText = {
+                'STAFF': 'Nhân viên',
+                'SUPERVISOR': 'Giám sát viên',
+                'MANAGER': 'Quản lý'
+            };
+            roleBadge.className = `badge ${roleClass[staff.staff_role] || 'badge-staff'}`;
+            roleBadge.textContent = roleText[staff.staff_role] || 'Nhân viên';
+            
+            // Agent info
+            document.getElementById('staffAgent').textContent = staff.agent_id 
+                ? `${staff.agent_code || ''} - ${staff.agent_name || ''}`
+                : 'Hệ thống (Admin)';
+            
+            // Stats
+            document.getElementById('statBills').textContent = staff.total_bills_processed || 0;
+            document.getElementById('statCustomers').textContent = staff.total_customers_served || 0;
+            document.getElementById('statTransactions').textContent = staff.total_transactions || 0;
+            document.getElementById('statCommission').textContent = formatMoney(staff.total_commission || 0);
+            
+            // Profile page
+            document.getElementById('profileName').textContent = staff.full_name || 'N/A';
+            document.getElementById('profileCode').textContent = staff.staff_code || 'N/A';
+            document.getElementById('profilePhone').textContent = staff.phone || '-';
+            document.getElementById('profileEmail').textContent = staff.email || '-';
+            document.getElementById('profileDepartment').textContent = staff.department || '-';
+            document.getElementById('profilePosition').textContent = staff.position || '-';
+            document.getElementById('profileAgentInfo').textContent = staff.agent_id 
+                ? `${staff.agent_code} - ${staff.agent_name}`
+                : 'Hệ thống (Admin)';
+        }
+
+        // =========================================
+        // PAGE NAVIGATION
+        // =========================================
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            // Show target page
+            const page = document.getElementById(pageId);
+            if (page) page.classList.add('active');
+            
+            // Update nav
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.page === pageId) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Load data
+            switch (pageId) {
+                case 'billsPage':
+                    loadBills();
+                    break;
+                case 'customersPage':
+                    loadCustomers();
+                    break;
+                case 'transactionsPage':
+                    loadTransactions();
+                    break;
+                case 'depositsPage':
+                    loadPendingDeposits();
+                    break;
+                case 'historyPage':
+                    loadHistory();
+                    break;
+                case 'tasksPage':
+                    loadTasks();
+                    break;
+                case 'createAgentPage':
+                    generateAgentCode();
+                    break;
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('appContainer').classList.remove('active');
+        }
+
+        function showApp() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('appContainer').classList.add('active');
+            loadDashboard();
+        }
+
+        // =========================================
+        // UTILITIES
+        // =========================================
+        function formatMoney(amount) {
+            if (!amount) return '0₫';
+            return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
+        }
+
+        // =========================================
+        // DATA LOADING (Placeholder functions)
+        // =========================================
+        async function loadBills() {
+            // TODO: Implement based on staff permissions
+            document.getElementById('billsList').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-file-invoice"></i>
+                    <h3>Tính năng đang phát triển</h3>
+                    <p>Hóa đơn sẽ hiển thị ở đây</p>
+                </div>
+            `;
+        }
+
+        async function loadCustomers() {
+            // TODO: Implement based on staff permissions
+            document.getElementById('customersList').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h3>Tính năng đang phát triển</h3>
+                    <p>Khách hàng sẽ hiển thị ở đây</p>
+                </div>
+            `;
+        }
+
+        async function loadTransactions() {
+            // TODO: Implement based on staff permissions
+            document.getElementById('transactionsList').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exchange-alt"></i>
+                    <h3>Tính năng đang phát triển</h3>
+                    <p>Giao dịch sẽ hiển thị ở đây</p>
+                </div>
+            `;
+        }
+        
+        // =========================================
+        // PENDING DEPOSITS - Duyệt Nạp Tiền
+        // =========================================
+        let pendingDeposits = [];
+        
+        async function loadPendingDeposits() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/agents/pending-deposits?limit=50`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    pendingDeposits = data.items || [];
+                    
+                    // Update badges
+                    const count = pendingDeposits.length;
+                    updateDepositBadges(count);
+                    
+                    // Render deposits
+                    renderDeposits();
+                    renderDepositsPreview();
+                }
+            } catch (error) {
+                console.error('Error loading pending deposits:', error);
+                document.getElementById('depositsList').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        <h3>Lỗi tải dữ liệu</h3>
+                        <p>Vui lòng thử lại sau</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function updateDepositBadges(count) {
+            const badge1 = document.getElementById('pendingDepositsBadge');
+            const badge2 = document.getElementById('navDepositsBadge');
+            
+            if (count > 0) {
+                badge1.textContent = count;
+                badge1.style.display = 'block';
+                badge2.textContent = count;
+                badge2.style.display = 'block';
+            } else {
+                badge1.style.display = 'none';
+                badge2.style.display = 'none';
+            }
+        }
+        
+        function renderDeposits() {
+            const container = document.getElementById('depositsList');
+            
+            if (pendingDeposits.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <h3>Không có lệnh chờ duyệt</h3>
+                        <p>Tất cả lệnh nạp tiền đã được xử lý</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = pendingDeposits.map(d => `
+                <div class="deposit-item" id="deposit-${d.id}">
+                    <div class="deposit-header">
+                        <div>
+                            <div class="deposit-agent">${d.agent_name || d.agent_code}</div>
+                            <div class="deposit-meta">Mã: ${d.transaction_code}</div>
+                        </div>
+                        <div class="deposit-amount">${formatMoney(d.amount)}</div>
+                    </div>
+                    <div class="deposit-meta">
+                        <i class="fas fa-clock me-1"></i>${formatDateTime(d.created_at)}
+                        ${d.payment_method ? `• ${d.payment_method}` : ''}
+                    </div>
+                    <div class="deposit-actions">
+                        <button class="btn-approve" onclick="approveDeposit(${d.agent_id}, ${d.id}, ${d.amount})">
+                            <i class="fas fa-check me-1"></i>Duyệt
+                        </button>
+                        <button class="btn-reject" onclick="rejectDeposit(${d.agent_id}, ${d.id})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function renderDepositsPreview() {
+            const container = document.getElementById('pendingDepositsPreview');
+            
+            if (pendingDeposits.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>Không có lệnh chờ duyệt
+                    </div>
+                `;
+                return;
+            }
+            
+            // Show first 3 items
+            const preview = pendingDeposits.slice(0, 3);
+            container.innerHTML = preview.map(d => `
+                <div class="list-item" onclick="showPage('depositsPage')">
+                    <div class="list-item-left">
+                        <div class="list-item-icon" style="background: #fef3c7;">
+                            <i class="fas fa-hand-holding-usd" style="color: #f59e0b;"></i>
+                        </div>
+                        <div class="list-item-info">
+                            <h4>${d.agent_name || d.agent_code}</h4>
+                            <p>${formatDateTime(d.created_at)}</p>
+                        </div>
+                    </div>
+                    <div class="list-item-right">
+                        <div class="list-item-amount positive">${formatMoney(d.amount)}</div>
+                        <span class="list-item-status status-pending">Chờ duyệt</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            if (pendingDeposits.length > 3) {
+                container.innerHTML += `
+                    <div class="text-center mt-2">
+                        <a href="#" onclick="showPage('depositsPage'); return false;" class="text-primary">
+                            Xem tất cả ${pendingDeposits.length} lệnh <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                `;
+            }
+        }
+        
+        async function approveDeposit(agentId, transactionId, amount) {
+            const result = await Swal.fire({
+                title: 'Duyệt nạp tiền?',
+                html: `<p>Số tiền: <strong style="color: #10b981;">${formatMoney(amount)}</strong></p>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-check"></i> Duyệt',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#10b981'
+            });
+            
+            if (!result.isConfirmed) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/agents/${agentId}/approve-deposit/${transactionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${appState.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ amount: amount })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Duyệt nạp tiền thành công!', 'success');
+                    await loadPendingDeposits();
+                } else {
+                    showToast(data.detail || 'Lỗi duyệt nạp tiền', 'error');
+                }
+            } catch (error) {
+                console.error('Approve deposit error:', error);
+                showToast('Lỗi kết nối server', 'error');
+            }
+        }
+        
+        async function rejectDeposit(agentId, transactionId) {
+            const result = await Swal.fire({
+                title: 'Từ chối nạp tiền?',
+                text: 'Bạn có chắc muốn từ chối lệnh nạp tiền này?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-times"></i> Từ chối',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#ef4444'
+            });
+            
+            if (!result.isConfirmed) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/agents/${agentId}/reject-deposit/${transactionId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Đã từ chối lệnh nạp tiền', 'success');
+                    await loadPendingDeposits();
+                } else {
+                    showToast(data.detail || 'Lỗi từ chối', 'error');
+                }
+            } catch (error) {
+                console.error('Reject deposit error:', error);
+                showToast('Lỗi kết nối server', 'error');
+            }
+        }
+        
+        // =========================================
+        // CREATE AGENT - Tạo Đại Lý
+        // =========================================
+        function generateAgentCode() {
+            const now = new Date();
+            const code = 'AG-' + now.getFullYear().toString().slice(-2) + 
+                        String(now.getMonth() + 1).padStart(2, '0') + 
+                        String(now.getDate()).padStart(2, '0') +
+                        String(now.getHours()).padStart(2, '0') +
+                        String(now.getMinutes()).padStart(2, '0') + '-' +
+                        Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            document.getElementById('agentCode').value = code;
+        }
+        
+        async function createAgent(formData) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/agents/create-with-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${appState.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Tạo Đại Lý Thành Công!',
+                        html: `
+                            <p>Mã đại lý: <strong>${data.data.agent_code}</strong></p>
+                            <p>Tên đăng nhập: <strong>${formData.username}</strong></p>
+                        `,
+                        confirmButtonColor: 'var(--staff-accent)'
+                    });
+                    
+                    document.getElementById('createAgentForm').reset();
+                    generateAgentCode();
+                    showPage('dashboardPage');
+                } else {
+                    let errorMsg = 'Lỗi tạo đại lý';
+                    if (data.detail) {
+                        if (Array.isArray(data.detail)) {
+                            errorMsg = data.detail.map(e => e.msg || e.message).join(', ');
+                        } else if (typeof data.detail === 'string') {
+                            errorMsg = data.detail;
+                        }
+                    }
+                    showToast(errorMsg, 'error');
+                }
+            } catch (error) {
+                console.error('Create agent error:', error);
+                showToast('Lỗi kết nối server', 'error');
+            }
+        }
+        
+        // =========================================
+        // HISTORY - Lịch Sử Công Việc
+        // =========================================
+        async function loadHistory() {
+            const container = document.getElementById('historyList');
+            const filter = document.getElementById('historyFilter').value;
+            
+            try {
+                // Load from transactions with staff processed
+                const response = await fetch(`${API_BASE_URL}/transactions?limit=50&status=completed`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const items = data.data || [];
+                    
+                    if (items.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <i class="fas fa-history"></i>
+                                <h3>Chưa có lịch sử</h3>
+                                <p>Các công việc bạn đã xử lý sẽ hiển thị ở đây</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    container.innerHTML = items.map(item => {
+                        let icon = 'history';
+                        let iconClass = 'task';
+                        let title = item.description || 'Giao dịch';
+                        
+                        if (item.transaction_type === 'deposit') {
+                            icon = 'hand-holding-usd';
+                            iconClass = 'deposit';
+                            title = 'Duyệt nạp tiền';
+                        }
+                        
+                        return `
+                            <div class="history-item">
+                                <div class="history-icon ${iconClass}">
+                                    <i class="fas fa-${icon}"></i>
+                                </div>
+                                <div class="history-content">
+                                    <div class="history-title">${title}</div>
+                                    <div class="history-desc">${formatMoney(item.amount)} • ${item.transaction_code || ''}</div>
+                                    <div class="history-time">${formatDateTime(item.created_at)}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-history"></i>
+                            <h3>Chưa có lịch sử</h3>
+                            <p>Các công việc bạn đã xử lý sẽ hiển thị ở đây</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Load history error:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        <h3>Lỗi tải dữ liệu</h3>
+                    </div>
+                `;
+            }
+        }
+        
+        // =========================================
+        // TASKS - Công Việc Được Giao
+        // =========================================
+        async function loadTasks() {
+            const container = document.getElementById('tasksList');
+            
+            // Placeholder for now - can be implemented with task management system
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-clipboard-check"></i>
+                    <h3>Không có công việc mới</h3>
+                    <p>Công việc được giao sẽ hiển thị ở đây</p>
+                </div>
+            `;
+        }
+        
+        // =========================================
+        // UTILITIES
+        // =========================================
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // =========================================
+        // INITIALIZATION
+        // =========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const phone = document.getElementById('loginPhone').value;
+                const password = document.getElementById('loginPassword').value;
+                login(phone, password);
+            });
+            
+            // Create Agent form
+            document.getElementById('createAgentForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const password = document.getElementById('agentPassword').value;
+                const passwordConfirm = document.getElementById('agentPasswordConfirm').value;
+                
+                if (password !== passwordConfirm) {
+                    showToast('Mật khẩu xác nhận không khớp', 'error');
+                    return;
+                }
+                
+                if (password.length < 8) {
+                    showToast('Mật khẩu phải có ít nhất 8 ký tự', 'error');
+                    return;
+                }
+                
+                const formData = {
+                    username: document.getElementById('agentUsername').value,
+                    password: password,
+                    password_confirm: passwordConfirm,
+                    full_name: document.getElementById('agentFullName').value,
+                    phone: document.getElementById('agentPhone').value || null,
+                    agent_name: document.getElementById('agentName').value,
+                    agent_code: document.getElementById('agentCode').value,
+                    agent_type: document.getElementById('agentType').value,
+                    company_name: document.getElementById('agentCompanyName').value || null,
+                    address: document.getElementById('agentAddress').value || null,
+                    city: document.getElementById('agentCity').value || null,
+                    district: document.getElementById('agentDistrict').value || null,
+                    status: 'pending'
+                };
+                
+                createAgent(formData);
+            });
+            
+            // Agent type change - show/hide company name
+            document.getElementById('agentType').addEventListener('change', function() {
+                document.getElementById('companyNameGroup').style.display = 
+                    this.value === 'business' ? 'block' : 'none';
+            });
+
+            // Check existing session
+            if (appState.token && appState.staff) {
+                showApp();
+                updateUI();
+                loadPendingDeposits();
+            } else if (appState.token) {
+                loadStaffProfile().then(() => {
+                    if (appState.staff) {
+                        showApp();
+                        loadPendingDeposits();
+                    } else {
+                        showLogin();
+                    }
+                });
+            } else {
+                showLogin();
+            }
+            
+            // Generate agent code on page load
+            generateAgentCode();
+        });
+    </script>
+</body>
+</html>

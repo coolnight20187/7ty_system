@@ -2924,21 +2924,27 @@
                 <span>Dashboard</span>
             </button>
             
+            <button class="menu-item" data-page="bills">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Hóa Đơn Tiện Ích</span>
+                <span class="menu-badge" id="pendingBillsCount">0</span>
+            </button>
+            
             <button class="menu-item" data-page="agents">
                 <i class="fas fa-users"></i>
                 <span>Quản lý Đại lý</span>
                 <span class="menu-badge" id="pendingAgentsCount">0</span>
             </button>
             
-            <button class="menu-item" data-page="bills">
-                <i class="fas fa-file-invoice-dollar"></i>
-                <span>Hóa đơn Điện</span>
-                <span class="menu-badge" id="pendingBillsCount">0</span>
+            <button class="menu-item" data-page="staff">
+                <i class="fas fa-user-tie"></i>
+                <span>Quản lý Nhân viên</span>
+                <span class="menu-badge" id="pendingStaffCount">0</span>
             </button>
             
             <button class="menu-item" data-page="customers">
                 <i class="fas fa-id-card"></i>
-                <span>Quản lý THẺ</span>
+                <span>Quản lý Khách THẺ</span>
             </button>
             
             <button class="menu-item" data-page="settings-users">
@@ -2973,6 +2979,7 @@
                 <button class="submenu-item" data-page="settings-security">Bảo mật</button>
                 <button class="submenu-item" data-page="settings-backup">Sao lưu & Khôi phục</button>
                 <button class="submenu-item" data-page="settings-proxy"><i class="fas fa-network-wired me-1"></i> Proxy Pool</button>
+                <button class="submenu-item" data-page="settings-links"><i class="fas fa-link me-1"></i> Link App</button>
             </div>
         </div>
         
@@ -3459,7 +3466,7 @@
                 <!-- Bulk Lookup Section -->
                 <div id="bulkLookupSection" class="card mb-4">
                     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Tra Cứu Hóa Đơn Điện Hàng Loạt</h5>
+                        <h5 class="mb-0"><i class="fas fa-search me-2"></i>Tra Cứu Hóa Đơn Hàng Loạt</h5>
                         <div class="d-flex gap-2 align-items-center">
                             <select id="bulkApiGateway" class="form-select form-select-sm bg-white" style="width: auto;">
                                 <option value="dailyshopee">Cổng 1: DailyShopee</option>
@@ -3481,9 +3488,19 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="mb-3">
+                                            <label class="form-label small fw-bold">Loại hóa đơn:</label>
+                                            <select id="bulkLookupType" class="form-select form-select-sm mb-2">
+                                                <option value="electric">⚡ Hóa đơn Điện</option>
+                                                <option value="phone_card">📱 Thẻ ĐT (Nạp thẻ)</option>
+                                                <option value="internet">🌐 Tiền Mạng (Internet)</option>
+                                                <option value="water">💧 Tiền Nước</option>
+                                                <option value="loan">💳 Khoản Vay</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3" id="providerSelectGroup">
                                             <label class="form-label small">Chọn nhà cung cấp:</label>
                                             <select id="bulkLookupProvider" class="form-select form-select-sm">
-                                                <!-- Options will be populated by JavaScript based on gateway -->
+                                                <!-- Options will be populated by JavaScript based on type -->
                                                 <option value="evn_south">Điện lực miền Nam</option>
                                                 <option value="evn_hcm">Điện EVNHCMC</option>
                                                 <option value="evn_hanoi">Điện EVN Hà Nội</option>
@@ -3521,21 +3538,40 @@ PA12345678903"></textarea>
                             <!-- Cột phải: Kết quả -->
                             <div class="col-lg-8 col-md-7">
                                 <div class="card h-100">
-                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
                                         <span><i class="fas fa-list me-1"></i> Kết Quả Tra Cứu</span>
-                                        <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-outline-secondary" id="bulkHideZeroBtn" title="Ẩn bill 0đ">
-                                                <i class="fas fa-eye-slash"></i>
-                                            </button>
-                                            <button class="btn btn-outline-success" id="bulkImportSelectedBtn" title="Nhập vào kho">
-                                                <i class="fas fa-download"></i> Nhập Kho
-                                            </button>
-                                            <button class="btn btn-outline-primary" id="bulkExportExcelBtn" title="Xuất Excel">
-                                                <i class="fas fa-file-excel"></i> Xuất
-                                            </button>
-                                            <button class="btn btn-outline-secondary" id="bulkCopyBtn" title="Sao chép">
-                                                <i class="fas fa-copy"></i>
-                                            </button>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="bulkColumnsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-columns"></i> Cột hiển thị
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bulkColumnsDropdown" style="min-width: 200px;">
+                                                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input me-2 bulk-col-toggle" data-col="0" checked> <i class="fas fa-check-square text-muted me-1"></i>Chọn</label></li>
+                                                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input me-2 bulk-col-toggle" data-col="1" checked> <i class="fas fa-sort-numeric-down text-muted me-1"></i>STT</label></li>
+                                                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input me-2 bulk-col-toggle" data-col="2" checked> <i class="fas fa-id-card text-muted me-1"></i>Mã KH</label></li>
+                                                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input me-2 bulk-col-toggle" data-col="3" checked> <i class="fas fa-user text-muted me-1"></i>Tên KH</label></li>
+                                                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input me-2 bulk-col-toggle" data-col="4" checked> <i class="fas fa-map-marker-alt text-muted me-1"></i>Địa chỉ</label></li>
+                                                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input me-2 bulk-col-toggle" data-col="5" checked> <i class="fas fa-calendar-alt text-muted me-1"></i>Kỳ</label></li>
+                                                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input me-2 bulk-col-toggle" data-col="6" checked> <i class="fas fa-money-bill text-muted me-1"></i>Số tiền</label></li>
+                                                    <li><label class="dropdown-item"><input type="checkbox" class="form-check-input me-2 bulk-col-toggle" data-col="7" checked> <i class="fas fa-info-circle text-muted me-1"></i>Trạng thái</label></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-primary" href="#" onclick="resetBulkColumns(); return false;"><i class="fas fa-undo me-2"></i>Đặt lại mặc định</a></li>
+                                                </ul>
+                                            </div>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-secondary" id="bulkHideZeroBtn" title="Ẩn bill 0đ">
+                                                    <i class="fas fa-eye-slash"></i>
+                                                </button>
+                                                <button class="btn btn-outline-success" id="bulkImportSelectedBtn" title="Nhập vào kho">
+                                                    <i class="fas fa-download"></i> Nhập Kho
+                                                </button>
+                                                <button class="btn btn-outline-primary" id="bulkExportExcelBtn" title="Xuất Excel">
+                                                    <i class="fas fa-file-excel"></i> Xuất
+                                                </button>
+                                                <button class="btn btn-outline-secondary" id="bulkCopyBtn" title="Sao chép">
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="card-body p-0">
@@ -3563,18 +3599,18 @@ PA12345678903"></textarea>
                                                 </div>
                                                 <div class="text-muted small" id="bulkResultsCount">0 kết quả</div>
                                             </div>
-                                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                                                <table class="table table-hover table-sm mb-0" id="bulkResultsTable">
+                                            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                                                <table class="table table-hover table-sm mb-0" id="bulkResultsTable" style="font-size: 14px;">
                                                     <thead class="table-light sticky-top">
                                                         <tr>
-                                                            <th width="30"><input type="checkbox" class="form-check-input" id="bulkSelectAllHeader"></th>
-                                                            <th width="40">STT</th>
-                                                            <th>Mã KH</th>
-                                                            <th>Tên khách hàng</th>
-                                                            <th>Địa chỉ</th>
-                                                            <th width="80">Kỳ</th>
-                                                            <th class="text-end" width="110">Số tiền</th>
-                                                            <th width="40">TT</th>
+                                                            <th width="35" class="bulk-col-0"><input type="checkbox" class="form-check-input" id="bulkSelectAllHeader"></th>
+                                                            <th width="45" class="bulk-col-1 bulk-sortable" data-sort="index" style="cursor: pointer;" title="Sắp xếp theo STT">STT <i class="fas fa-sort text-muted ms-1"></i></th>
+                                                            <th style="min-width: 120px;" class="bulk-col-2 bulk-sortable" data-sort="code" style="cursor: pointer;" title="Sắp xếp theo Mã KH">Mã KH <i class="fas fa-sort text-muted ms-1"></i></th>
+                                                            <th style="min-width: 180px;" class="bulk-col-3 bulk-sortable" data-sort="name" style="cursor: pointer;" title="Sắp xếp theo Tên">Tên KH <i class="fas fa-sort text-muted ms-1"></i></th>
+                                                            <th style="min-width: 250px;" class="bulk-col-4 bulk-sortable" data-sort="address" style="cursor: pointer;" title="Sắp xếp theo Địa chỉ">Địa chỉ <i class="fas fa-sort text-muted ms-1"></i></th>
+                                                            <th width="90" class="bulk-col-5 bulk-sortable" data-sort="period" style="cursor: pointer;" title="Sắp xếp theo Kỳ">Kỳ <i class="fas fa-sort text-muted ms-1"></i></th>
+                                                            <th class="text-end bulk-col-6 bulk-sortable" style="min-width: 130px; cursor: pointer;" data-sort="amount" title="Sắp xếp theo Số tiền">Số tiền <i class="fas fa-sort text-muted ms-1"></i></th>
+                                                            <th width="50" class="bulk-col-7 bulk-sortable" data-sort="status" style="cursor: pointer;" title="Sắp xếp theo Trạng thái">TT <i class="fas fa-sort text-muted ms-1"></i></th>
                                                         </tr>
                                                     </thead>
                                                     <tbody id="bulkResultsBody">
@@ -3909,7 +3945,10 @@ PA12345678903"></textarea>
             <div id="customers" class="page-content">
                 <!-- Card Tabs -->
                 <div class="tabs mb-3">
-                    <button class="tab active" data-card-tab="list">
+                    <button class="tab active" data-card-tab="customerList">
+                        <i class="fas fa-users me-1"></i>Danh Sách Khách THẺ
+                    </button>
+                    <button class="tab" data-card-tab="list">
                         <i class="fas fa-id-card me-1"></i>Danh sách THẺ
                     </button>
                     <button class="tab" data-card-tab="transactions">
@@ -3917,11 +3956,112 @@ PA12345678903"></textarea>
                     </button>
                 </div>
                 
+                <!-- Tab: Danh Sách Khách THẺ -->
+                <div id="customerListTab" class="card-tab-content active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><i class="fas fa-users me-2"></i>Danh Sách Khách THẺ</h4>
+                            <div class="card-actions">
+                                <button class="btn btn-primary" onclick="showModal('addCustomerProfileModal')">
+                                    <i class="fas fa-plus me-1"></i>Thêm Khách THẺ
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Filters -->
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <input type="text" class="form-control" id="customerSearchInput" placeholder="Tìm theo tên, SĐT, email..." style="width: 250px;">
+                                    <select class="form-control" id="customerStatusFilter" style="width: 150px;">
+                                        <option value="">Tất cả trạng thái</option>
+                                        <option value="active">Hoạt động</option>
+                                        <option value="inactive">Ngừng</option>
+                                    </select>
+                                    <button class="btn btn-outline-secondary" onclick="loadCustomersList()">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Customer Stats -->
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="stat-card bg-primary text-white">
+                                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                                        <div class="stat-content">
+                                            <h3 id="totalCustomersCount">0</h3>
+                                            <p>Tổng Khách THẺ</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-card bg-success text-white">
+                                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                                        <div class="stat-content">
+                                            <h3 id="activeCustomersCount">0</h3>
+                                            <p>Đang hoạt động</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-card bg-info text-white">
+                                        <div class="stat-icon"><i class="fas fa-credit-card"></i></div>
+                                        <div class="stat-content">
+                                            <h3 id="customersWithCardsCount">0</h3>
+                                            <p>Có thẻ liên kết</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="stat-card bg-warning text-white">
+                                        <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
+                                        <div class="stat-content">
+                                            <h3 id="newCustomersThisMonth">0</h3>
+                                            <p>Mới tháng này</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Customers Table -->
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="customersTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 50px;">STT</th>
+                                            <th>Mã KH</th>
+                                            <th>Họ tên</th>
+                                            <th>SĐT</th>
+                                            <th>Email</th>
+                                            <th>Số thẻ</th>
+                                            <th>Trạng thái</th>
+                                            <th>Ngày tạo</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="customersTableBody">
+                                        <tr>
+                                            <td colspan="9" class="text-center py-5">
+                                                <div class="spinner-border text-primary"></div>
+                                                <p class="mt-2 text-muted">Đang tải...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <div id="customersCount">Hiển thị 0 khách hàng</div>
+                                <ul class="pagination" id="customersPagination"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Tab: Danh sách THẺ -->
-                <div id="cardListTab" class="card-tab-content">
+                <div id="cardListTab" class="card-tab-content" style="display: none;">
                 <div class="card">
                     <div class="card-header">
-                        <h4><i class="fas fa-credit-card me-2"></i>Quản lý THẺ</h4>
+                        <h4><i class="fas fa-credit-card me-2"></i>Danh sách THẺ</h4>
                         <div class="card-actions">
                             <button class="btn btn-primary" id="addCustomerBtn"><i class="fas fa-plus me-1"></i>Thêm THẺ mới</button>
                             <div class="dropdown d-inline-block">
@@ -4481,12 +4621,144 @@ PA12345678903"></textarea>
                 </div>
             </div>
             
+            <!-- Staff Management Page -->
+            <div id="staff" class="page-content">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4><i class="fas fa-user-tie me-2"></i>Quản lý Nhân viên</h4>
+                        <div>
+                            <button class="btn btn-outline-info me-2" onclick="downloadStaffApp()">
+                                <i class="fas fa-mobile-alt me-1"></i> Tải App Nhân viên
+                            </button>
+                            <button class="btn btn-outline-secondary me-2" onclick="loadStaffs()">
+                                <i class="fas fa-sync-alt"></i> Làm mới
+                            </button>
+                            <button class="btn btn-primary" onclick="openAddStaffModal()">
+                                <i class="fas fa-plus"></i> Thêm nhân viên
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Stats Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-2">
+                                <div class="stat-card bg-primary text-white">
+                                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                                    <div class="stat-content">
+                                        <h3 id="totalStaffCount">0</h3>
+                                        <p>Tổng nhân viên</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="stat-card bg-success text-white">
+                                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                                    <div class="stat-content">
+                                        <h3 id="activeStaffCount">0</h3>
+                                        <p>Đang hoạt động</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="stat-card bg-warning text-white">
+                                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                                    <div class="stat-content">
+                                        <h3 id="pendingStaffCountCard">0</h3>
+                                        <p>Chờ duyệt</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card bg-info text-white">
+                                    <div class="stat-icon"><i class="fas fa-building"></i></div>
+                                    <div class="stat-content">
+                                        <h3 id="systemStaffCount">0</h3>
+                                        <p>NV Hệ thống</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card bg-secondary text-white">
+                                    <div class="stat-icon"><i class="fas fa-store"></i></div>
+                                    <div class="stat-content">
+                                        <h3 id="agentStaffCount">0</h3>
+                                        <p>NV Đại lý</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Filters -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <input type="text" class="form-control" id="staffSearchInput" placeholder="Tìm theo tên, SĐT, mã NV..." style="width: 250px;">
+                                <select class="form-control" id="staffStatusFilter" style="width: 150px;">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="ACTIVE">Hoạt động</option>
+                                    <option value="PENDING">Chờ duyệt</option>
+                                    <option value="INACTIVE">Ngừng hoạt động</option>
+                                    <option value="SUSPENDED">Tạm ngưng</option>
+                                </select>
+                                <select class="form-control" id="staffRoleFilter" style="width: 150px;">
+                                    <option value="">Tất cả vai trò</option>
+                                    <option value="STAFF">Nhân viên</option>
+                                    <option value="SUPERVISOR">Giám sát viên</option>
+                                    <option value="MANAGER">Quản lý</option>
+                                </select>
+                                <select class="form-control" id="staffTypeFilter" style="width: 160px;">
+                                    <option value="">Tất cả loại</option>
+                                    <option value="system">NV Hệ thống</option>
+                                    <option value="agent">NV Đại lý</option>
+                                </select>
+                                <button class="btn btn-outline-primary" onclick="loadStaffs()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Staff Table -->
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="staffTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50px;">STT</th>
+                                        <th>Mã NV</th>
+                                        <th>Họ và Tên</th>
+                                        <th>Số điện thoại</th>
+                                        <th>Phòng ban</th>
+                                        <th>Vai trò</th>
+                                        <th>Thuộc Đại lý</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="staffTableBody">
+                                    <tr>
+                                        <td colspan="9" class="text-center py-5">
+                                            <div class="spinner-border text-primary"></div>
+                                            <p class="mt-2 text-muted">Đang tải...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div id="staffsCount">Hiển thị 0 nhân viên</div>
+                            <ul class="pagination" id="staffsPagination"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Settings Users Page -->
             <div id="settings-users" class="page-content">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h4><i class="fas fa-users-cog me-2"></i>Quản lý Tài khoản</h4>
+                        <h4><i class="fas fa-users-cog me-2"></i>Quản lý Tài khoản Tập trung</h4>
                         <div>
+                            <button class="btn btn-outline-info me-2" onclick="loadAccountsStats()">
+                                <i class="fas fa-chart-pie"></i> Thống kê
+                            </button>
                             <button class="btn btn-outline-secondary me-2" onclick="loadUsers()">
                                 <i class="fas fa-sync-alt"></i> Làm mới
                             </button>
@@ -4496,24 +4768,102 @@ PA12345678903"></textarea>
                         </div>
                     </div>
                     <div class="card-body">
+                        <!-- Stats Cards -->
+                        <div class="row mb-4" id="accountsStatsRow" style="display: none;">
+                            <div class="col-md-2">
+                                <div class="card bg-danger text-white">
+                                    <div class="card-body text-center py-2">
+                                        <i class="fas fa-crown fa-2x mb-1"></i>
+                                        <h4 class="mb-0" id="statsAdmins">0</h4>
+                                        <small>Admin</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center py-2">
+                                        <i class="fas fa-store fa-2x mb-1"></i>
+                                        <h4 class="mb-0" id="statsAgents">0</h4>
+                                        <small>Đại lý</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center py-2">
+                                        <i class="fas fa-user-tie fa-2x mb-1"></i>
+                                        <h4 class="mb-0" id="statsStaffs">0</h4>
+                                        <small>Nhân viên</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center py-2">
+                                        <i class="fas fa-id-card fa-2x mb-1"></i>
+                                        <h4 class="mb-0" id="statsCustomers">0</h4>
+                                        <small>Khách hàng</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-warning text-dark">
+                                    <div class="card-body text-center py-2">
+                                        <i class="fas fa-layer-group fa-2x mb-1"></i>
+                                        <h4 class="mb-0" id="statsMultiRole">0</h4>
+                                        <small>Đa vai trò</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card bg-secondary text-white">
+                                    <div class="card-body text-center py-2">
+                                        <i class="fas fa-users fa-2x mb-1"></i>
+                                        <h4 class="mb-0" id="statsTotal">0</h4>
+                                        <small>Tổng cộng</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <!-- Filters -->
                         <div class="row mb-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <input type="text" class="form-control" id="userSearch" placeholder="Tìm kiếm theo tên, email, SĐT..." onkeyup="debounce(loadUsers, 500)()">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
+                                <select class="form-select" id="userAccountTypeFilter" onchange="loadUsers()">
+                                    <option value="">-- Loại tài khoản --</option>
+                                    <option value="SYSTEM">Hệ thống</option>
+                                    <option value="AGENT">Đại lý</option>
+                                    <option value="STAFF">Nhân viên</option>
+                                    <option value="CUSTOMER">Khách hàng</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
                                 <select class="form-select" id="userRoleFilter" onchange="loadUsers()">
-                                    <option value="">-- Tất cả vai trò --</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="manager">Quản lý</option>
-                                    <option value="viewer">Tài khoản thường</option>
+                                    <option value="">-- Vai trò --</option>
+                                    <option value="is_admin">Admin</option>
+                                    <option value="is_agent">Đại lý</option>
+                                    <option value="is_staff">Nhân viên</option>
+                                    <option value="is_customer">Khách hàng</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="userStatusFilter" onchange="loadUsers()">
+                                    <option value="">-- Trạng thái --</option>
+                                    <option value="true">Hoạt động</option>
+                                    <option value="false">Bị khóa</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <select class="form-select" id="userStatusFilter" onchange="loadUsers()">
-                                    <option value="">-- Tất cả trạng thái --</option>
-                                    <option value="true">Hoạt động</option>
-                                    <option value="false">Bị khóa</option>
+                                <select class="form-select" id="userAccountStatusFilter" onchange="loadUsers()">
+                                    <option value="">-- Trạng thái TK --</option>
+                                    <option value="ACTIVE">Đã duyệt</option>
+                                    <option value="PENDING">Chờ duyệt</option>
+                                    <option value="INACTIVE">Không hoạt động</option>
+                                    <option value="SUSPENDED">Tạm khóa</option>
+                                    <option value="BLOCKED">Khóa vĩnh viễn</option>
                                 </select>
                             </div>
                         </div>
@@ -4525,17 +4875,16 @@ PA12345678903"></textarea>
                                     <tr>
                                         <th>ID</th>
                                         <th>Username</th>
-                                        <th>Họ tên</th>
-                                        <th>Email / SĐT</th>
+                                        <th>Họ tên / SĐT</th>
+                                        <th>Loại TK</th>
                                         <th>Vai trò</th>
-                                        <th>Quyền</th>
                                         <th>Trạng thái</th>
                                         <th>Đăng nhập cuối</th>
                                         <th>Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody id="usersTableBody">
-                                    <tr><td colspan="9" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
+                                    <tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -4559,6 +4908,172 @@ PA12345678903"></textarea>
                 <div class="row"><div class="col-md-6"><div class="card"><div class="card-header"><h4>Sao lưu</h4></div><div class="card-body"><button class="btn btn-primary" id="createBackupBtn"><i class="fas fa-database"></i> Tạo backup</button><div class="form-check form-switch mt-3"><input class="form-check-input" type="checkbox" id="autoBackup" checked><label class="form-check-label">Tự động backup</label></div></div></div></div><div class="col-md-6"><div class="card"><div class="card-header"><h4>Khôi phục</h4></div><div class="card-body"><input type="file" class="form-control mb-3" id="backupFile" accept=".sql,.zip"><button class="btn btn-warning" id="restoreBackupBtn"><i class="fas fa-undo"></i> Khôi phục</button></div></div></div></div>
             </div>
             
+            <!-- Settings Links Page -->
+            <div id="settings-links" class="page-content">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h4 class="mb-0"><i class="fas fa-link me-2"></i>Link Ứng Dụng & Tài Nguyên</h4>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-4">Tổng hợp toàn bộ link truy cập web và link tải file APK của hệ thống 7TY.VN</p>
+                                
+                                <!-- Web Links -->
+                                <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-globe text-info me-2"></i>Link Truy Cập Web</h5>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="card h-100 border-primary">
+                                            <div class="card-body">
+                                                <h6 class="card-title"><i class="fas fa-user-shield text-primary me-2"></i>Trang Quản Trị</h6>
+                                                <p class="card-text small text-muted">Dành cho Admin và Manager</p>
+                                                <a href="/" class="btn btn-outline-primary btn-sm w-100" target="_blank">
+                                                    <i class="fas fa-external-link-alt me-1"></i> Mở trang
+                                                </a>
+                                                <div class="mt-2"><code class="small" id="adminWebUrl"></code></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="card h-100 border-success">
+                                            <div class="card-body">
+                                                <h6 class="card-title"><i class="fas fa-store text-success me-2"></i>App Đại Lý (Web)</h6>
+                                                <p class="card-text small text-muted">Dành cho Đại lý sử dụng trên trình duyệt</p>
+                                                <a href="/agent" class="btn btn-outline-success btn-sm w-100" target="_blank">
+                                                    <i class="fas fa-external-link-alt me-1"></i> Mở trang
+                                                </a>
+                                                <div class="mt-2"><code class="small" id="agentWebUrl"></code></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="card h-100 border-info">
+                                            <div class="card-body">
+                                                <h6 class="card-title"><i class="fas fa-user-tie text-info me-2"></i>App Nhân Viên (Web)</h6>
+                                                <p class="card-text small text-muted">Dành cho Nhân viên sử dụng trên trình duyệt</p>
+                                                <a href="/staff" class="btn btn-outline-info btn-sm w-100" target="_blank">
+                                                    <i class="fas fa-external-link-alt me-1"></i> Mở trang
+                                                </a>
+                                                <div class="mt-2"><code class="small" id="staffWebUrl"></code></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="card h-100 border-secondary">
+                                            <div class="card-body">
+                                                <h6 class="card-title"><i class="fas fa-code text-secondary me-2"></i>API Documentation</h6>
+                                                <p class="card-text small text-muted">Swagger UI - Tài liệu API</p>
+                                                <a href="/docs" class="btn btn-outline-secondary btn-sm w-100" target="_blank">
+                                                    <i class="fas fa-external-link-alt me-1"></i> Mở trang
+                                                </a>
+                                                <div class="mt-2"><code class="small" id="docsUrl"></code></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- APK Downloads -->
+                                <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-mobile-alt text-success me-2"></i>Tải File APK (Android)</h5>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="card h-100" style="border-left: 4px solid #28a745;">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fas fa-store fa-2x text-success me-3"></i>
+                                                    <div>
+                                                        <h6 class="card-title mb-0">App Đại Lý</h6>
+                                                        <small class="text-muted">7TY Agent v1.0</small>
+                                                    </div>
+                                                </div>
+                                                <p class="card-text small text-muted">Ứng dụng dành cho đại lý quản lý hóa đơn, khách hàng</p>
+                                                <a href="/downloads/apk/7ty-agent.apk" class="btn btn-success btn-sm w-100" download>
+                                                    <i class="fas fa-download me-1"></i> Tải APK
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="card h-100" style="border-left: 4px solid #17a2b8;">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fas fa-user-tie fa-2x text-info me-3"></i>
+                                                    <div>
+                                                        <h6 class="card-title mb-0">App Nhân Viên</h6>
+                                                        <small class="text-muted">7TY Staff v1.0</small>
+                                                    </div>
+                                                </div>
+                                                <p class="card-text small text-muted">Ứng dụng dành cho nhân viên duyệt nạp tiền, tạo đại lý</p>
+                                                <a href="/downloads/apk/7ty-staff.apk" class="btn btn-info btn-sm w-100" download>
+                                                    <i class="fas fa-download me-1"></i> Tải APK
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="card h-100" style="border-left: 4px solid #6f42c1;">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fas fa-sms fa-2x text-purple me-3" style="color: #6f42c1;"></i>
+                                                    <div>
+                                                        <h6 class="card-title mb-0">SMS Reader</h6>
+                                                        <small class="text-muted">7TY SMS v1.0</small>
+                                                    </div>
+                                                </div>
+                                                <p class="card-text small text-muted">Ứng dụng đọc SMS ngân hàng tự động xử lý giao dịch</p>
+                                                <a href="/downloads/apk/7ty-sms-reader.apk" class="btn btn-sm w-100" style="background: #6f42c1; color: white;" download>
+                                                    <i class="fas fa-download me-1"></i> Tải APK
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Copy Links Section -->
+                                <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-copy text-warning me-2"></i>Copy Link Nhanh</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Ứng dụng</th>
+                                                <th>Link truy cập</th>
+                                                <th>Hành động</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><i class="fas fa-user-shield text-primary me-2"></i>Trang Quản Trị</td>
+                                                <td><code id="copyAdminUrl"></code></td>
+                                                <td><button class="btn btn-sm btn-outline-primary" onclick="copyLinkToClipboard('copyAdminUrl')"><i class="fas fa-copy"></i></button></td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fas fa-store text-success me-2"></i>App Đại Lý</td>
+                                                <td><code id="copyAgentUrl"></code></td>
+                                                <td><button class="btn btn-sm btn-outline-success" onclick="copyLinkToClipboard('copyAgentUrl')"><i class="fas fa-copy"></i></button></td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fas fa-user-tie text-info me-2"></i>App Nhân Viên</td>
+                                                <td><code id="copyStaffUrl"></code></td>
+                                                <td><button class="btn btn-sm btn-outline-info" onclick="copyLinkToClipboard('copyStaffUrl')"><i class="fas fa-copy"></i></button></td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fas fa-code text-secondary me-2"></i>API Docs</td>
+                                                <td><code id="copyDocsUrl"></code></td>
+                                                <td><button class="btn btn-sm btn-outline-secondary" onclick="copyLinkToClipboard('copyDocsUrl')"><i class="fas fa-copy"></i></button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="alert alert-info mt-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Lưu ý:</strong> File APK cần được cài đặt thủ công. Hãy bật "Cho phép cài đặt từ nguồn không xác định" trên thiết bị Android.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
     
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
@@ -4574,6 +5089,218 @@ PA12345678903"></textarea>
     </div>
 
     <!-- Modals -->
+    
+    <!-- Add Staff Modal -->
+    <div class="modal" id="addStaffModal">
+        <div class="modal-dialog modal-xl" style="max-height: 95vh;">
+            <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
+                <div class="modal-header bg-gradient" style="background: linear-gradient(135deg, #0d4a4a 0%, #c9a227 100%); flex-shrink: 0;">
+                    <h5 class="text-white mb-0"><i class="fas fa-user-tie me-2"></i>Thêm Nhân viên mới</h5>
+                    <button class="modal-close text-white" data-modal="addStaffModal">&times;</button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 25px;">
+                    <form id="addStaffForm">
+                        <!-- Liên kết Tài Khoản -->
+                        <h6 class="text-primary mb-3"><i class="fas fa-user-check me-2"></i>Liên kết Tài Khoản</h6>
+                        <div class="form-group mb-3">
+                            <label class="form-label">ID Tài khoản <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="staffUserIdInput" required placeholder="Nhập ID tài khoản" min="1">
+                                <button type="button" class="btn btn-outline-primary" onclick="loadUserInfoForStaff(document.getElementById('staffUserIdInput').value)">
+                                    <i class="fas fa-search"></i> Tìm
+                                </button>
+                            </div>
+                            <small class="text-muted">Nhập ID tài khoản và nhấn Tìm để xem thông tin</small>
+                        </div>
+
+                        <!-- Thông tin cá nhân (Tự động điền) -->
+                        <h6 class="text-primary mb-3 mt-4"><i class="fas fa-user me-2"></i>Thông tin cá nhân <small class="text-muted">(Tự động từ tài khoản)</small></h6>
+                        <div id="staffUserInfo" class="p-3 bg-light rounded mb-3" style="display:none;">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <div class="p-2 bg-white rounded small">
+                                        <span class="text-muted d-block">Họ và tên</span>
+                                        <strong id="staffUserFullName">-</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-2 bg-white rounded small">
+                                        <span class="text-muted d-block">Số điện thoại</span>
+                                        <strong id="staffUserPhone">-</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-2 bg-white rounded small">
+                                        <span class="text-muted d-block">Email</span>
+                                        <strong id="staffUserEmail">-</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-2 bg-white rounded small">
+                                        <span class="text-muted d-block">Địa chỉ</span>
+                                        <strong id="staffUserAddress">-</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Ảnh CCCD từ tài khoản -->
+                            <div class="row g-2 mt-2">
+                                <div class="col-md-6">
+                                    <div class="p-2 bg-white rounded text-center">
+                                        <span class="text-muted d-block small">CCCD Mặt trước</span>
+                                        <div id="staffUserCccdFront" class="mt-1">
+                                            <span class="text-muted small">Chưa có</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-2 bg-white rounded text-center">
+                                        <span class="text-muted d-block small">CCCD Mặt sau</span>
+                                        <div id="staffUserCccdBack" class="mt-1">
+                                            <span class="text-muted small">Chưa có</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="staffUserPlaceholder" class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle me-2"></i>Vui lòng nhập ID tài khoản và nhấn Tìm để xem thông tin cá nhân
+                        </div>
+                        
+                        <!-- Thông tin công việc -->
+                        <h6 class="text-success mb-3 mt-4"><i class="fas fa-briefcase me-2"></i>Thông tin công việc</h6>
+                        <div class="p-3 bg-light rounded mb-3">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Thuộc Đại lý</label>
+                                    <select class="form-control" id="staffAgentId">
+                                        <option value="">-- NV Hệ thống (Admin) --</option>
+                                    </select>
+                                    <small class="text-muted">Để trống nếu là nhân viên hệ thống</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Vai trò <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="staffRole" required>
+                                        <option value="STAFF">Nhân viên</option>
+                                        <option value="SUPERVISOR">Giám sát viên</option>
+                                        <option value="MANAGER">Quản lý</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Phòng ban</label>
+                                    <input type="text" class="form-control" id="staffDepartment" placeholder="VD: Kinh doanh, Kế toán...">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Chức vụ</label>
+                                    <input type="text" class="form-control" id="staffPosition" placeholder="VD: Trưởng phòng, Nhân viên...">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ghi chú</label>
+                                <textarea class="form-control" id="staffNotes" rows="2"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Hình ảnh Hồ Sơ -->
+                        <h6 class="text-info mb-3 mt-4"><i class="fas fa-images me-2"></i>Hình ảnh Hồ Sơ <span class="badge bg-info ms-2" id="staffImageCount">0/20 ảnh</span></h6>
+                        <div class="p-3 bg-light rounded mb-3">
+                            <div class="mb-3">
+                                <label class="form-label">Upload hình ảnh (tối đa 20 ảnh)</label>
+                                <input type="file" class="form-control" id="staffProfileImages" multiple accept="image/*" onchange="previewStaffImages(this)">
+                                <small class="text-muted">Hỗ trợ: JPG, PNG, GIF. Tối đa 5MB mỗi ảnh.</small>
+                            </div>
+                            <div id="staffImagePreview" class="row g-2">
+                                <!-- Image previews will be shown here -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="flex-shrink: 0;">
+                    <button class="btn btn-secondary" data-modal="addStaffModal">Hủy</button>
+                    <button class="btn btn-primary" onclick="createStaff()">
+                        <i class="fas fa-save me-1"></i>Tạo nhân viên
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Staff Modal -->
+    <div class="modal" id="editStaffModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-gradient" style="background: linear-gradient(135deg, #0d4a4a 0%, #c9a227 100%);">
+                    <h5 class="text-white mb-0"><i class="fas fa-edit me-2"></i>Chỉnh sửa Nhân viên</h5>
+                    <button class="modal-close text-white" data-modal="editStaffModal">&times;</button>
+                </div>
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                    <form id="editStaffForm">
+                        <input type="hidden" id="editStaffId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Họ và Tên</label>
+                                <input type="text" class="form-control" id="editStaffFullName">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" id="editStaffPhone">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="editStaffEmail">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Vai trò</label>
+                                <select class="form-control" id="editStaffRole">
+                                    <option value="STAFF">Nhân viên</option>
+                                    <option value="SUPERVISOR">Giám sát viên</option>
+                                    <option value="MANAGER">Quản lý</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phòng ban</label>
+                                <input type="text" class="form-control" id="editStaffDepartment">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Chức vụ</label>
+                                <input type="text" class="form-control" id="editStaffPosition">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Trạng thái</label>
+                                <select class="form-control" id="editStaffStatus">
+                                    <option value="ACTIVE">Hoạt động</option>
+                                    <option value="PENDING">Chờ duyệt</option>
+                                    <option value="INACTIVE">Ngừng hoạt động</option>
+                                    <option value="SUSPENDED">Tạm ngưng</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Lương cơ bản</label>
+                                <input type="number" class="form-control" id="editStaffSalary">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea class="form-control" id="editStaffNotes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-modal="editStaffModal">Hủy</button>
+                    <button class="btn btn-primary" onclick="updateStaff()">
+                        <i class="fas fa-save me-1"></i>Lưu thay đổi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Add User Modal -->
     <div class="modal" id="addUserModal">
@@ -4751,9 +5478,9 @@ PA12345678903"></textarea>
                                         <option value="customer_portal">Cổng Khách hàng</option>
                                         <option value="dashboard">Dashboard</option>
                                         <option value="agents">Quản lý Đại lý</option>
-                                        <option value="bills">Hóa đơn Điện</option>
+                                        <option value="bills">Hóa đơn</option>
                                         <option value="transactions">Giao dịch</option>
-                                        <option value="customers">Quản lý THẺ</option>
+                                        <option value="customers">Quản lý Khách THẺ</option>
                                         <option value="users">Quản lý Tài khoản</option>
                                         <option value="reports">Báo cáo</option>
                                         <option value="api_webhooks">API & Webhooks</option>
@@ -4975,7 +5702,7 @@ PA12345678903"></textarea>
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5>Thêm hóa đơn điện</h5>
+                    <h5>Thêm hóa đơn</h5>
                     <button class="modal-close" data-modal="addBillModal">&times;</button>
                 </div>
                 <div class="modal-body">
@@ -6075,9 +6802,581 @@ PA12345678903"></textarea>
             currentFilters: {
                 agents: {},
                 bills: {},
-                transactions: {}
+                transactions: {},
+                staff: {}
             }
         };
+
+        // =========================================
+        // STAFF MANAGEMENT FUNCTIONS
+        // =========================================
+        
+        // Load staff list
+        async function loadStaffs(page = 1) {
+            try {
+                showLoading();
+                
+                const search = document.getElementById('staffSearchInput')?.value || '';
+                const status = document.getElementById('staffStatusFilter')?.value || '';
+                const role = document.getElementById('staffRoleFilter')?.value || '';
+                const type = document.getElementById('staffTypeFilter')?.value || '';
+                
+                const params = new URLSearchParams({ page, limit: 20 });
+                if (search) params.append('search', search);
+                if (status) params.append('status', status);
+                if (role) params.append('staff_role', role);
+                if (type === 'system') params.append('system_only', 'true');
+                if (type === 'agent') params.append('agent_id', '-1'); // Will filter for non-null agent_id
+                
+                const response = await fetch(`${API_BASE_URL}/staff?${params}`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                
+                if (!response.ok) throw new Error('Không thể tải danh sách nhân viên');
+                
+                const data = await response.json();
+                renderStaffTable(data.data || []);
+                updateStaffPagination(data.pagination);
+                
+                // Load stats
+                loadStaffStats();
+                
+                hideLoading();
+            } catch (error) {
+                console.error('Error loading staff:', error);
+                hideLoading();
+                showToast('Không thể tải danh sách nhân viên', 'error');
+            }
+        }
+        
+        // Load staff stats
+        async function loadStaffStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/staff/stats`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const stats = data.data || {};
+                    
+                    document.getElementById('totalStaffCount').textContent = stats.total || 0;
+                    document.getElementById('activeStaffCount').textContent = stats.active || 0;
+                    document.getElementById('pendingStaffCountCard').textContent = stats.pending || 0;
+                    document.getElementById('pendingStaffCount').textContent = stats.pending || 0;
+                    document.getElementById('systemStaffCount').textContent = stats.system_staff || 0;
+                    document.getElementById('agentStaffCount').textContent = stats.agent_staff || 0;
+                }
+            } catch (error) {
+                console.error('Error loading staff stats:', error);
+            }
+        }
+        
+        // Render staff table
+        function renderStaffTable(staffList) {
+            const tbody = document.getElementById('staffTableBody');
+            if (!tbody) return;
+            
+            if (!staffList || staffList.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <i class="fas fa-user-tie fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">Không có nhân viên nào</p>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('staffsCount').textContent = 'Hiển thị 0 nhân viên';
+                return;
+            }
+            
+            tbody.innerHTML = staffList.map((staff, index) => {
+                const statusBadge = getStaffStatusBadge(staff.status);
+                const roleBadge = getStaffRoleBadge(staff.staff_role);
+                const agentInfo = staff.agent_id 
+                    ? `<span class="badge bg-info">${staff.agent_code || ''}</span> ${staff.agent_name || ''}`
+                    : '<span class="badge bg-dark">Hệ thống</span>';
+                
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${staff.staff_code}</strong></td>
+                        <td>${staff.full_name || 'N/A'}</td>
+                        <td>${staff.phone || 'N/A'}</td>
+                        <td>${staff.department || '-'}</td>
+                        <td>${roleBadge}</td>
+                        <td>${agentInfo}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="editStaff(${staff.id})" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                ${staff.status === 'PENDING' ? `
+                                    <button class="btn btn-outline-success" onclick="activateStaff(${staff.id})" title="Kích hoạt">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                ` : ''}
+                                ${staff.status === 'ACTIVE' ? `
+                                    <button class="btn btn-outline-warning" onclick="suspendStaff(${staff.id})" title="Tạm ngưng">
+                                        <i class="fas fa-pause"></i>
+                                    </button>
+                                ` : ''}
+                                <button class="btn btn-outline-danger" onclick="deleteStaff(${staff.id})" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('staffsCount').textContent = `Hiển thị ${staffList.length} nhân viên`;
+        }
+        
+        // Get staff status badge
+        function getStaffStatusBadge(status) {
+            const badges = {
+                'ACTIVE': '<span class="badge bg-success">Hoạt động</span>',
+                'PENDING': '<span class="badge bg-warning">Chờ duyệt</span>',
+                'INACTIVE': '<span class="badge bg-secondary">Ngừng</span>',
+                'SUSPENDED': '<span class="badge bg-danger">Tạm ngưng</span>'
+            };
+            return badges[status] || `<span class="badge bg-secondary">${status}</span>`;
+        }
+        
+        // Get staff role badge
+        function getStaffRoleBadge(role) {
+            const badges = {
+                'STAFF': '<span class="badge bg-info">Nhân viên</span>',
+                'SUPERVISOR': '<span class="badge bg-primary">Giám sát viên</span>',
+                'MANAGER': '<span class="badge bg-dark">Quản lý</span>'
+            };
+            return badges[role] || `<span class="badge bg-secondary">${role}</span>`;
+        }
+        
+        // Update staff pagination
+        function updateStaffPagination(pagination) {
+            if (!pagination) return;
+            const container = document.getElementById('staffsPagination');
+            if (!container) return;
+            
+            const { page, pages, total } = pagination;
+            let html = '';
+            
+            // Previous
+            html += `<li class="page-item ${page <= 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="loadStaffs(${page - 1}); return false;">«</a>
+            </li>`;
+            
+            // Pages
+            for (let i = 1; i <= Math.min(pages, 5); i++) {
+                html += `<li class="page-item ${page === i ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="loadStaffs(${i}); return false;">${i}</a>
+                </li>`;
+            }
+            
+            // Next
+            html += `<li class="page-item ${page >= pages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="loadStaffs(${page + 1}); return false;">»</a>
+            </li>`;
+            
+            container.innerHTML = html;
+        }
+        
+        // Open Add Staff Modal
+        function openAddStaffModal() {
+            // Reset form
+            document.getElementById('addStaffForm')?.reset();
+            staffProfileImagesData = [];
+            document.getElementById('staffImagePreview').innerHTML = '';
+            document.getElementById('staffImageCount').textContent = '0/20 ảnh';
+            
+            // Reset user info display
+            document.getElementById('staffUserInfo').style.display = 'none';
+            document.getElementById('staffUserPlaceholder').style.display = 'block';
+            document.getElementById('staffUserIdInput').value = '';
+            
+            // Show modal
+            showModal('addStaffModal');
+        }
+        
+        // Staff profile images storage
+        let staffProfileImagesData = [];
+        
+        // Load user info for staff by ID (like agent form)
+        async function loadUserInfoForStaff(userId) {
+            const infoDiv = document.getElementById('staffUserInfo');
+            const placeholderDiv = document.getElementById('staffUserPlaceholder');
+            
+            if (!userId) {
+                infoDiv.style.display = 'none';
+                placeholderDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                
+                if (!response.ok) throw new Error('Không thể tải thông tin tài khoản');
+                
+                const user = await response.json();
+                
+                // Fill user info
+                document.getElementById('staffUserFullName').textContent = user.full_name || 'Chưa cập nhật';
+                document.getElementById('staffUserPhone').textContent = user.phone || user.username || 'N/A';
+                document.getElementById('staffUserEmail').textContent = user.email || 'Chưa cập nhật';
+                
+                const fullAddress = [user.address, user.ward, user.district, user.city].filter(Boolean).join(', ');
+                document.getElementById('staffUserAddress').textContent = fullAddress || 'Chưa cập nhật';
+                
+                // CCCD images
+                const cccdFrontDiv = document.getElementById('staffUserCccdFront');
+                const cccdBackDiv = document.getElementById('staffUserCccdBack');
+                
+                if (user.cccd_front) {
+                    cccdFrontDiv.innerHTML = `<img src="${user.cccd_front}" class="img-fluid rounded" style="max-height:60px;cursor:pointer" onclick="window.open('${user.cccd_front}','_blank')">`;
+                } else {
+                    cccdFrontDiv.innerHTML = '<span class="text-muted small">Chưa có ảnh</span>';
+                }
+                
+                if (user.cccd_back) {
+                    cccdBackDiv.innerHTML = `<img src="${user.cccd_back}" class="img-fluid rounded" style="max-height:60px;cursor:pointer" onclick="window.open('${user.cccd_back}','_blank')">`;
+                } else {
+                    cccdBackDiv.innerHTML = '<span class="text-muted small">Chưa có ảnh</span>';
+                }
+                
+                // Show info, hide placeholder
+                infoDiv.style.display = 'block';
+                placeholderDiv.style.display = 'none';
+                
+                showToast(`Đã tải thông tin tài khoản ID: ${userId}`, 'success');
+                
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                showToast('Không thể tải thông tin tài khoản. Kiểm tra lại ID.', 'error');
+            }
+        }
+        
+        // Preview staff profile images
+        function previewStaffImages(input) {
+            const preview = document.getElementById('staffImagePreview');
+            const countBadge = document.getElementById('staffImageCount');
+            
+            if (!preview) return;
+            
+            const files = Array.from(input.files);
+            const maxImages = 20;
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            
+            // Check total count
+            const totalImages = staffProfileImagesData.length + files.length;
+            if (totalImages > maxImages) {
+                showToast(`Chỉ được upload tối đa ${maxImages} ảnh`, 'warning');
+                input.value = '';
+                return;
+            }
+            
+            files.forEach((file, index) => {
+                // Check file size
+                if (file.size > maxSize) {
+                    showToast(`Ảnh "${file.name}" vượt quá 5MB`, 'warning');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageIndex = staffProfileImagesData.length;
+                    staffProfileImagesData.push({
+                        name: file.name,
+                        data: e.target.result,
+                        file: file
+                    });
+                    
+                    const col = document.createElement('div');
+                    col.className = 'col-4 col-md-3 col-lg-2';
+                    col.id = `staffImg_${imageIndex}`;
+                    col.innerHTML = `
+                        <div class="position-relative border rounded overflow-hidden" style="aspect-ratio: 1;">
+                            <img src="${e.target.result}" class="w-100 h-100" style="object-fit: cover;">
+                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
+                                    onclick="removeStaffImage(${imageIndex})" style="padding: 2px 6px;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <div class="position-absolute bottom-0 start-0 end-0 bg-dark bg-opacity-50 text-white text-center small py-1">
+                                ${index + 1}
+                            </div>
+                        </div>
+                    `;
+                    preview.appendChild(col);
+                    
+                    // Update count
+                    countBadge.textContent = `${staffProfileImagesData.length}/${maxImages} ảnh`;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        // Remove staff image
+        function removeStaffImage(index) {
+            const col = document.getElementById(`staffImg_${index}`);
+            if (col) col.remove();
+            
+            staffProfileImagesData[index] = null;
+            
+            const validCount = staffProfileImagesData.filter(img => img !== null).length;
+            document.getElementById('staffImageCount').textContent = `${validCount}/20 ảnh`;
+        }
+        
+        // Create staff
+        async function createStaff() {
+            try {
+                const userId = document.getElementById('staffUserIdInput').value;
+                
+                // User ID is required
+                if (!userId) {
+                    showToast('Vui lòng nhập ID tài khoản và nhấn Tìm', 'error');
+                    return;
+                }
+                
+                // Check if user info is loaded
+                const userInfoDiv = document.getElementById('staffUserInfo');
+                if (userInfoDiv.style.display === 'none') {
+                    showToast('Vui lòng nhấn nút Tìm để tải thông tin tài khoản', 'error');
+                    return;
+                }
+                
+                const staffData = {
+                    user_id: parseInt(userId),
+                    department: document.getElementById('staffDepartment').value || null,
+                    position: document.getElementById('staffPosition').value || null,
+                    staff_role: document.getElementById('staffRole').value,
+                    agent_id: document.getElementById('staffAgentId').value || null,
+                    notes: document.getElementById('staffNotes').value || null
+                };
+                
+                // Collect valid images
+                const validImages = staffProfileImagesData.filter(img => img !== null);
+                if (validImages.length > 0) {
+                    staffData.profile_images = validImages.map(img => img.data);
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/staff/link`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${appState.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(staffData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Tạo nhân viên thành công!', 'success');
+                    hideModal('addStaffModal');
+                    document.getElementById('addStaffForm').reset();
+                    staffProfileImagesData = [];
+                    document.getElementById('staffImagePreview').innerHTML = '';
+                    document.getElementById('staffImageCount').textContent = '0/20 ảnh';
+                    document.getElementById('staffUserInfo').style.display = 'none';
+                    document.getElementById('staffUserPlaceholder').style.display = 'block';
+                    loadStaffs();
+                } else {
+                    // Handle validation errors (array of objects) vs simple error message
+                    let errorMsg = 'Không thể tạo nhân viên';
+                    if (data.detail) {
+                        if (Array.isArray(data.detail)) {
+                            // Pydantic validation errors
+                            errorMsg = data.detail.map(err => {
+                                const field = err.loc ? err.loc[err.loc.length - 1] : '';
+                                return field ? `${field}: ${err.msg}` : err.msg;
+                            }).join(', ');
+                        } else if (typeof data.detail === 'object') {
+                            errorMsg = data.detail.message || JSON.stringify(data.detail);
+                        } else {
+                            errorMsg = data.detail;
+                        }
+                    }
+                    showToast(errorMsg, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating staff:', error);
+                showToast('Lỗi khi tạo nhân viên', 'error');
+            }
+        }
+        
+        // Edit staff - load data into modal
+        async function editStaff(staffId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/staff/${staffId}`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                
+                if (!response.ok) throw new Error('Không thể tải thông tin nhân viên');
+                
+                const data = await response.json();
+                const staff = data.data;
+                
+                document.getElementById('editStaffId').value = staff.id;
+                document.getElementById('editStaffFullName').value = staff.full_name || '';
+                document.getElementById('editStaffPhone').value = staff.phone || '';
+                document.getElementById('editStaffEmail').value = staff.email || '';
+                document.getElementById('editStaffRole').value = staff.staff_role || 'STAFF';
+                document.getElementById('editStaffDepartment').value = staff.department || '';
+                document.getElementById('editStaffPosition').value = staff.position || '';
+                document.getElementById('editStaffStatus').value = staff.status || 'ACTIVE';
+                document.getElementById('editStaffSalary').value = staff.base_salary || 0;
+                document.getElementById('editStaffNotes').value = staff.notes || '';
+                
+                showModal('editStaffModal');
+            } catch (error) {
+                console.error('Error loading staff:', error);
+                showToast('Không thể tải thông tin nhân viên', 'error');
+            }
+        }
+        
+        // Update staff
+        async function updateStaff() {
+            try {
+                const staffId = document.getElementById('editStaffId').value;
+                const staffData = {
+                    full_name: document.getElementById('editStaffFullName').value,
+                    phone: document.getElementById('editStaffPhone').value,
+                    email: document.getElementById('editStaffEmail').value || null,
+                    staff_role: document.getElementById('editStaffRole').value,
+                    department: document.getElementById('editStaffDepartment').value || null,
+                    position: document.getElementById('editStaffPosition').value || null,
+                    status: document.getElementById('editStaffStatus').value,
+                    base_salary: parseFloat(document.getElementById('editStaffSalary').value) || 0,
+                    notes: document.getElementById('editStaffNotes').value || null
+                };
+                
+                const response = await fetch(`${API_BASE_URL}/staff/${staffId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${appState.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(staffData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('Cập nhật thành công!', 'success');
+                    hideModal('editStaffModal');
+                    loadStaffs();
+                } else {
+                    showToast(data.detail || 'Không thể cập nhật', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating staff:', error);
+                showToast('Lỗi khi cập nhật', 'error');
+            }
+        }
+        
+        // Activate staff
+        async function activateStaff(staffId) {
+            if (!confirm('Kích hoạt nhân viên này?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/staff/${staffId}/activate`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Đã kích hoạt nhân viên', 'success');
+                    loadStaffs();
+                } else {
+                    showToast(data.detail || 'Không thể kích hoạt', 'error');
+                }
+            } catch (error) {
+                showToast('Lỗi khi kích hoạt', 'error');
+            }
+        }
+        
+        // Suspend staff
+        async function suspendStaff(staffId) {
+            if (!confirm('Tạm ngưng nhân viên này?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/staff/${staffId}/suspend`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Đã tạm ngưng nhân viên', 'success');
+                    loadStaffs();
+                } else {
+                    showToast(data.detail || 'Không thể tạm ngưng', 'error');
+                }
+            } catch (error) {
+                showToast('Lỗi khi tạm ngưng', 'error');
+            }
+        }
+        
+        // Delete staff
+        async function deleteStaff(staffId) {
+            if (!confirm('Bạn có chắc muốn xóa nhân viên này?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/staff/${staffId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Đã xóa nhân viên', 'success');
+                    loadStaffs();
+                } else {
+                    showToast(data.detail || 'Không thể xóa', 'error');
+                }
+            } catch (error) {
+                showToast('Lỗi khi xóa', 'error');
+            }
+        }
+        
+        // Download Staff App
+        function downloadStaffApp() {
+            window.open('/download/staff-apk', '_blank');
+        }
+        
+        // Load agents for staff form select
+        async function loadAgentsForStaffForm() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/agents?limit=100&status=ACTIVE`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const agents = data.data || [];
+                    const select = document.getElementById('staffAgentId');
+                    
+                    if (select) {
+                        select.innerHTML = '<option value="">-- NV Hệ thống (Admin) --</option>';
+                        agents.forEach(agent => {
+                            const name = agent.agent_name || agent.user?.full_name || 'N/A';
+                            select.innerHTML += `<option value="${agent.id}">${agent.agent_code} - ${name}</option>`;
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading agents for staff form:', error);
+            }
+        }
+        
+        // =========================================
+        // END STAFF MANAGEMENT FUNCTIONS
+        // =========================================
 
         // Initialize application
         document.addEventListener('DOMContentLoaded', async function() {
@@ -6302,9 +7601,9 @@ PA12345678903"></textarea>
             const titles = {
                 'dashboard': 'Dashboard',
                 'agents': 'Quản lý Đại lý',
-                'bills': 'Hóa đơn Điện',
+                'bills': 'Hóa đơn',
                 'transactions': 'Giao dịch',
-                'customers': 'Quản lý THẺ',
+                'customers': 'Quản lý Khách THẺ',
                 'profile': 'Thông tin cá nhân',
                 'reports-sales': 'Báo cáo Doanh thu',
                 'reports-agent': 'Báo cáo Đại lý',
@@ -6313,7 +7612,8 @@ PA12345678903"></textarea>
                 'settings-users': 'Quản lý Tài khoản',
                 'settings-security': 'Bảo mật',
                 'settings-backup': 'Sao lưu & Khôi phục',
-                'settings-proxy': 'Quản lý Proxy Pool'
+                'settings-proxy': 'Quản lý Proxy Pool',
+                'settings-links': 'Link Ứng Dụng'
             };
 
             const breadcrumbs = {
@@ -6321,7 +7621,7 @@ PA12345678903"></textarea>
                 'agents': ['Trang chủ', 'Đại lý'],
                 'bills': ['Trang chủ', 'Hóa đơn'],
                 'transactions': ['Trang chủ', 'Giao dịch'],
-                'customers': ['Trang chủ', 'Quản lý THẺ'],
+                'customers': ['Trang chủ', 'Quản lý Khách THẺ'],
                 'profile': ['Trang chủ', 'Tài khoản'],
                 'reports-sales': ['Trang chủ', 'Báo cáo', 'Doanh thu'],
                 'reports-agent': ['Trang chủ', 'Báo cáo', 'Đại lý'],
@@ -6330,7 +7630,8 @@ PA12345678903"></textarea>
                 'settings-users': ['Trang chủ', 'Cài đặt', 'Tài khoản'],
                 'settings-security': ['Trang chủ', 'Cài đặt', 'Bảo mật'],
                 'settings-backup': ['Trang chủ', 'Cài đặt', 'Sao lưu'],
-                'settings-proxy': ['Trang chủ', 'Cài đặt', 'Proxy Pool']
+                'settings-proxy': ['Trang chủ', 'Cài đặt', 'Proxy Pool'],
+                'settings-links': ['Trang chủ', 'Cài đặt', 'Link App']
             };
 
             document.getElementById('pageTitle').textContent = titles[page] || '7TY.VN';
@@ -6671,7 +7972,13 @@ PA12345678903"></textarea>
                     await loadTransactions();
                     break;
                 case 'customers':
+                    // Load customer list tab by default
+                    await loadCustomersList();
                     await loadCards();
+                    break;
+                case 'staff':
+                    await loadStaffs();
+                    await loadAgentsForStaffForm();
                     break;
                 case 'profile':
                     await loadProfileActivities();
@@ -6686,6 +7993,9 @@ PA12345678903"></textarea>
                 case 'settings-email-reader':
                     loadEmailConfigs();
                     loadEmailReaderStats();
+                    break;
+                case 'settings-links':
+                    initLinkAppPage();
                     break;
                 case 'reports-sales':
                     initReportsPage();
@@ -7702,18 +9012,27 @@ PA12345678903"></textarea>
             viewCustomer(customerId);
         }
 
-        // Load users data
+        // Load users data - Hệ thống Tài khoản Tập trung
         async function loadUsers(page = 1) {
             try {
                 const limit = 10;
                 const search = document.getElementById('userSearch')?.value || '';
-                const role = document.getElementById('userRoleFilter')?.value || '';
+                const roleFilter = document.getElementById('userRoleFilter')?.value || '';
+                const accountType = document.getElementById('userAccountTypeFilter')?.value || '';
+                const accountStatus = document.getElementById('userAccountStatusFilter')?.value || '';
                 const isActive = document.getElementById('userStatusFilter')?.value;
                 
                 const params = new URLSearchParams({ page: page, limit: limit });
                 if (search) params.append('search', search);
-                if (role) params.append('role', role);
+                if (accountType) params.append('account_type', accountType);
+                if (accountStatus) params.append('account_status', accountStatus);
                 if (isActive !== '') params.append('is_active', isActive);
+                
+                // Multi-role filter
+                if (roleFilter === 'is_admin') params.append('is_admin', 'true');
+                else if (roleFilter === 'is_agent') params.append('is_agent', 'true');
+                else if (roleFilter === 'is_staff') params.append('is_staff', 'true');
+                else if (roleFilter === 'is_customer') params.append('is_customer', 'true');
                 
                 const response = await fetch(`${API_BASE_URL}/users/?${params}`, {
                     headers: { 'Authorization': `Bearer ${appState.token}` }
@@ -7743,7 +9062,7 @@ PA12345678903"></textarea>
             const tbody = document.getElementById('usersTableBody');
             if (!tbody) return;
             if (!users || users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center py-5 text-muted"><i class="fas fa-users fa-2x mb-3"></i><p>Không có tài khoản nào</p></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted"><i class="fas fa-users fa-2x mb-3"></i><p>Không có tài khoản nào</p></td></tr>';
                 return;
             }
             tbody.innerHTML = users.map(u => `
@@ -7753,30 +9072,65 @@ PA12345678903"></textarea>
                         <i class="fas fa-user-circle me-1 text-primary"></i>
                         ${u.username}
                     </td>
-                    <td>${u.full_name || 'N/A'}</td>
                     <td>
-                        <small class="d-block">${u.email || 'N/A'}</small>
-                        <small class="text-muted">${u.phone || ''}</small>
+                        <strong>${u.full_name || 'N/A'}</strong>
+                        <br><small class="text-muted">${u.phone || u.email || ''}</small>
                     </td>
-                    <td>${getRoleBadge(u.role)}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-info" onclick="showUserPermissions(${u.id}, '${u.full_name || u.username}')">
-                            <i class="fas fa-key"></i> Xem
-                        </button>
-                    </td>
+                    <td>${getAccountTypeBadge(u.account_type)}</td>
+                    <td>${getMultiRoleBadges(u)}</td>
                     <td>
                         ${u.is_active 
                             ? '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Hoạt động</span>' 
                             : '<span class="badge bg-danger"><i class="fas fa-ban me-1"></i>Bị khóa</span>'}
+                        ${getAccountStatusBadge(u.account_status)}
                     </td>
                     <td><small>${u.last_login ? formatDateTime(u.last_login) : 'Chưa đăng nhập'}</small></td>
                     <td>
-                        <button class="btn btn-sm btn-primary" onclick="viewUserDetail(${u.id})">
-                            <i class="fas fa-eye me-1"></i>Xem chi tiết
-                        </button>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="viewUserDetail(${u.id})" title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-info" onclick="showAssignRoleModal(${u.id}, '${u.full_name || u.username}')" title="Phân bổ vai trò">
+                                <i class="fas fa-user-tag"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="showUserPermissions(${u.id}, '${u.full_name || u.username}')" title="Xem quyền">
+                                <i class="fas fa-key"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
+        }
+        
+        function getAccountTypeBadge(accountType) {
+            const types = {
+                'SYSTEM': '<span class="badge bg-danger"><i class="fas fa-server me-1"></i>Hệ thống</span>',
+                'AGENT': '<span class="badge bg-primary"><i class="fas fa-store me-1"></i>Đại lý</span>',
+                'STAFF': '<span class="badge bg-info"><i class="fas fa-user-tie me-1"></i>Nhân viên</span>',
+                'CUSTOMER': '<span class="badge bg-success"><i class="fas fa-id-card me-1"></i>Khách hàng</span>'
+            };
+            return types[accountType] || '<span class="badge bg-secondary">N/A</span>';
+        }
+        
+        function getAccountStatusBadge(status) {
+            const statuses = {
+                'ACTIVE': '',
+                'PENDING': '<br><span class="badge bg-warning text-dark mt-1"><i class="fas fa-clock me-1"></i>Chờ duyệt</span>',
+                'INACTIVE': '<br><span class="badge bg-secondary mt-1"><i class="fas fa-pause me-1"></i>Tạm ngưng</span>',
+                'SUSPENDED': '<br><span class="badge bg-danger mt-1"><i class="fas fa-exclamation-triangle me-1"></i>Tạm khóa</span>',
+                'BLOCKED': '<br><span class="badge bg-dark mt-1"><i class="fas fa-lock me-1"></i>Khóa vĩnh viễn</span>'
+            };
+            return statuses[status] || '';
+        }
+        
+        function getMultiRoleBadges(user) {
+            let badges = [];
+            if (user.is_admin) badges.push('<span class="badge bg-danger me-1"><i class="fas fa-crown"></i></span>');
+            if (user.is_manager) badges.push('<span class="badge bg-warning text-dark me-1"><i class="fas fa-user-shield"></i></span>');
+            if (user.is_agent) badges.push('<span class="badge bg-primary me-1"><i class="fas fa-store"></i></span>');
+            if (user.is_staff) badges.push('<span class="badge bg-info me-1"><i class="fas fa-user-tie"></i></span>');
+            if (user.is_customer) badges.push('<span class="badge bg-success me-1"><i class="fas fa-id-card"></i></span>');
+            return badges.length > 0 ? badges.join('') : '<span class="badge bg-secondary">Chưa gán</span>';
         }
         
         function getRoleBadge(role) {
@@ -7787,6 +9141,184 @@ PA12345678903"></textarea>
             };
             // Tất cả role khác đều là Tài khoản thường
             return badges[r] || '<span class="badge bg-secondary"><i class="fas fa-user me-1"></i>Tài khoản</span>';
+        }
+        
+        // Load accounts stats
+        async function loadAccountsStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/accounts/stats`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                if (!response.ok) throw new Error('Không thể tải thống kê');
+                const data = await response.json();
+                
+                if (data.success && data.stats) {
+                    const stats = data.stats;
+                    document.getElementById('statsAdmins').textContent = stats.by_role?.admins || 0;
+                    document.getElementById('statsAgents').textContent = stats.by_role?.agents || 0;
+                    document.getElementById('statsStaffs').textContent = stats.by_role?.staffs || 0;
+                    document.getElementById('statsCustomers').textContent = stats.by_role?.customers || 0;
+                    document.getElementById('statsMultiRole').textContent = stats.users_with_multiple_roles || 0;
+                    document.getElementById('statsTotal').textContent = stats.total_users || 0;
+                    
+                    // Show stats row
+                    document.getElementById('accountsStatsRow').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('Error loading accounts stats:', error);
+            }
+        }
+        
+        // Show assign role modal
+        function showAssignRoleModal(userId, userName) {
+            const modalHtml = `
+                <div class="modal" id="assignRoleModal">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-info text-white">
+                                <h5 class="modal-title"><i class="fas fa-user-tag me-2"></i>Phân bổ vai trò</h5>
+                                <button class="modal-close text-white" onclick="hideModal('assignRoleModal')">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="mb-3">Tài khoản: <strong>${userName}</strong></p>
+                                
+                                <div class="alert alert-info py-2 mb-3" style="font-size: 13px;">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Bật vai trò để cho phép tài khoản đăng nhập vào ứng dụng tương ứng
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3 p-3" style="background: #fff5f5; border-radius: 8px; border-left: 3px solid #dc3545;">
+                                    <input class="form-check-input" type="checkbox" id="assignAdmin" style="margin-left: -1.5em;">
+                                    <label class="form-check-label" for="assignAdmin" style="margin-left: 0.5em;">
+                                        <div><i class="fas fa-crown text-danger me-1"></i> <strong>Quản trị viên (Admin)</strong></div>
+                                        <small class="text-muted">→ Đăng nhập: <span class="badge bg-warning text-dark">Web Quản Trị</span></small>
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch mb-3 p-3" style="background: #fffbeb; border-radius: 8px; border-left: 3px solid #f59e0b;">
+                                    <input class="form-check-input" type="checkbox" id="assignManager" style="margin-left: -1.5em;">
+                                    <label class="form-check-label" for="assignManager" style="margin-left: 0.5em;">
+                                        <div><i class="fas fa-user-shield text-warning me-1"></i> <strong>Quản lý (Manager)</strong></div>
+                                        <small class="text-muted">→ Đăng nhập: <span class="badge bg-warning text-dark">Web Quản Trị</span></small>
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch mb-3 p-3" style="background: #eff6ff; border-radius: 8px; border-left: 3px solid #3b82f6;">
+                                    <input class="form-check-input" type="checkbox" id="assignAgent" style="margin-left: -1.5em;">
+                                    <label class="form-check-label" for="assignAgent" style="margin-left: 0.5em;">
+                                        <div><i class="fas fa-store text-primary me-1"></i> <strong>Đại lý (Agent)</strong></div>
+                                        <small class="text-muted">→ Đăng nhập: <span class="badge bg-success">App Đại Lý</span></small>
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch mb-3 p-3" style="background: #f0f9ff; border-radius: 8px; border-left: 3px solid #0ea5e9;">
+                                    <input class="form-check-input" type="checkbox" id="assignStaff" style="margin-left: -1.5em;">
+                                    <label class="form-check-label" for="assignStaff" style="margin-left: 0.5em;">
+                                        <div><i class="fas fa-user-tie text-info me-1"></i> <strong>Nhân viên (Staff)</strong></div>
+                                        <small class="text-muted">→ Đăng nhập: <span class="badge bg-info">App Nhân Viên</span></small>
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch mb-3 p-3" style="background: #f0fdf4; border-radius: 8px; border-left: 3px solid #10b981;">
+                                    <input class="form-check-input" type="checkbox" id="assignCustomer" style="margin-left: -1.5em;">
+                                    <label class="form-check-label" for="assignCustomer" style="margin-left: 0.5em;">
+                                        <div><i class="fas fa-id-card text-success me-1"></i> <strong>Khách hàng THẺ (Customer)</strong></div>
+                                        <small class="text-muted">→ Sử dụng thẻ khách hàng liên kết đại lý</small>
+                                    </label>
+                                </div>
+                                
+                                <hr>
+                                <div class="mb-3">
+                                    <label class="form-label"><i class="fas fa-toggle-on me-1"></i>Trạng thái tài khoản:</label>
+                                    <select class="form-select" id="assignAccountStatus">
+                                        <option value="ACTIVE">✅ Đã duyệt - Hoạt động</option>
+                                        <option value="PENDING">⏳ Chờ duyệt</option>
+                                        <option value="INACTIVE">⚪ Không hoạt động</option>
+                                        <option value="SUSPENDED">🔒 Tạm khóa</option>
+                                        <option value="BLOCKED">🚫 Khóa vĩnh viễn</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" onclick="hideModal('assignRoleModal')">Hủy</button>
+                                <button class="btn btn-primary" onclick="saveUserRoles(${userId})">
+                                    <i class="fas fa-save me-1"></i> Lưu thay đổi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('assignRoleModal');
+            if (existingModal) existingModal.remove();
+            
+            // Add new modal
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Load current user roles
+            loadUserRolesForAssign(userId);
+            
+            // Show modal
+            showModal('assignRoleModal');
+        }
+        
+        async function loadUserRolesForAssign(userId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                if (!response.ok) return;
+                const user = await response.json();
+                
+                // Set checkboxes
+                document.getElementById('assignAdmin').checked = user.is_admin || false;
+                document.getElementById('assignManager').checked = user.is_manager || false;
+                document.getElementById('assignAgent').checked = user.is_agent || false;
+                document.getElementById('assignStaff').checked = user.is_staff || false;
+                document.getElementById('assignCustomer').checked = user.is_customer || false;
+                
+                // Set account status
+                if (user.account_status) {
+                    document.getElementById('assignAccountStatus').value = user.account_status;
+                }
+            } catch (error) {
+                console.error('Error loading user roles:', error);
+            }
+        }
+        
+        async function saveUserRoles(userId) {
+            try {
+                const data = {
+                    is_admin: document.getElementById('assignAdmin').checked,
+                    is_manager: document.getElementById('assignManager').checked,
+                    is_agent: document.getElementById('assignAgent').checked,
+                    is_staff: document.getElementById('assignStaff').checked,
+                    is_customer: document.getElementById('assignCustomer').checked,
+                    account_status: document.getElementById('assignAccountStatus').value
+                };
+                
+                const response = await fetch(`${API_BASE_URL}/users/${userId}/roles`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${appState.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) throw new Error('Không thể cập nhật vai trò');
+                
+                const result = await response.json();
+                if (result.success) {
+                    showToast('Cập nhật vai trò thành công!', 'success');
+                    hideModal('assignRoleModal');
+                    loadUsers();
+                    loadAccountsStats();
+                } else {
+                    throw new Error(result.message || 'Lỗi không xác định');
+                }
+            } catch (error) {
+                console.error('Error saving user roles:', error);
+                showToast('Lỗi: ' + error.message, 'error');
+            }
         }
         
         function renderUsersPagination(pagination) {
@@ -9927,14 +11459,22 @@ PA12345678903"></textarea>
             });
             
             // Hide all tab contents
-            document.getElementById('cardListTab').style.display = 'none';
-            document.getElementById('cardTransactionsTab').style.display = 'none';
+            const customerListTab = document.getElementById('customerListTab');
+            const cardListTab = document.getElementById('cardListTab');
+            const cardTransactionsTab = document.getElementById('cardTransactionsTab');
+            
+            if (customerListTab) customerListTab.style.display = 'none';
+            if (cardListTab) cardListTab.style.display = 'none';
+            if (cardTransactionsTab) cardTransactionsTab.style.display = 'none';
             
             // Show selected tab content
-            if (tabName === 'list') {
-                document.getElementById('cardListTab').style.display = 'block';
+            if (tabName === 'customerList') {
+                if (customerListTab) customerListTab.style.display = 'block';
+                loadCustomersList();
+            } else if (tabName === 'list') {
+                if (cardListTab) cardListTab.style.display = 'block';
             } else if (tabName === 'transactions') {
-                document.getElementById('cardTransactionsTab').style.display = 'block';
+                if (cardTransactionsTab) cardTransactionsTab.style.display = 'block';
                 loadCardTransactions();
             }
         }
@@ -13781,7 +15321,47 @@ PA12345678903"></textarea>
         let bulkLookupResults = [];
         let bulkHideZero = false;
         
-        // Provider options for each gateway
+        // Provider options for each bill type
+        const BILL_TYPE_PROVIDERS = {
+            'electric': [
+                { value: 'evn_south', label: '⚡ Điện lực miền Nam' },
+                { value: 'evn_north', label: '⚡ Điện lực miền Bắc' },
+                { value: 'evn_central', label: '⚡ Điện lực miền Trung' },
+                { value: 'evn_hcm', label: '⚡ Điện EVNHCMC' },
+                { value: 'evn_hanoi', label: '⚡ Điện EVN Hà Nội' }
+            ],
+            'phone_card': [
+                { value: 'viettel', label: '📱 Viettel' },
+                { value: 'vinaphone', label: '📱 Vinaphone' },
+                { value: 'mobifone', label: '📱 Mobifone' },
+                { value: 'vietnamobile', label: '📱 Vietnamobile' },
+                { value: 'gmobile', label: '📱 Gmobile' }
+            ],
+            'internet': [
+                { value: 'fpt', label: '🌐 FPT Telecom' },
+                { value: 'vnpt', label: '🌐 VNPT' },
+                { value: 'viettel', label: '🌐 Viettel' },
+                { value: 'sctv', label: '🌐 SCTV' },
+                { value: 'cmc', label: '🌐 CMC Telecom' }
+            ],
+            'water': [
+                { value: 'sawaco', label: '💧 SAWACO (TP.HCM)' },
+                { value: 'hanoi_water', label: '💧 Nước sạch Hà Nội' },
+                { value: 'danang_water', label: '💧 Nước Đà Nẵng' },
+                { value: 'binh_duong_water', label: '💧 Nước Bình Dương' },
+                { value: 'dong_nai_water', label: '💧 Nước Đồng Nai' }
+            ],
+            'loan': [
+                { value: 'fe_credit', label: '💳 FE Credit' },
+                { value: 'home_credit', label: '💳 Home Credit' },
+                { value: 'mcredit', label: '💳 MCredit' },
+                { value: 'shinhan', label: '💳 Shinhan Finance' },
+                { value: 'easy_credit', label: '💳 Easy Credit' },
+                { value: 'mirae_asset', label: '💳 Mirae Asset' }
+            ]
+        };
+        
+        // Provider options for each gateway (legacy support)
         const GATEWAY_PROVIDERS = {
             'dailyshopee': [
                 { value: 'evn_hcm', label: 'Điện Hồ Chí Minh' },
@@ -13798,12 +15378,19 @@ PA12345678903"></textarea>
             ]
         };
         
-        function updateProviderDropdown(gateway) {
+        function updateProviderDropdown(billType, gateway) {
             const providerSelect = document.getElementById('bulkLookupProvider');
             if (!providerSelect) return;
             
             const currentValue = providerSelect.value;
-            const providers = GATEWAY_PROVIDERS[gateway] || GATEWAY_PROVIDERS['fptshop'];
+            
+            // Get providers based on bill type first, then filter by gateway if applicable
+            let providers = BILL_TYPE_PROVIDERS[billType] || BILL_TYPE_PROVIDERS['electric'];
+            
+            // For electric bills, we may also use gateway-specific providers
+            if (billType === 'electric' && gateway && GATEWAY_PROVIDERS[gateway]) {
+                providers = GATEWAY_PROVIDERS[gateway];
+            }
             
             // Clear and rebuild options
             providerSelect.innerHTML = '';
@@ -13826,16 +15413,35 @@ PA12345678903"></textarea>
         }
         
         function initBulkLookup() {
+            // Bill type selector - update providers based on selected type
+            document.getElementById('bulkLookupType')?.addEventListener('change', (e) => {
+                const billType = e.target.value;
+                const gateway = document.getElementById('bulkApiGateway')?.value || 'fptshop';
+                
+                console.log('Bill type changed to:', billType);
+                updateProviderDropdown(billType, gateway);
+                
+                // Show info toast based on type
+                const typeLabels = {
+                    'electric': '⚡ Hóa đơn Điện',
+                    'phone_card': '📱 Thẻ Điện Thoại',
+                    'internet': '🌐 Tiền Mạng (Internet)',
+                    'water': '💧 Tiền Nước',
+                    'loan': '💳 Khoản Vay'
+                };
+                showToast(`Đã chọn loại: ${typeLabels[billType] || billType}`, 'info');
+            });
             // Gateway selector - show/hide login button based on gateway
             document.getElementById('bulkApiGateway')?.addEventListener('change', (e) => {
                 const gateway = e.target.value;
+                const billType = document.getElementById('bulkLookupType')?.value || 'electric';
                 const loginBtn = document.getElementById('dailyshopeeLoginBtn');
                 const statusText = document.getElementById('dailyshopeeLoginStatus');
                 
                 console.log('Gateway changed to:', gateway);
                 
-                // Update provider dropdown based on gateway
-                updateProviderDropdown(gateway);
+                // Update provider dropdown based on bill type and gateway
+                updateProviderDropdown(billType, gateway);
                 
                 if (loginBtn && statusText) {
                     if (gateway === 'dailyshopee') {
@@ -13853,8 +15459,9 @@ PA12345678903"></textarea>
             });
             
             // Initialize provider dropdown on page load
-            const initialGateway = document.getElementById('bulkApiGateway')?.value || 'dailyshopee';
-            updateProviderDropdown(initialGateway);
+            const initialBillType = document.getElementById('bulkLookupType')?.value || 'electric';
+            const initialGateway = document.getElementById('bulkApiGateway')?.value || 'fptshop';
+            updateProviderDropdown(initialBillType, initialGateway);
             
             // DailyShopee Login button
             document.getElementById('dailyshopeeLoginBtn')?.addEventListener('click', () => {
@@ -13911,6 +15518,25 @@ PA12345678903"></textarea>
                 renderBulkResults();
             });
             
+            // Column visibility toggle
+            document.querySelectorAll('.bulk-col-toggle').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    const colIndex = parseInt(e.target.dataset.col);
+                    const visible = e.target.checked;
+                    toggleBulkColumn(colIndex, visible);
+                });
+            });
+            
+            // Sortable column headers
+            document.querySelectorAll('.bulk-sortable').forEach(th => {
+                th.addEventListener('click', (e) => {
+                    const sortColumn = th.dataset.sort;
+                    if (sortColumn) {
+                        sortBulkResults(sortColumn);
+                    }
+                });
+            });
+            
             // Select all checkboxes
             document.getElementById('bulkSelectAll')?.addEventListener('change', (e) => {
                 document.querySelectorAll('#bulkResultsBody input[type="checkbox"]').forEach(cb => {
@@ -13937,8 +15563,9 @@ PA12345678903"></textarea>
         
         async function handleBulkLookup() {
             const textarea = document.getElementById('bulkLookupCodes');
+            const billType = document.getElementById('bulkLookupType')?.value || 'electric';
             const provider = document.getElementById('bulkLookupProvider')?.value || 'evn_south';
-            const gateway = document.getElementById('bulkApiGateway')?.value || 'dailyshopee';
+            const gateway = document.getElementById('bulkApiGateway')?.value || 'fptshop';
             const btn = document.getElementById('bulkLookupBtn');
             const spinner = btn?.querySelector('.spinner-border');
             const loadingDiv = document.getElementById('bulkLookupLoading');
@@ -13950,10 +15577,10 @@ PA12345678903"></textarea>
             
             const codes = textarea.value.split('\n')
                 .map(s => s.trim().toUpperCase())
-                .filter(s => s.length >= 5);
+                .filter(s => s.length >= 3);
             
             if (codes.length === 0) {
-                showToast('Vui lòng nhập mã khách hàng để tra cứu', 'warning');
+                showToast('Vui lòng nhập mã tra cứu', 'warning');
                 return;
             }
             
@@ -13961,6 +15588,9 @@ PA12345678903"></textarea>
                 showToast('Chỉ tra cứu tối đa 100 mã mỗi lần', 'warning');
                 return;
             }
+            
+            // Log lookup type for debugging
+            console.log('Bulk lookup:', { billType, provider, gateway, codeCount: codes.length });
             
             // Start loading
             if (btn) btn.disabled = true;
@@ -14162,6 +15792,95 @@ PA12345678903"></textarea>
             }
         }
         
+        // Sort state for bulk results
+        let bulkSortColumn = null;
+        let bulkSortDirection = 'asc'; // 'asc' or 'desc'
+        
+        // Column visibility for bulk results
+        let bulkColumnVisibility = [true, true, true, true, true, true, true, true];
+        
+        function toggleBulkColumn(colIndex, visible) {
+            bulkColumnVisibility[colIndex] = visible;
+            const table = document.getElementById('bulkResultsTable');
+            if (!table) return;
+            
+            // Toggle header
+            table.querySelectorAll(`th.bulk-col-${colIndex}`).forEach(th => {
+                th.style.display = visible ? '' : 'none';
+            });
+            
+            // Toggle body cells
+            table.querySelectorAll(`td.bulk-col-${colIndex}`).forEach(td => {
+                td.style.display = visible ? '' : 'none';
+            });
+            
+            // Toggle footer cells if needed
+            if (colIndex >= 6) {
+                const tfoot = table.querySelector('tfoot tr');
+                if (tfoot) {
+                    const cells = tfoot.querySelectorAll('td');
+                    if (colIndex === 6 && cells[1]) cells[1].style.display = visible ? '' : 'none';
+                    if (colIndex === 7 && cells[2]) cells[2].style.display = visible ? '' : 'none';
+                }
+            }
+        }
+        
+        function resetBulkColumns() {
+            bulkColumnVisibility = [true, true, true, true, true, true, true, true];
+            document.querySelectorAll('.bulk-col-toggle').forEach(cb => {
+                cb.checked = true;
+                const colIndex = parseInt(cb.dataset.col);
+                toggleBulkColumn(colIndex, true);
+            });
+            showToast('Đã đặt lại cột hiển thị về mặc định', 'success');
+        }
+        
+        function sortBulkResults(column) {
+            if (bulkSortColumn === column) {
+                // Toggle direction
+                bulkSortDirection = bulkSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                bulkSortColumn = column;
+                bulkSortDirection = 'asc';
+            }
+            
+            // Update sort icons
+            document.querySelectorAll('.bulk-sortable i').forEach(icon => {
+                icon.className = 'fas fa-sort text-muted ms-1';
+            });
+            const activeHeader = document.querySelector(`.bulk-sortable[data-sort="${column}"] i`);
+            if (activeHeader) {
+                activeHeader.className = `fas fa-sort-${bulkSortDirection === 'asc' ? 'up' : 'down'} text-primary ms-1`;
+            }
+            
+            // Sort the results
+            bulkLookupResults.sort((a, b) => {
+                let valA, valB;
+                switch(column) {
+                    case 'index': valA = a.index; valB = b.index; break;
+                    case 'code': valA = a.code || ''; valB = b.code || ''; break;
+                    case 'name': valA = a.name || ''; valB = b.name || ''; break;
+                    case 'address': valA = a.address || ''; valB = b.address || ''; break;
+                    case 'period': valA = a.period || ''; valB = b.period || ''; break;
+                    case 'amount': valA = a.amount || 0; valB = b.amount || 0; break;
+                    case 'status': valA = a.status || ''; valB = b.status || ''; break;
+                    default: return 0;
+                }
+                
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    return bulkSortDirection === 'asc' ? valA - valB : valB - valA;
+                }
+                
+                const strA = String(valA).toLowerCase();
+                const strB = String(valB).toLowerCase();
+                const result = strA.localeCompare(strB, 'vi');
+                return bulkSortDirection === 'asc' ? result : -result;
+            });
+            
+            renderBulkResults();
+            showToast(`Sắp xếp theo ${column} (${bulkSortDirection === 'asc' ? 'tăng dần' : 'giảm dần'})`, 'info');
+        }
+        
         function renderBulkResults() {
             const tbody = document.getElementById('bulkResultsBody');
             const resultsDiv = document.getElementById('bulkLookupResults');
@@ -14184,14 +15903,14 @@ PA12345678903"></textarea>
             } else {
                 tbody.innerHTML = filtered.map((r, idx) => `
                     <tr class="${r.status === 'error' ? 'table-warning' : ''}" title="Nguồn: ${r.source || 'EVN'}">
-                        <td><input type="checkbox" class="form-check-input bulk-select-item" data-index="${r.index - 1}" ${r.status === 'success' ? 'checked' : ''}></td>
-                        <td>${idx + 1}</td>
-                        <td><code class="text-primary">${r.code}</code></td>
-                        <td>${escapeHtml(r.name)}</td>
-                        <td class="small text-truncate" style="max-width: 200px;" title="${escapeHtml(r.address)}">${escapeHtml(r.address)}</td>
-                        <td class="small text-muted">${r.period || '-'}</td>
-                        <td class="text-end ${r.amount > 0 ? 'text-danger fw-bold' : 'text-muted'}">${formatCurrency(r.amount)}</td>
-                        <td>
+                        <td class="bulk-col-0" style="${bulkColumnVisibility[0] ? '' : 'display:none'}"><input type="checkbox" class="form-check-input bulk-select-item" data-index="${r.index - 1}" ${r.status === 'success' ? 'checked' : ''}></td>
+                        <td class="bulk-col-1" style="${bulkColumnVisibility[1] ? '' : 'display:none'}">${idx + 1}</td>
+                        <td class="bulk-col-2" style="${bulkColumnVisibility[2] ? '' : 'display:none'}"><code class="text-primary">${r.code}</code></td>
+                        <td class="bulk-col-3" style="${bulkColumnVisibility[3] ? '' : 'display:none'}">${escapeHtml(r.name)}</td>
+                        <td class="bulk-col-4 small text-truncate" style="max-width: 200px; ${bulkColumnVisibility[4] ? '' : 'display:none'}" title="${escapeHtml(r.address)}">${escapeHtml(r.address)}</td>
+                        <td class="bulk-col-5 small text-muted" style="${bulkColumnVisibility[5] ? '' : 'display:none'}">${r.period || '-'}</td>
+                        <td class="bulk-col-6 text-end ${r.amount > 0 ? 'text-danger fw-bold' : 'text-muted'}" style="${bulkColumnVisibility[6] ? '' : 'display:none'}">${formatCurrency(r.amount)}</td>
+                        <td class="bulk-col-7" style="${bulkColumnVisibility[7] ? '' : 'display:none'}">
                             ${r.status === 'success' 
                                 ? '<span class="badge bg-success"><i class="fas fa-check"></i></span>' 
                                 : '<span class="badge bg-warning" title="Lỗi tra cứu"><i class="fas fa-exclamation-triangle"></i></span>'}
@@ -16214,6 +17933,144 @@ PA12345678903"></textarea>
             // TODO: Implement export
         }
         
+        // ============ CUSTOMERS LIST TAB ============
+        let customersCurrentPage = 1;
+        
+        async function loadCustomersList(page = 1) {
+            customersCurrentPage = page;
+            const tbody = document.getElementById('customersTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted mb-0">Đang tải...</p></td></tr>`;
+            
+            try {
+                // Collect filters
+                const search = document.getElementById('customerSearchInput')?.value || '';
+                const status = document.getElementById('customerStatusFilter')?.value || '';
+                
+                // Build query params
+                const params = new URLSearchParams();
+                params.append('page', page);
+                params.append('limit', 10);
+                if (search) params.append('search', search);
+                if (status) params.append('is_active', status === 'active' ? 'true' : 'false');
+                
+                const response = await fetch(`${API_BASE_URL}/customers?${params}`, {
+                    headers: { 'Authorization': `Bearer ${appState.token}` }
+                });
+                
+                if (!response.ok) throw new Error('Không thể tải danh sách khách THẺ');
+                
+                const data = await response.json();
+                const customers = data.customers || data.items || [];
+                const total = data.pagination?.total || customers.length;
+                const pages = data.pagination?.pages || Math.ceil(total / 10);
+                
+                // Update stats
+                document.getElementById('totalCustomersCount').textContent = total;
+                document.getElementById('activeCustomersCount').textContent = customers.filter(c => c.is_active).length;
+                document.getElementById('customersWithCardsCount').textContent = customers.filter(c => c.card_last_digits).length;
+                document.getElementById('newCustomersThisMonth').textContent = data.new_this_month || 0;
+                
+                // Render table
+                if (customers.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted"><i class="fas fa-users fa-3x mb-3"></i><p>Chưa có khách THẺ nào</p></td></tr>`;
+                } else {
+                    tbody.innerHTML = customers.map((c, idx) => `
+                        <tr>
+                            <td>${(page - 1) * 10 + idx + 1}</td>
+                            <td><span class="badge bg-secondary">${c.customer_code || 'N/A'}</span></td>
+                            <td>
+                                <strong>${c.full_name || 'N/A'}</strong>
+                                ${c.address ? `<br><small class="text-muted">${c.address}</small>` : ''}
+                            </td>
+                            <td>${c.phone || 'N/A'}</td>
+                            <td><small>${c.email || 'N/A'}</small></td>
+                            <td>
+                                ${c.card_last_digits ? 
+                                    `<span class="badge bg-primary"><i class="fas fa-credit-card me-1"></i>${countCustomerCards(c)}</span>` : 
+                                    '<span class="badge bg-light text-muted">0</span>'}
+                            </td>
+                            <td>
+                                ${c.is_active 
+                                    ? '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Hoạt động</span>' 
+                                    : '<span class="badge bg-secondary"><i class="fas fa-pause-circle me-1"></i>Ngừng</span>'}
+                            </td>
+                            <td><small>${formatDate(c.created_at)}</small></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="viewCustomer(${c.id})" title="Xem chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-info" onclick="viewCustomerCards(${c.id})" title="Xem thẻ">
+                                        <i class="fas fa-credit-card"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary" onclick="editCustomerProfile(${c.id})" title="Sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+                
+                // Update count text
+                document.getElementById('customersCount').textContent = `Hiển thị ${customers.length} / ${total} khách hàng`;
+                
+                // Render pagination
+                renderCustomersPagination(pages, page);
+                
+            } catch (error) {
+                console.error('Error loading customers:', error);
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>${error.message}</p></td></tr>`;
+            }
+        }
+        
+        function countCustomerCards(customer) {
+            // Count cards based on card_last_digits field
+            return customer.card_last_digits ? 1 : 0;
+        }
+        
+        function renderCustomersPagination(totalPages, currentPage) {
+            const container = document.getElementById('customersPagination');
+            if (!container) return;
+            
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            if (currentPage > 1) {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="loadCustomersList(${currentPage - 1}); return false;">«</a></li>`;
+            }
+            
+            // Page numbers
+            for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+                html += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="loadCustomersList(${i}); return false;">${i}</a></li>`;
+            }
+            
+            // Next button
+            if (currentPage < totalPages) {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="loadCustomersList(${currentPage + 1}); return false;">»</a></li>`;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function viewCustomerCards(customerId) {
+            // Switch to cards tab and filter by customer
+            switchCardTab('list');
+            // Could add filter logic here
+            showToast('Đang hiển thị thẻ của khách hàng #' + customerId, 'info');
+        }
+        
+        function editCustomerProfile(customerId) {
+            viewCustomer(customerId);
+        }
+        
         // ============ CARD TRANSACTIONS TAB ============
         let cardTxnCurrentPage = 1;
         
@@ -17112,6 +18969,42 @@ PA12345678903"></textarea>
             }).catch(err => {
                 console.error('Copy failed:', err);
             });
+        }
+        
+        // Copy link from element
+        function copyLinkToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                const text = element.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Đã sao chép link!', 'success');
+                }).catch(err => {
+                    console.error('Copy failed:', err);
+                    showToast('Lỗi sao chép!', 'error');
+                });
+            }
+        }
+        
+        // Initialize Link App page URLs
+        function initLinkAppPage() {
+            const baseUrl = window.location.origin;
+            
+            // Set display URLs
+            const urlElements = {
+                'adminWebUrl': baseUrl + '/',
+                'agentWebUrl': baseUrl + '/agent',
+                'staffWebUrl': baseUrl + '/staff',
+                'docsUrl': baseUrl + '/docs',
+                'copyAdminUrl': baseUrl + '/',
+                'copyAgentUrl': baseUrl + '/agent',
+                'copyStaffUrl': baseUrl + '/staff',
+                'copyDocsUrl': baseUrl + '/docs'
+            };
+            
+            for (const [id, url] of Object.entries(urlElements)) {
+                const el = document.getElementById(id);
+                if (el) el.textContent = url;
+            }
         }
 
         // Load reward programs list

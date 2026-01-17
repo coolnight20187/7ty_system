@@ -914,5 +914,34 @@
       "request_code": "DEP202601161453310864DD5B",
       "hint": "Admin cần đối soát và gán agent thủ công"
     }
+  },
+  {
+    "timestamp": "2026-01-16T15:37:52.091184",
+    "payload": {
+      "type": "credit",
+      "amount": 17000,
+      "content": "ACB: TK 17246947(VND) + 17,000 luc 22:37 16/01/2026. So du 194,573. GD: NAP AG000001 106000 GD 6016IBT1iJQNDL6R 160126-22:37:41",
+      "transfer_content": "NAP AG000001 106000",
+      "reference": "ACB_6016IBT1iJQNDL6R",
+      "bank_transaction_ref": "6016IBT1iJQNDL6R",
+      "bank_code": "ACB",
+      "account_number": "17246947",
+      "balance": 194573,
+      "raw_content": "ACB: TK 17246947(VND) + 17,000 luc 22:37 16/01/2026. So du 194,573. GD: NAP AG000001 106000 GD 6016IBT1iJQNDL6R 160126-22:37:41",
+      "source": "notification_reader",
+      "app_version": "2.53.0",
+      "timestamp": "2026-01-16 22:37:51"
+    },
+    "result": {
+      "success": true,
+      "message": "Số tiền không khớp - chờ admin duyệt",
+      "received": true,
+      "pending": true,
+      "request_code": "DEP2026011615375288F4DE05",
+      "agent_code": "AG000001",
+      "transfer_amount": 17000,
+      "content_amount": 106000,
+      "reason": "Chuyển khoản 17,000đ nhưng nội dung ghi 106,000đ"
+    }
   }
 ]

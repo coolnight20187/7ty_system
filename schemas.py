@@ -8,7 +8,7 @@ from decimal import Decimal
 from models import (
     UserRole, AgentStatus, AgentType, TransactionStatus,
     TransactionType, BillStatus, ActivityType, NotificationType,
-    NotificationStatus
+    NotificationStatus, AccountType, AccountStatus
 )
 
 # Generic TypeVar for pagination
@@ -157,6 +157,10 @@ class UserBase(BaseModel):
     phone: Optional[str] = Field(None, max_length=20)
     role: UserRole = UserRole.VIEWER
     
+    # Hệ thống tài khoản tập trung
+    account_type: Optional[AccountType] = AccountType.CUSTOMER
+    account_status: Optional[AccountStatus] = AccountStatus.PENDING
+    
     class Config:
         from_attributes = True
 
@@ -164,6 +168,13 @@ class UserCreate(UserBase):
     """User creation schema"""
     password: str = Field(..., min_length=8)
     is_active: Optional[bool] = True
+    
+    # Đa vai trò
+    is_admin: Optional[bool] = False
+    is_manager: Optional[bool] = False
+    is_agent: Optional[bool] = False
+    is_staff: Optional[bool] = False
+    is_customer: Optional[bool] = False
     
     @validator('password')
     def validate_password_strength(cls, v):
@@ -187,8 +198,11 @@ class UserCreate(UserBase):
                 "full_name": "John Doe",
                 "phone": "+1234567890",
                 "role": "agent",
+                "account_type": "AGENT",
+                "account_status": "PENDING",
                 "password": "SecurePass123!",
-                "is_active": True
+                "is_active": True,
+                "is_agent": True
             }
         }
 
@@ -208,6 +222,17 @@ class UserUpdate(BaseModel):
     district: Optional[str] = Field(None, max_length=100)
     city: Optional[str] = Field(None, max_length=100)
     notes: Optional[str] = None
+    
+    # Hệ thống tài khoản tập trung
+    account_type: Optional[AccountType] = None
+    account_status: Optional[AccountStatus] = None
+    
+    # Đa vai trò
+    is_admin: Optional[bool] = None
+    is_manager: Optional[bool] = None
+    is_agent: Optional[bool] = None
+    is_staff: Optional[bool] = None
+    is_customer: Optional[bool] = None
     
     @validator('password')
     def validate_password_strength(cls, v):
@@ -232,7 +257,10 @@ class UserUpdate(BaseModel):
                 "full_name": "John Doe Updated",
                 "phone": "+0987654321",
                 "role": "manager",
-                "is_active": True
+                "account_type": "SYSTEM",
+                "account_status": "ACTIVE",
+                "is_active": True,
+                "is_manager": True
             }
         }
 
@@ -245,6 +273,62 @@ class UserRoleUpdate(BaseModel):
         json_schema_extra = {
             "example": {
                 "role": "agent"
+            }
+        }
+
+# Schema cập nhật đa vai trò
+class UserRolesUpdate(BaseModel):
+    """Schema for updating user multiple roles"""
+    is_admin: Optional[bool] = None
+    is_manager: Optional[bool] = None
+    is_agent: Optional[bool] = None
+    is_staff: Optional[bool] = None
+    is_customer: Optional[bool] = None
+    account_type: Optional[AccountType] = None
+    account_status: Optional[AccountStatus] = None
+    
+    class Config:
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "is_admin": False,
+                "is_agent": True,
+                "is_staff": True,
+                "account_type": "AGENT",
+                "account_status": "ACTIVE"
+            }
+        }
+
+# Schema phân bổ tài khoản
+class AccountAssignment(BaseModel):
+    """Schema for assigning account to roles"""
+    user_id: int
+    assign_as_admin: Optional[bool] = False
+    assign_as_manager: Optional[bool] = False
+    assign_as_agent: Optional[bool] = False
+    assign_as_staff: Optional[bool] = False
+    assign_as_customer: Optional[bool] = False
+    
+    # Thông tin bổ sung khi gán vai trò
+    agent_data: Optional[Dict[str, Any]] = None    # Thông tin đại lý
+    staff_data: Optional[Dict[str, Any]] = None    # Thông tin nhân viên
+    customer_data: Optional[Dict[str, Any]] = None # Thông tin khách hàng
+    
+    class Config:
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "user_id": 1,
+                "assign_as_agent": True,
+                "assign_as_staff": True,
+                "agent_data": {
+                    "agent_code": "DL000001",
+                    "agent_name": "Đại lý ABC"
+                },
+                "staff_data": {
+                    "department": "Kinh doanh",
+                    "position": "Nhân viên"
+                }
             }
         }
 
@@ -267,6 +351,22 @@ class UserResponse(UserBase):
     cccd_front: Optional[str] = None
     cccd_back: Optional[str] = None
     
+    # Hệ thống tài khoản tập trung
+    account_type: Optional[AccountType] = None
+    account_status: Optional[AccountStatus] = None
+    
+    # Đa vai trò
+    is_admin: bool = False
+    is_manager: bool = False
+    is_agent: bool = False
+    is_staff: bool = False
+    is_customer: bool = False
+    active_role: Optional[UserRole] = None
+    
+    # Thông tin liên kết
+    available_roles: Optional[List[str]] = None
+    role_badges: Optional[List[Dict[str, str]]] = None
+    
     class Config:
         from_attributes = True
 
@@ -274,7 +374,13 @@ class UserFilterParams(BaseModel):
     """Schema for user filter parameters"""
     search: Optional[str] = None
     role: Optional[UserRole] = None
+    account_type: Optional[AccountType] = None
+    account_status: Optional[AccountStatus] = None
     is_active: Optional[bool] = None
+    is_admin: Optional[bool] = None
+    is_agent: Optional[bool] = None
+    is_staff: Optional[bool] = None
+    is_customer: Optional[bool] = None
     created_from: Optional[datetime] = None
     created_to: Optional[datetime] = None
     
@@ -289,6 +395,12 @@ class UserSearchResult(BaseModel):
     full_name: Optional[str]
     role: UserRole
     is_active: bool
+    account_type: Optional[AccountType] = None
+    account_status: Optional[AccountStatus] = None
+    is_admin: bool = False
+    is_agent: bool = False
+    is_staff: bool = False
+    is_customer: bool = False
     
     class Config:
         from_attributes = True

@@ -1,6 +1,6 @@
 ﻿from fastapi import APIRouter, Depends, HTTPException, status, Query, Request, BackgroundTasks, UploadFile, File, Form
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, Integer
 import os
 import uuid
 import shutil
@@ -15,11 +15,11 @@ from dependencies import (
     pagination_params, search_params, audit_log,
     rate_limit, api_rate_limit
 )
-from models import User, UserRole, ActivityLog, Agent, AgentStatus
+from models import User, UserRole, ActivityLog, Agent, AgentStatus, AccountType, AccountStatus
 from schemas import (
     UserCreate, UserResponse, UserUpdate, UserRoleUpdate,
     ChangePasswordRequest, AdminResetPasswordRequest, SuccessResponse, ErrorResponse,
-    UserFilterParams, UserSearchResult
+    UserFilterParams, UserSearchResult, UserRolesUpdate, AccountAssignment
 )
 from utils import (
     SecurityUtils, EmailUtils, ValidationUtils,
@@ -66,16 +66,22 @@ async def get_current_user_info(
 @router.get("/", response_model=Dict[str, Any])
 async def get_users(
     db: Session = Depends(get_db),
-    current_user: User = Depends(admin_only_dep),  # Sß╗¡a: thay v├¼ decorator
+    current_user: User = Depends(admin_only_dep),  # Sửa: thay vì decorator
     pagination: Dict = Depends(pagination_params),
     search: str = Query(None, description="Search by username, email, or full name"),
     role: Optional[UserRole] = Query(None, description="Filter by role"),
+    account_type: Optional[str] = Query(None, description="Filter by account type: SYSTEM, AGENT, STAFF, CUSTOMER"),
+    account_status: Optional[str] = Query(None, description="Filter by account status: ACTIVE, PENDING, INACTIVE, SUSPENDED, BLOCKED"),
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    is_admin: Optional[bool] = Query(None, description="Filter users with admin role"),
+    is_agent: Optional[bool] = Query(None, description="Filter users with agent role"),
+    is_staff: Optional[bool] = Query(None, description="Filter users with staff role"),
+    is_customer: Optional[bool] = Query(None, description="Filter users with customer role"),
     created_from: Optional[datetime] = Query(None, description="Created from date"),
     created_to: Optional[datetime] = Query(None, description="Created to date")
 ):
     """
-    Get all users (admin only)
+    Get all users (admin only) with unified account filtering
     """
     try:
         # Build query
@@ -87,14 +93,41 @@ async def get_users(
             query = query.filter(
                 (User.username.ilike(search_term)) |
                 (User.email.ilike(search_term)) |
-                (User.full_name.ilike(search_term))
+                (User.full_name.ilike(search_term)) |
+                (User.phone.ilike(search_term))
             )
         
         if role:
             query = query.filter(User.role == role)
         
+        # Filter by account_type
+        if account_type:
+            try:
+                account_type_enum = AccountType(account_type.upper())
+                query = query.filter(User.account_type == account_type_enum)
+            except (ValueError, AttributeError):
+                pass
+        
+        # Filter by account_status
+        if account_status:
+            try:
+                account_status_enum = AccountStatus(account_status.upper())
+                query = query.filter(User.account_status == account_status_enum)
+            except (ValueError, AttributeError):
+                pass
+        
         if is_active is not None:
             query = query.filter(User.is_active == is_active)
+        
+        # Filter by multi-role flags
+        if is_admin is not None:
+            query = query.filter(User.is_admin == is_admin)
+        if is_agent is not None:
+            query = query.filter(User.is_agent == is_agent)
+        if is_staff is not None:
+            query = query.filter(User.is_staff == is_staff)
+        if is_customer is not None:
+            query = query.filter(User.is_customer == is_customer)
         
         if created_from:
             query = query.filter(User.created_at >= created_from)
@@ -127,9 +160,18 @@ async def get_users(
                     "id": user.id,
                     "username": user.username,
                     "email": user.email,
+                    "phone": user.phone,
                     "full_name": user.full_name,
-                    "role": user.role.value,
+                    "role": user.role.value if hasattr(user.role, 'value') else user.role,
+                    "account_type": user.account_type.value if hasattr(user, 'account_type') and user.account_type else None,
+                    "account_status": user.account_status.value if hasattr(user, 'account_status') and user.account_status else None,
                     "is_active": user.is_active,
+                    "is_admin": getattr(user, 'is_admin', False),
+                    "is_manager": getattr(user, 'is_manager', False),
+                    "is_agent": getattr(user, 'is_agent', False),
+                    "is_staff": getattr(user, 'is_staff', False),
+                    "is_customer": getattr(user, 'is_customer', False),
+                    "available_roles": user.get_available_roles() if hasattr(user, 'get_available_roles') else [],
                     "last_login": user.last_login.isoformat() if user.last_login else None,
                     "created_at": user.created_at.isoformat(),
                     "login_attempts": user.login_attempts,
@@ -181,17 +223,18 @@ async def get_user(
             )
         
         # Check if user is an agent
-        from models import Agent, AgentStatus, Customer
+        from models import Agent, AgentStatus, Customer, Staff
         agent = db.query(Agent).filter(Agent.user_id == user_id).first()
-        is_agent = agent is not None
+        is_agent = agent is not None or getattr(user, 'is_agent', False)
         agent_status = agent.status.value if agent else None
         
         # Check if user is a customer (has card linked)
         customer = db.query(Customer).filter(Customer.user_id == user_id).first()
-        is_customer = customer is not None
+        is_customer = customer is not None or getattr(user, 'is_customer', False)
         
         # Check if user is staff
-        is_staff = getattr(user, 'is_staff', False)
+        staff = db.query(Staff).filter(Staff.user_id == user_id).first()
+        is_staff = staff is not None or getattr(user, 'is_staff', False)
         
         # Build response
         user_dict = {
@@ -216,11 +259,18 @@ async def get_user(
             "notes": user.notes,
             "cccd_front": user.cccd_front,
             "cccd_back": user.cccd_back,
-            # Additional role info
+            # Hệ thống tài khoản tập trung
+            "account_type": user.account_type.value if hasattr(user, 'account_type') and user.account_type else None,
+            "account_status": user.account_status.value if hasattr(user, 'account_status') and user.account_status else None,
+            # Additional role info - đa vai trò
+            "is_admin": getattr(user, 'is_admin', False),
+            "is_manager": getattr(user, 'is_manager', False),
             "is_agent": is_agent,
             "agent_status": agent_status,
             "is_customer": is_customer,
-            "is_staff": is_staff
+            "is_staff": is_staff,
+            "available_roles": user.get_available_roles() if hasattr(user, 'get_available_roles') else [],
+            "active_role": user.active_role.value if hasattr(user, 'active_role') and user.active_role else None
         }
         
         return user_dict
@@ -1571,8 +1621,372 @@ async def users_health():
             "role_management": True,
             "profile_management": True,
             "activity_logging": True,
-            "export": True
+            "export": True,
+            "unified_accounts": True  # Hệ thống tài khoản tập trung
         }
     }
+
+
+# ========== HỆ THỐNG TÀI KHOẢN TẬP TRUNG ==========
+
+@router.get("/accounts/stats")
+async def get_accounts_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_only_dep)
+):
+    """
+    Get statistics for unified account system
+    """
+    try:
+        from sqlalchemy import func
+        
+        # Total users
+        total_users = db.query(func.count(User.id)).filter(User.is_deleted == False).scalar()
+        
+        # Count by account_type
+        stats_by_type = {}
+        for acc_type in AccountType:
+            count = db.query(func.count(User.id)).filter(
+                User.is_deleted == False,
+                User.account_type == acc_type
+            ).scalar() or 0
+            stats_by_type[acc_type.value] = count
+        
+        # Count by account_status
+        stats_by_status = {}
+        for acc_status in AccountStatus:
+            count = db.query(func.count(User.id)).filter(
+                User.is_deleted == False,
+                User.account_status == acc_status
+            ).scalar() or 0
+            stats_by_status[acc_status.value] = count
+        
+        # Count by multi-role flags
+        multi_role_stats = {
+            "admins": db.query(func.count(User.id)).filter(User.is_deleted == False, User.is_admin == True).scalar() or 0,
+            "managers": db.query(func.count(User.id)).filter(User.is_deleted == False, User.is_manager == True).scalar() or 0,
+            "agents": db.query(func.count(User.id)).filter(User.is_deleted == False, User.is_agent == True).scalar() or 0,
+            "staffs": db.query(func.count(User.id)).filter(User.is_deleted == False, User.is_staff == True).scalar() or 0,
+            "customers": db.query(func.count(User.id)).filter(User.is_deleted == False, User.is_customer == True).scalar() or 0,
+        }
+        
+        # Users with multiple roles
+        users_with_multi_roles = db.query(User).filter(
+            User.is_deleted == False,
+            (
+                (User.is_admin == True).cast(Integer) +
+                (User.is_manager == True).cast(Integer) +
+                (User.is_agent == True).cast(Integer) +
+                (User.is_staff == True).cast(Integer) +
+                (User.is_customer == True).cast(Integer)
+            ) > 1
+        ).count()
+        
+        return {
+            "success": True,
+            "stats": {
+                "total_users": total_users,
+                "by_account_type": stats_by_type,
+                "by_account_status": stats_by_status,
+                "by_role": multi_role_stats,
+                "users_with_multiple_roles": users_with_multi_roles
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Get accounts stats error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get accounts stats"
+        )
+
+
+@router.put("/{user_id}/roles")
+@audit_log(action="update_user_roles", resource_type="user")
+async def update_user_roles(
+    user_id: int,
+    roles_data: UserRolesUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_only_dep)
+):
+    """
+    Update user's multi-role flags (Admin only)
+    """
+    try:
+        user = db.query(User).filter(
+            User.id == user_id,
+            User.is_deleted == False
+        ).first()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Update role flags
+        if roles_data.is_admin is not None:
+            user.is_admin = roles_data.is_admin
+        if roles_data.is_manager is not None:
+            user.is_manager = roles_data.is_manager
+        if roles_data.is_agent is not None:
+            user.is_agent = roles_data.is_agent
+        if roles_data.is_staff is not None:
+            user.is_staff = roles_data.is_staff
+        if roles_data.is_customer is not None:
+            user.is_customer = roles_data.is_customer
+        
+        # Update account_type
+        if roles_data.account_type is not None:
+            user.account_type = roles_data.account_type
+        
+        # Update account_status
+        if roles_data.account_status is not None:
+            user.account_status = roles_data.account_status
+        
+        db.commit()
+        db.refresh(user)
+        
+        logger.info(f"User roles updated: {user.username} by {current_user.username}")
+        
+        return {
+            "success": True,
+            "message": "User roles updated successfully",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "account_type": user.account_type.value if user.account_type else None,
+                "account_status": user.account_status.value if user.account_status else None,
+                "is_admin": user.is_admin,
+                "is_manager": user.is_manager,
+                "is_agent": user.is_agent,
+                "is_staff": user.is_staff,
+                "is_customer": user.is_customer,
+                "available_roles": user.get_available_roles() if hasattr(user, 'get_available_roles') else []
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update user roles error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update user roles"
+        )
+
+
+@router.post("/{user_id}/assign-role")
+@audit_log(action="assign_role", resource_type="user")
+async def assign_role_to_user(
+    user_id: int,
+    assignment: AccountAssignment,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_only_dep)
+):
+    """
+    Assign role(s) to user and create related profile records
+    """
+    try:
+        from models import Agent, Staff, Customer
+        
+        user = db.query(User).filter(
+            User.id == user_id,
+            User.is_deleted == False
+        ).first()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        results = []
+        
+        # Assign as Admin
+        if assignment.assign_as_admin:
+            user.is_admin = True
+            user.account_type = AccountType.SYSTEM
+            results.append("Admin role assigned")
+        
+        # Assign as Manager
+        if assignment.assign_as_manager:
+            user.is_manager = True
+            if not user.is_admin:
+                user.account_type = AccountType.SYSTEM
+            results.append("Manager role assigned")
+        
+        # Assign as Agent
+        if assignment.assign_as_agent:
+            # Check if agent profile exists
+            existing_agent = db.query(Agent).filter(Agent.user_id == user_id).first()
+            if not existing_agent:
+                # Create agent profile
+                agent_data = assignment.agent_data or {}
+                agent_code = agent_data.get('agent_code', f"DL{datetime.now().strftime('%Y%m%d')}{user_id:05d}")
+                agent_name = agent_data.get('agent_name', user.full_name)
+                
+                new_agent = Agent(
+                    user_id=user_id,
+                    agent_code=agent_code,
+                    agent_name=agent_name,
+                    status=AgentStatus.PENDING
+                )
+                db.add(new_agent)
+                results.append(f"Agent profile created: {agent_code}")
+            
+            user.is_agent = True
+            if user.account_type not in [AccountType.SYSTEM]:
+                user.account_type = AccountType.AGENT
+            results.append("Agent role assigned")
+        
+        # Assign as Staff
+        if assignment.assign_as_staff:
+            # Check if staff profile exists
+            existing_staff = db.query(Staff).filter(Staff.user_id == user_id).first()
+            if not existing_staff:
+                # Create staff profile
+                from models import StaffStatus
+                staff_data = assignment.staff_data or {}
+                staff_code = f"NV{datetime.now().strftime('%Y%m%d')}{user_id:05d}"
+                
+                new_staff = Staff(
+                    user_id=user_id,
+                    staff_code=staff_code,
+                    department=staff_data.get('department'),
+                    position=staff_data.get('position'),
+                    status=StaffStatus.PENDING
+                )
+                db.add(new_staff)
+                results.append(f"Staff profile created: {staff_code}")
+            
+            user.is_staff = True
+            if user.account_type not in [AccountType.SYSTEM, AccountType.AGENT]:
+                user.account_type = AccountType.STAFF
+            results.append("Staff role assigned")
+        
+        # Assign as Customer
+        if assignment.assign_as_customer:
+            # Check if customer profile exists
+            existing_customer = db.query(Customer).filter(Customer.user_id == user_id).first()
+            if not existing_customer:
+                # Create customer profile
+                customer_data = assignment.customer_data or {}
+                customer_code = f"KH{datetime.now().strftime('%Y%m%d')}{user_id:05d}"
+                
+                new_customer = Customer(
+                    user_id=user_id,
+                    customer_code=customer_code,
+                    full_name=user.full_name,
+                    phone=user.phone,
+                    email=user.email,
+                    address=user.address or ""
+                )
+                db.add(new_customer)
+                results.append(f"Customer profile created: {customer_code}")
+            
+            user.is_customer = True
+            if user.account_type not in [AccountType.SYSTEM, AccountType.AGENT, AccountType.STAFF]:
+                user.account_type = AccountType.CUSTOMER
+            results.append("Customer role assigned")
+        
+        db.commit()
+        db.refresh(user)
+        
+        logger.info(f"Roles assigned to user {user.username}: {results}")
+        
+        return {
+            "success": True,
+            "message": "Roles assigned successfully",
+            "results": results,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "account_type": user.account_type.value if user.account_type else None,
+                "is_admin": user.is_admin,
+                "is_manager": user.is_manager,
+                "is_agent": user.is_agent,
+                "is_staff": user.is_staff,
+                "is_customer": user.is_customer,
+                "available_roles": user.get_available_roles() if hasattr(user, 'get_available_roles') else []
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Assign role error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to assign role"
+        )
+
+
+@router.post("/{user_id}/switch-role")
+async def switch_active_role(
+    user_id: int,
+    role: str = Query(..., description="Role to switch to: ADMIN, MANAGER, AGENT, STAFF, CUSTOMER"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Switch user's active role (User can only switch their own role)
+    """
+    try:
+        # Only allow users to switch their own role
+        if current_user.id != user_id and current_user.role != UserRole.ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only switch your own role"
+            )
+        
+        user = db.query(User).filter(
+            User.id == user_id,
+            User.is_deleted == False
+        ).first()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Check if user has this role
+        role = role.upper()
+        if not user.can_switch_to_role(role):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"User does not have {role} role"
+            )
+        
+        # Switch role
+        try:
+            user.active_role = UserRole(role)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid role: {role}"
+            )
+        
+        db.commit()
+        db.refresh(user)
+        
+        logger.info(f"User {user.username} switched to role: {role}")
+        
+        return {
+            "success": True,
+            "message": f"Switched to {role} role",
+            "active_role": user.active_role.value if user.active_role else None,
+            "available_roles": user.get_available_roles() if hasattr(user, 'get_available_roles') else []
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Switch role error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to switch role"
+        )
 
 

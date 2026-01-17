@@ -41,7 +41,7 @@ def is_admin_or_staff(user):
     return get_role(user) in ["admin", "staff"]
 
 # Danh sách khách hàng
-@router.get("/", response_model=List[CustomerResponse])
+@router.get("", response_model=List[CustomerResponse])
 async def get_customers(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -132,7 +132,7 @@ async def get_customers(
     return customers
 
 # Tạo khách hàng mới
-@router.post("/", response_model=CustomerResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=CustomerResponse, status_code=status.HTTP_201_CREATED)
 async def create_customer(
     customer_data: CustomerCreate,
     db: Session = Depends(get_db),

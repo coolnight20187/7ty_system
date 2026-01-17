@@ -97,6 +97,13 @@ try:
 except ImportError as e:
     logging.warning(f"Failed to import deposit router: {e}")
 
+# Staff management router
+staff = None
+try:
+    from routers import staff
+except ImportError as e:
+    logging.warning(f"Failed to import staff router: {e}")
+
 # Thiết lập logging
 logging.basicConfig(
     level=logging.INFO,
@@ -352,17 +359,29 @@ async def serve_agent_app():
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Agent app not found")
 
+# Staff mobile app route
+@app.get("/staff")
+@app.get("/staff-app")
+@app.get("/staff_app.html")
+async def serve_staff_app():
+    """Serve staff mobile app"""
+    try:
+        return FileResponse("staff_app/www/index.html", media_type="text/html")
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Staff app not found")
+
 # APK download route - serve with correct headers to prevent zip compression
 @app.get("/download/apk")
 @app.get("/download/agent-apk")
 @app.get("/download/agent-apk-new")
 @app.get("/static/uploads/7ty-agent-latest.apk")
+@app.get("/static/downloads/7ty-agent-v2.54.0.apk")
 @app.get("/static/downloads/7ty-agent-v2.52.0.apk")
-@app.get("/static/downloads/7ty-agent-v2.51.0.apk")
 async def download_apk():
     """Download Agent APK file with correct headers"""
     # Ưu tiên file mới nhất trong static/downloads
     apk_paths = [
+        "static/downloads/7ty-agent-v2.54.0.apk",
         "static/downloads/7ty-agent-v2.52.0.apk",
         "static/downloads/7ty-agent-v2.51.0.apk",
         "static/downloads/7ty-agent-v2.46.0.apk",
@@ -384,9 +403,9 @@ async def download_apk():
     return FileResponse(
         path=apk_path,
         media_type="application/vnd.android.package-archive",
-        filename="7ty-agent-v2.52.0.apk",
+        filename="7ty-agent-v2.54.0.apk",
         headers={
-            "Content-Disposition": "attachment; filename=7ty-agent-v2.52.0.apk",
+            "Content-Disposition": "attachment; filename=7ty-agent-v2.54.0.apk",
             "Content-Type": "application/vnd.android.package-archive",
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",
@@ -396,12 +415,13 @@ async def download_apk():
     )
 
 @app.get("/download/sms-reader-apk")
+@app.get("/static/downloads/sms-reader-v2.54.0.apk")
 @app.get("/static/downloads/sms-reader-v2.52.0.apk")
-@app.get("/static/downloads/sms-reader-v2.51.0.apk")
 async def download_sms_reader_apk():
     """Download SMS Reader APK file"""
     # Ưu tiên file mới nhất
     apk_paths = [
+        "static/downloads/sms-reader-v2.54.0.apk",
         "static/downloads/sms-reader-v2.52.0.apk",
         "static/downloads/sms-reader-v2.51.0.apk",
         "static/downloads/sms-reader-v2.43.0.apk",
@@ -421,9 +441,39 @@ async def download_sms_reader_apk():
     return FileResponse(
         path=apk_path,
         media_type="application/vnd.android.package-archive",
-        filename="sms-reader-v2.52.0.apk",
+        filename="sms-reader-v2.54.0.apk",
         headers={
-            "Content-Disposition": "attachment; filename=sms-reader-v2.52.0.apk",
+            "Content-Disposition": "attachment; filename=sms-reader-v2.54.0.apk",
+            "Content-Type": "application/vnd.android.package-archive",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "X-Content-Type-Options": "nosniff"
+        }
+    )
+
+@app.get("/download/staff-apk")
+async def download_staff_apk():
+    """Download Staff APK file"""
+    apk_paths = [
+        "static/downloads/7ty-staff-v1.0.0.apk",
+        "static/downloads/staff-app-v1.0.0.apk",
+        "downloads/7TY_Staff_v1.0.0.apk"
+    ]
+    
+    apk_path = None
+    for path in apk_paths:
+        if os.path.exists(path):
+            apk_path = path
+            break
+    
+    if not apk_path:
+        raise HTTPException(status_code=404, detail="Staff APK not found. Đang được phát triển.")
+    
+    return FileResponse(
+        path=apk_path,
+        media_type="application/vnd.android.package-archive",
+        filename="7ty-staff-v1.0.0.apk",
+        headers={
+            "Content-Disposition": "attachment; filename=7ty-staff-v1.0.0.apk",
             "Content-Type": "application/vnd.android.package-archive",
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "X-Content-Type-Options": "nosniff"
@@ -456,6 +506,33 @@ async def download_static_file(filename: str):
         return FileResponse(path=file_path)
     raise HTTPException(status_code=404, detail=f"File {filename} not found")
 
+# Serve downloads (APK files)
+@app.get("/downloads/{filepath:path}")
+async def serve_downloads(filepath: str):
+    """Serve download files (APK)"""
+    full_path = f"downloads/{filepath}"
+    
+    if not os.path.exists(full_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # APK files - serve with correct headers for download
+    if filepath.endswith('.apk'):
+        filename = os.path.basename(filepath)
+        return FileResponse(
+            path=full_path,
+            media_type="application/vnd.android.package-archive",
+            filename=filename,
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Type": "application/vnd.android.package-archive",
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "X-Content-Type-Options": "nosniff"
+            }
+        )
+    
+    # Other files
+    return FileResponse(path=full_path)
+
 # Mount static files - Quan trọng: routes được định nghĩa trước sẽ có priority
 # Nhưng app.mount sử dụng catch-all, nên cần dùng custom middleware hoặc route riêng
 from starlette.routing import Mount
@@ -486,6 +563,20 @@ async def serve_static(filepath: str):
         )
     
     # Other static files - serve normally
+    return FileResponse(path=full_path)
+
+# Staff app static files
+@app.get("/staff_app/{filepath:path}")
+async def serve_staff_app_static(filepath: str):
+    """Serve staff app static files"""
+    full_path = f"staff_app/www/{filepath}"
+    
+    if not os.path.exists(full_path):
+        # Try without www
+        full_path = f"staff_app/{filepath}"
+        if not os.path.exists(full_path):
+            raise HTTPException(status_code=404, detail="File not found")
+    
     return FileResponse(path=full_path)
 
 # API Routes
@@ -535,6 +626,8 @@ if email_webhook:
     app.include_router(email_webhook.router, prefix="/api/v1", tags=["Email Webhook"])
 if deposit:
     app.include_router(deposit.router, prefix="/api/v1", tags=["Deposit"])
+if staff:
+    app.include_router(staff.router, prefix="/api/staff", tags=["Staff Management"])
 
 # WebSocket endpoints
 @app.websocket("/ws")

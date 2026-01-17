@@ -239,12 +239,15 @@ async def login(
                 detail="Quá nhiều lần thử thất bại. Vui lòng thử lại sau."
             )
         
-        # Normalize username - remove leading zeros
-        input_username = login_data.username.lstrip('0') if login_data.username else login_data.username
+        # Normalize username - remove leading zeros for comparison
+        input_username = login_data.username
+        normalized_username = login_data.username.lstrip('0') if login_data.username else login_data.username
         
-        # Get user by normalized username or email
+        # Get user by username (original or normalized) or email
         user = db.query(User).filter(
-            (User.username == input_username) | (User.email == login_data.username),
+            (User.username == input_username) | 
+            (User.username == normalized_username) |
+            (User.email == login_data.username),
             User.is_deleted == False
         ).first()
         
